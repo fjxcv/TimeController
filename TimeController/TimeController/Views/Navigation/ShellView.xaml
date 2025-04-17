@@ -1,0 +1,61 @@
+﻿<UserControl x:Class="TimeController.Views.Navigation.ShellView"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:TimeController.Views.Navigation"
+        xmlns:ui="http://schemas.inkore.net/lib/ui/wpf/modern" 
+        xmlns:ikw="http://schemas.inkore.net/lib/ui/wpf" 
+        mc:Ignorable="d">
+
+    <ui:NavigationView x:Name="NavigationView_Root"
+        PaneDisplayMode="Left"
+        OpenPaneLength="176"
+        IsPaneOpen="True"
+        IsPaneToggleButtonVisible="False"
+        IsBackButtonVisible="Collapsed"
+        SelectionChanged="NavigationView_SelectionChanged">
+
+        <FrameworkElement.Resources>
+            <SolidColorBrush x:Key="{x:Static ui:ThemeKeys.NavigationViewContentBackgroundKey}" Color="Transparent"/>
+            <SolidColorBrush x:Key="{x:Static ui:ThemeKeys.ExpanderHeaderBorderBrushKey}" Color="Transparent"/>
+            <Thickness x:Key="NavigationViewContentGridBorderThickness">0,0,0,0</Thickness>
+        </FrameworkElement.Resources>
+
+        <ui:NavigationView.MenuItems>
+            <ui:NavigationViewItem x:Name="NavigationViewItem_CasualMode" 
+                                  Content="咸鱼模式" 
+                                  Tag="CasualMode" 
+                                  Height="52"/>
+            <ui:NavigationViewItem x:Name="NavigationViewItem_StrongGoalMode" 
+                                  Content="强管理模式" 
+                                  Tag="StrongGoalMode">
+                <ui:NavigationViewItem.MenuItems>
+                    <ui:NavigationViewItem x:Name="NavigationViewItem_WeekView" 
+                                          Content="周视图" 
+                                          Tag="WeekView"/>
+                    <ui:NavigationViewItem x:Name="NavigationViewItem_MonthView" 
+                                          Content="月视图" 
+                                          Tag="MonthView"/>
+                    <ui:NavigationViewItem x:Name="NavigationViewItem_Review" 
+                                          Content="复盘" 
+                                          Tag="Review"/>
+                </ui:NavigationViewItem.MenuItems>
+            </ui:NavigationViewItem>
+        </ui:NavigationView.MenuItems>
+
+        <ui:NavigationView.FooterMenuItems>
+            <ui:NavigationViewItem x:Name="NavigationViewItem_Settings" 
+                                  Content="设置" 
+                                  Tag="settings" 
+                                  Icon="Settings" />
+            <ui:NavigationViewItem x:Name="NavigationViewItem_About" 
+                                  Content="关于" 
+                                  Tag="about" 
+                                  Icon="Info"/>
+        </ui:NavigationView.FooterMenuItems>
+
+        <ui:Frame x:Name="ContentFrame"/>
+
+    </ui:NavigationView>
+</UserControl>
