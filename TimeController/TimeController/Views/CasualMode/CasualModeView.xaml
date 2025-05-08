@@ -4,8 +4,65 @@
         xmlns:ui="http://schemas.inkore.net/lib/ui/wpf/modern"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-        xmlns:local="clr-namespace:TimeController.Views.CasualMode"
         mc:Ignorable="d" 
-        Title="" d:DesignHeight="800" d:DesignWidth="1104">
+         Title="" d:DesignHeight="800" d:DesignWidth="1104"
+         MinHeight="600" MinWidth="800">
 
+    <Grid Margin="0">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="781*"/>
+            <RowDefinition Height="19*"/>
+        </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="4*" MinWidth="400"/>
+            <ColumnDefinition Width="2*" MinWidth="300"/>
+        </Grid.ColumnDefinitions>
+
+        <!-- 左侧主板块 -->
+        <StackPanel Grid.Column="0" Margin="30,20,20,1">
+            <!-- 顶部进度条区域 -->
+            <StackPanel Orientation="Horizontal" VerticalAlignment="Top" Margin="0,0,0,20">
+                <TextBlock Text="本周进度" FontSize="18" FontWeight="Bold" VerticalAlignment="Center"/>
+                <ProgressBar Width="Auto" MinWidth="500" Height="16" Margin="16,0,8,0" VerticalAlignment="Center" Value="60"/>
+                <Button Content="奖" Width="36" Height="28" Margin="0,0,0,0" VerticalAlignment="Center"/>
+            </StackPanel>
+
+            <!-- 四个模块 2x2 -->
+            <Grid Margin="0,0,0,0" Height="617">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="*" MinHeight="150"/>
+                    <RowDefinition Height="*" MinHeight="150"/>
+                </Grid.RowDefinitions>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" MinWidth="200"/>
+                    <ColumnDefinition Width="*" MinWidth="200"/>
+                </Grid.ColumnDefinitions>
+
+                <Border Grid.Row="0" Grid.Column="0" Background="#D6F3ED" CornerRadius="10" Margin="8">
+                    <TextBlock Text="自我滋养" FontSize="20" FontWeight="Bold" VerticalAlignment="Top" HorizontalAlignment="Left" Margin="10,10,0,0"/>
+                </Border>
+                <Border Grid.Row="0" Grid.Column="1" Background="#D6F3ED" CornerRadius="10" Margin="8">
+                    <TextBlock Text="创造表达" FontSize="20" FontWeight="Bold" VerticalAlignment="Top" HorizontalAlignment="Left" Margin="10,10,0,0"/>
+                </Border>
+                <Border Grid.Row="1" Grid.Column="0" Background="#D6F3ED" CornerRadius="10" Margin="8">
+                    <TextBlock Text="生活杂务" FontSize="20" FontWeight="Bold" VerticalAlignment="Top" HorizontalAlignment="Left" Margin="10,10,0,0"/>
+                </Border>
+                <Border Grid.Row="1" Grid.Column="1" Background="#D6F3ED" CornerRadius="10" Margin="8" RenderTransformOrigin="0.421,0.459">
+                    <TextBlock Text="人际连接" FontSize="20" FontWeight="Bold" VerticalAlignment="Top" HorizontalAlignment="Left" Margin="10,10,0,0"/>
+                </Border>
+            </Grid>
+        </StackPanel>
+
+        <!-- 右侧板块 -->
+        <StackPanel Grid.Column="1" Margin="0,20,30,1">
+            <!-- 长期备忘 -->
+            <Border Background="#D6F3ED" CornerRadius="10" Margin="0,0,0,16" Padding="16" MinHeight="200">
+                <TextBlock FontSize="20" FontWeight="Bold" Height="316" Text="                  长期备忘" />
+            </Border>
+            <!-- 本周复盘 -->
+            <Border Background="#D6F3ED" CornerRadius="10" Padding="16" MinHeight="200" Height="296">
+                <TextBlock FontSize="20" FontWeight="Bold" Height="270" ><Run Language="zh-cn" Text="                  "/><Run Text="本周复盘"/></TextBlock>
+            </Border>
+        </StackPanel>
+    </Grid>
 </ui:Page>
