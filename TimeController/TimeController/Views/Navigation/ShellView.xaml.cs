@@ -5,26 +5,35 @@ using TimeController.Views.StrongGoalMonth;
 using TimeController.Views.Review;
 using System;
 using System.Windows;
+using TimeController.Services;
 
 namespace TimeController.Views.Navigation
 {
-    public partial class ShellView : System.Windows.Controls.UserControl
+    public partial class ShellView : System.Windows.Controls.UserControl, INavigationService
     {
+
+        private readonly INavigationService _navigationService;
+
         // 预先创建页面实例
         public CasualModeView Page_CasualMode = new CasualModeView();
         public WeekView Page_WeekView = new WeekView();
         public MonthView Page_MonthView = new MonthView();
-        public ReviewView Page_Review = new ReviewView();
+        public ReviewView_everyday Page_Review;
         //public SettingsView Page_Settings = new SettingsView();
         //public AboutView Page_About = new AboutView();
 
         public ShellView()
         {
             InitializeComponent();
+            _navigationService = new NavigationService(ContentFrame);
+            Page_Review = new ReviewView_everyday(_navigationService);
             // 设置默认选中项
             NavigationView_Root.SelectedItem = NavigationViewItem_CasualMode;
+
         }
 
+
+        //导航栏
         private void NavigationView_SelectionChanged(NavigationView sender, NavigationViewSelectionChangedEventArgs args)
         {
             var item = sender.SelectedItem as NavigationViewItem;
@@ -42,7 +51,7 @@ namespace TimeController.Views.Navigation
             {
                 page = Page_MonthView;
             }
-            else if (item == NavigationViewItem_Review)
+            else if (item == NavigationViewItem_Review_everyday)
             {
                 page = Page_Review;
             }
@@ -61,5 +70,21 @@ namespace TimeController.Views.Navigation
                 ContentFrame.Navigate(page);
             }
         }
+
+        public void NavigateTo(string viewKey)
+        {
+            switch (viewKey)
+            {
+                case "Everyday":
+                    ContentFrame.Navigate(new ReviewView_everyday(this));
+                    break;
+                case "Everyweek":
+                    ContentFrame.Navigate(new ReviewView_everyweek(this));
+                    break;
+            }
+        }
+
+
+
     }
 }

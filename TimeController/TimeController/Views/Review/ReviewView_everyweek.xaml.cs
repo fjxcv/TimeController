@@ -1,5 +1,4 @@
 ﻿using System;
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -13,19 +12,21 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using TimeController.Services;
+using TimeController.ViewModels;
 using Page = iNKORE.UI.WPF.Modern.Controls.Page;
-
 
 namespace TimeController.Views.Review
 {
     /// <summary>
-    /// ReviewView.xaml 的交互逻辑
+    /// ReviewView_everyweek.xaml 的交互逻辑
     /// </summary>
-    public partial class ReviewView : Page
+    public partial class ReviewView_everyweek : Page
     {
-        public ReviewView()
+        public ReviewView_everyweek(INavigationService navService)
         {
             InitializeComponent();
+            this.DataContext = new ReviewViewModel_everyweek(navService);
         }
     }
 }

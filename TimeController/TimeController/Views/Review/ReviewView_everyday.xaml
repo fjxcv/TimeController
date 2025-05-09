@@ -1,0 +1,177 @@
+﻿<ui:Page x:Class="TimeController.Views.Review.ReviewView_everyday"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:ui="http://schemas.inkore.net/lib/ui/wpf/modern"
+        xmlns:local="clr-namespace:TimeController.Converters"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:vm="clr-namespace:TimeController.ViewModels"
+        mc:Ignorable="d" 
+        Title="ReviewView_everyday" d:DesignHeight="764" d:DesignWidth="1104">
+ 
+    <!--<ui:Page.DataContext>
+        <vm:ReviewViewModel_everyday />
+    </ui:Page.DataContext>-->
+
+
+    <Page.Resources>
+        <local:PostponeTextConverter x:Key="PostponeTextConverter"/>
+        <local:AbandonTextConverter x:Key="AbandonTextConverter"/>
+        <local:PostponeEnabledConverter x:Key="PostponeEnabledConverter"/>
+        <local:AbandonEnabledConverter x:Key="AbandonEnabledConverter"/>
+
+        <!-- 每日复盘按钮样式 -->
+        <Style x:Key="EverydayButtonStyle" TargetType="Button">
+            <Setter Property="Background" Value="White"/>
+            <Setter Property="Foreground" Value="{DynamicResource {x:Static SystemColors.ControlTextBrushKey}}"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}"
+                    CornerRadius="20"
+                    Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" 
+                                VerticalAlignment="Center"/>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding IsEverydayPage}" Value="True">
+                    <Setter Property="Background" Value="#cbf1f5"/>
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+
+
+        <!-- 本周复盘按钮样式 -->
+        <Style x:Key="EveryweekButtonStyle" TargetType="Button">
+            <Setter Property="Background" Value="White"/>
+            <Setter Property="Foreground" Value="{DynamicResource {x:Static SystemColors.ControlTextBrushKey}}"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}"
+                    CornerRadius="20"
+                    Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" 
+                                VerticalAlignment="Center"/>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding IsEverydayPage}" Value="False">
+                    <Setter Property="Background" Value="#cbf1f5"/>
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+    </Page.Resources>
+
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="88"/>
+            <RowDefinition Height="50"/>
+            <RowDefinition Height="auto"/>
+        </Grid.RowDefinitions>
+        <StackPanel Orientation="Horizontal" Grid.Row="0">
+            <TextBlock Text="强目标模式" 
+        HorizontalAlignment="Left" 
+        VerticalAlignment="Top" 
+        FontSize="40" 
+        FontWeight="Bold" 
+        Foreground="{DynamicResource {x:Static SystemColors.ControlTextBrushKey}}" 
+        Margin="20,20,600,0"/>
+            <Button x:Name="Button1" 
+            Command="{Binding NavigateToEverydayCommand}" 
+            Content="每日复盘" 
+            IsEnabled="True" 
+            Padding="10" 
+            FontSize="24" 
+            Margin="0,0,20,0"
+            Style="{StaticResource EverydayButtonStyle}" Height="50"/>
+            <Button x:Name="Button2" 
+            Command="{Binding NavigateToEveryweekCommand}" 
+            Content="本周复盘" 
+            IsEnabled="True" 
+            Padding="10" 
+            FontSize="24"
+            Style="{StaticResource EveryweekButtonStyle}" Height="50"/>
+        </StackPanel>
+
+        <StackPanel Grid.Row="1" HorizontalAlignment="Center">
+            <DatePicker x:Name="datePicker" IsEnabled="True"
+            ui:ControlHelper.Header=""
+            ui:ControlHelper.PlaceholderText=""
+            ui:ControlHelper.Description=""
+            IsTodayHighlighted="True" IsDropDownOpen="False" Height="50" 
+            FontFamily="Yu Gothic UI Semibold" FontSize="18" FontWeight="Bold"
+            SelectedDate="{Binding SelectedDate}"            />
+        </StackPanel>
+
+        <Border Grid.Row="2" Padding="10" Margin="20,0,20,10">
+
+            <StackPanel>
+                <!--标题-->
+                <TextBlock  Text="今日任务" FontSize="40" FontWeight="Bold" HorizontalAlignment="Center"
+                   Margin="0,0,0,10"/>
+
+                <!--分栏区域-->
+
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+
+                    <!--左列：已完成任务-->
+                    <StackPanel Grid.Column="0" Margin="0">
+                        <TextBlock Text="已完成" FontSize="25" FontWeight="Bold" HorizontalAlignment="Center"/>
+
+                        <ItemsControl ItemsSource="{Binding CompletedTasks}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <TextBlock Text="{Binding Name}" Margin="0,10" FontSize="24"/>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </StackPanel>
+
+                    <!--右列：未完成任务-->
+                    <StackPanel Grid.Column="1">
+                        <TextBlock Text="未完成" FontSize="25" FontWeight="Bold" HorizontalAlignment="Center"/>
+                        <ItemsControl ItemsSource="{Binding UncompletedTasks}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <StackPanel Orientation="Horizontal" Margin="0,5">
+                                        <TextBlock Text="{Binding Name}" Width="250" VerticalAlignment="Center" FontSize="24"/>
+
+                                        <!-- 推迟按钮 -->
+                                        <Button Content="{Binding Status, Converter={StaticResource PostponeTextConverter}}"
+                                        IsEnabled="{Binding Status, Converter={StaticResource PostponeEnabledConverter}}"
+                                        Margin="10,0" Padding="10" FontSize="20"
+                                        Click="PostponeButton_Click"/>
+
+
+
+                                        <!-- 放弃按钮 -->
+                                        <Button Content="{Binding Status, Converter={StaticResource AbandonTextConverter}}"
+                                        IsEnabled="{Binding Status, Converter={StaticResource AbandonEnabledConverter}}"
+                                        Margin="0,0" Padding="10" FontSize="20"
+                                        Click="AbandonButton_Click"/>
+
+
+
+                                    </StackPanel>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </StackPanel>
+
+
+                </Grid>
+            </StackPanel>
+        </Border>
+    </Grid>
+</ui:Page>

@@ -8,26 +8,20 @@ using System.Windows.Input;
 
 namespace TimeController.Models
 {
-    public class RelayCommand<T> : ICommand
+    public class RelayCommand : ICommand
     {
-        private readonly Action<T> _execute;
-        private readonly Func<T, bool>? _canExecute;
+        private readonly Action<object?> _execute;
+        private readonly Func<object?, bool>? _canExecute;
 
-        public RelayCommand(Action<T> execute, Func<T, bool>? canExecute = null)
+        public RelayCommand(Action<object?> execute, Func<object?, bool>? canExecute = null)
         {
-            _execute = execute ?? throw new ArgumentNullException(nameof(execute));
+            _execute = execute;
             _canExecute = canExecute;
         }
 
-        public bool CanExecute(object? parameter)
-        {
-            return _canExecute?.Invoke((T)parameter!) ?? true;
-        }
+        public bool CanExecute(object? parameter) => _canExecute?.Invoke(parameter) ?? true;
 
-        public void Execute(object? parameter)
-        {
-            _execute((T)parameter!);
-        }
+        public void Execute(object? parameter) => _execute(parameter);
 
         public event EventHandler? CanExecuteChanged
         {

@@ -16,7 +16,6 @@
 
   <ItemGroup>
     <Folder Include="Views\Components\" />
-    <Folder Include="Services\" />
     <Folder Include="Styles\" />
     <Folder Include="Assets\" />
   </ItemGroup>

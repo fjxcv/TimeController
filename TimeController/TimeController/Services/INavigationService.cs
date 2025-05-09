@@ -4,9 +4,11 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace TimeController.ViewModels
+namespace TimeController.Services
 {
-    internal class ReviewViewModel
+    public interface INavigationService
     {
+        void NavigateTo(string viewName);
     }
+
 }
