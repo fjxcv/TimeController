@@ -5,12 +5,25 @@
       xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
       xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
       xmlns:local="clr-namespace:TimeController.Views.Review"
+      xmlns:lvc="clr-namespace:LiveChartsCore.SkiaSharpView.WPF;assembly=LiveChartsCore.SkiaSharpView.WPF"
       mc:Ignorable="d" 
       d:DesignHeight="764" d:DesignWidth="1104"
       Title="ReviewView_everyweek">
 
 
     <Page.Resources>
+
+        <!-- 复盘卡片样式 -->
+        <Style x:Key="CardStyle" TargetType="Border">
+            <Setter Property="Background" Value="White"/>
+            <Setter Property="CornerRadius" Value="5"/>
+            <Setter Property="Padding" Value="10"/>
+            <Setter Property="Margin" Value="10"/>
+            <Setter Property="BorderBrush" Value="#DDDDDD"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Height" Value="166"/>
+        </Style>
+
         <!-- 每日复盘按钮样式 -->
         <Style x:Key="EverydayButtonStyle" TargetType="Button">
             <Setter Property="Background" Value="White"/>
@@ -57,12 +70,23 @@
                 </DataTrigger>
             </Style.Triggers>
         </Style>
+
+        <!--滚动卡片-->
+        <Style x:Key="ListItemBorderStyle" TargetType="Border">
+            <Setter Property="Background" Value="#F5F5F5"/>
+            <Setter Property="CornerRadius" Value="5"/>
+            <Setter Property="Padding" Value="5,8"/>
+            <Setter Property="Margin" Value="0,6"/>
+            <Setter Property="BorderBrush" Value="#CCCCCC"/>
+            <Setter Property="BorderThickness" Value="1"/>
+        </Style>
         
     </Page.Resources>
-    
+
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="88"/>
+            <RowDefinition Height="66"/>
             <RowDefinition Height="auto"/>
         </Grid.RowDefinitions>
 
@@ -90,5 +114,87 @@
                     FontSize="24"
                     Style="{StaticResource EveryweekButtonStyle}" Height="50"/>
         </StackPanel>
+
+        <StackPanel Grid.Row="1" Orientation="Horizontal" VerticalAlignment="Center" HorizontalAlignment="Right" Width="1104">
+
+            <!-- 当前月份 -->
+            <TextBlock Text="{Binding CurrentMonthText}" FontWeight="Bold" FontSize="28" Margin="345,0,40,0"/>
+
+            <!-- 中间部分带背景、圆角 -->
+            <Border CornerRadius="15" Padding="10,5" Background="#80AAAAAA">
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                    <Button Content="&lt;" Command="{Binding PreviousWeekCommand}" Margin="5,0"/>
+                    <TextBlock Text="{Binding CurrentWeekText}" FontWeight="Bold" Margin="10,0" FontSize="24"/>
+                    <Button Content="&gt;" Command="{Binding NextWeekCommand}" Margin="5,0"/>
+                </StackPanel>
+            </Border>
+
+        </StackPanel>
+
+        <Grid Grid.Row="2" Margin="20,10,20,20">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="3*"/>
+                <ColumnDefinition Width="2*"/>
+            </Grid.ColumnDefinitions>
+
+            <!-- 卡片区域 -->
+            <UniformGrid Rows="3" Columns="2" Grid.Column="0" Margin="0,0,20,0">
+                <Border Style="{StaticResource CardStyle}">
+                    <TextBlock Text="{Binding Card1Text}" TextWrapping="Wrap" FontSize="18"/>
+                </Border>
+                <Border Style="{StaticResource CardStyle}">
+                    <TextBlock Text="{Binding Card2Text}" TextWrapping="Wrap" FontSize="18"/>
+                </Border>
+                <Border Style="{StaticResource CardStyle}">
+                    <TextBlock Text="{Binding Card3Text}" TextWrapping="Wrap" FontSize="18"/>
+                </Border>
+                <Border Style="{StaticResource CardStyle}">
+                    <TextBlock Text="{Binding Card4Text}" TextWrapping="Wrap" FontSize="18"/>
+                </Border>
+                <Border Style="{StaticResource CardStyle}">
+                    <TextBlock Text="{Binding Card5Text}" TextWrapping="Wrap" FontSize="18"/>
+                </Border>
+                <Border Style="{StaticResource CardStyle}">
+                    <TextBlock Text="{Binding Card6Text}" TextWrapping="Wrap" FontSize="18"/>
+                </Border>
+            </UniformGrid>
+
+            <Grid Grid.Column="1">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+                <!-- 折线图 -->
+                <lvc:CartesianChart
+                    Series="{Binding Series}" 
+                    XAxes="{Binding XAxes}" 
+                    YAxes="{Binding YAxes}"
+                    TooltipTextPaint="{Binding TooltipTextPaint}"
+                    Height="300" Margin="0,0,0,10" Grid.Row="0"/>
+
+                <StackPanel  Grid.Row="1">
+                <TextBlock Text="本周被推迟/放弃的任务" FontWeight="Bold" FontSize="24" HorizontalAlignment="Center" Margin="0,0,0,10"/>
+                
+                    <!-- 滚动列表 -->
+                <ScrollViewer VerticalScrollBarVisibility="Auto" Height="200">
+                    <ItemsControl ItemsSource="{Binding SkippedTasks}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                    <Border Style="{StaticResource ListItemBorderStyle}">
+                                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Stretch">
+                                        <TextBlock Text="{Binding Name}" Width="200" FontSize="18" Margin="20,0,0,0"/>
+                                        <TextBlock Text="{Binding Status}" Margin="100,0,0,0" HorizontalAlignment="Right" FontSize="18"/>
+                                    </StackPanel>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </ScrollViewer>
+                </StackPanel>
+                
+            </Grid>
+
+        </Grid>
+
     </Grid>
 </ui:Page>

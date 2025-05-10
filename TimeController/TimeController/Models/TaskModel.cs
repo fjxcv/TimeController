@@ -6,7 +6,10 @@ using System.Threading.Tasks;
 
 namespace TimeController.Models
 {
-    internal class TaskModel
+    public class TaskItem
     {
+        public string Name { get; set; }
+        public string Status { get; set; } // 推迟 / 放弃
     }
+
 }

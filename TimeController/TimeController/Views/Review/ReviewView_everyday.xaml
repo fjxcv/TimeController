@@ -126,7 +126,7 @@
                     </Grid.ColumnDefinitions>
 
                     <!--左列：已完成任务-->
-                    <StackPanel Grid.Column="0" Margin="0">
+                    <StackPanel Grid.Column="0" Margin="0,0,150,0" >
                         <TextBlock Text="已完成" FontSize="25" FontWeight="Bold" HorizontalAlignment="Center"/>
 
                         <ItemsControl ItemsSource="{Binding CompletedTasks}">
