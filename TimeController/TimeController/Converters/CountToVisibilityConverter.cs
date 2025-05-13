@@ -1,23 +1,23 @@
 ﻿using System;
-using System.Globalization;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.Windows;
 using System.Windows.Data;
-using TimeController.ViewModels;
+using System.Globalization;
 
 namespace TimeController.Converters
 {
-    public class AbandonTextConverter : IValueConverter
+    public class CountToVisibilityConverter : IValueConverter
     {
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
-            if (value is MyTaskStatus status)
+            if (value is int count)
             {
-                if (status == MyTaskStatus.Abandoned)
-                {
-                    return "已放弃";
-                }
-                return "放弃";
+                return count > 0 ? Visibility.Visible : Visibility.Collapsed;
             }
-            return "放弃";
+            return Visibility.Collapsed;
         }
 
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)

@@ -14,11 +14,13 @@
     </ui:Page.DataContext>-->
 
 
-    <Page.Resources>
+    <ui:Page.Resources>
         <local:PostponeTextConverter x:Key="PostponeTextConverter"/>
         <local:AbandonTextConverter x:Key="AbandonTextConverter"/>
         <local:PostponeEnabledConverter x:Key="PostponeEnabledConverter"/>
         <local:AbandonEnabledConverter x:Key="AbandonEnabledConverter"/>
+        <local:BoolToTimeTextConverter x:Key="BoolToTimeTextConverter"/>
+        <local:CountToVisibilityConverter x:Key="CountToVisibilityConverter"/>
 
         <!-- 每日复盘按钮样式 -->
         <Style x:Key="EverydayButtonStyle" TargetType="Button">
@@ -66,112 +68,211 @@
                 </DataTrigger>
             </Style.Triggers>
         </Style>
-    </Page.Resources>
+    </ui:Page.Resources>
 
 
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="88"/>
             <RowDefinition Height="50"/>
-            <RowDefinition Height="auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
+
+        <!-- 顶部标题和按钮 -->
         <StackPanel Orientation="Horizontal" Grid.Row="0">
             <TextBlock Text="强目标模式" 
-        HorizontalAlignment="Left" 
-        VerticalAlignment="Top" 
-        FontSize="40" 
-        FontWeight="Bold" 
-        Foreground="{DynamicResource {x:Static SystemColors.ControlTextBrushKey}}" 
-        Margin="20,20,600,0"/>
+                      HorizontalAlignment="Left" 
+                      VerticalAlignment="Top" 
+                      FontSize="40" 
+                      FontWeight="Bold" 
+                      Foreground="{DynamicResource {x:Static SystemColors.ControlTextBrushKey}}" 
+                      Margin="20,20,600,0"/>
             <Button x:Name="Button1" 
-            Command="{Binding NavigateToEverydayCommand}" 
-            Content="每日复盘" 
-            IsEnabled="True" 
-            Padding="10" 
-            FontSize="24" 
-            Margin="0,0,20,0"
-            Style="{StaticResource EverydayButtonStyle}" Height="50"/>
+                    Command="{Binding NavigateToEverydayCommand}" 
+                    Content="每日复盘" 
+                    IsEnabled="True" 
+                    Padding="10" 
+                    FontSize="24" 
+                    Margin="0,0,20,0"
+                    Style="{StaticResource EverydayButtonStyle}" 
+                    Height="50"/>
             <Button x:Name="Button2" 
-            Command="{Binding NavigateToEveryweekCommand}" 
-            Content="本周复盘" 
-            IsEnabled="True" 
-            Padding="10" 
-            FontSize="24"
-            Style="{StaticResource EveryweekButtonStyle}" Height="50"/>
+                    Command="{Binding NavigateToEveryweekCommand}" 
+                    Content="本周复盘" 
+                    IsEnabled="True" 
+                    Padding="10" 
+                    FontSize="24"
+                    Style="{StaticResource EveryweekButtonStyle}" 
+                    Height="50"/>
         </StackPanel>
 
+        <!-- 日期选择器 -->
         <StackPanel Grid.Row="1" HorizontalAlignment="Center">
-            <DatePicker x:Name="datePicker" IsEnabled="True"
-            ui:ControlHelper.Header=""
-            ui:ControlHelper.PlaceholderText=""
-            ui:ControlHelper.Description=""
-            IsTodayHighlighted="True" IsDropDownOpen="False" Height="50" 
-            FontFamily="Yu Gothic UI Semibold" FontSize="18" FontWeight="Bold"
-            SelectedDate="{Binding SelectedDate}"            />
+            <DatePicker x:Name="datePicker" 
+                       IsEnabled="True"
+                       ui:ControlHelper.Header=""
+                       ui:ControlHelper.PlaceholderText=""
+                       ui:ControlHelper.Description=""
+                       IsTodayHighlighted="True" 
+                       IsDropDownOpen="False" 
+                       Height="50" 
+                       FontFamily="Yu Gothic UI Semibold" 
+                       FontSize="18" 
+                       FontWeight="Bold"
+                       SelectedDate="{Binding SelectedDate}"/>
         </StackPanel>
 
-        <Border Grid.Row="2" Padding="10" Margin="20,0,20,10">
+        <!-- 主要内容区域 -->
+        <Grid Grid.Row="2" Margin="20,10,20,20">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="300"/>
+            </Grid.ColumnDefinitions>
 
-            <StackPanel>
-                <!--标题-->
-                <TextBlock  Text="今日任务" FontSize="40" FontWeight="Bold" HorizontalAlignment="Center"
-                   Margin="0,0,0,10"/>
+            <!-- 左侧今日任务区域 -->
+            <Grid Grid.Column="0">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
 
-                <!--分栏区域-->
+                <TextBlock Text="今日任务" 
+                          FontSize="30" 
+                          FontWeight="Bold" 
+                          HorizontalAlignment="Center"
+                          Margin="0,0,0,10"/>
 
-                <Grid>
+                <Grid Grid.Row="1">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*"/>
                         <ColumnDefinition Width="*"/>
                     </Grid.ColumnDefinitions>
 
-                    <!--左列：已完成任务-->
-                    <StackPanel Grid.Column="0" Margin="0,0,150,0" >
-                        <TextBlock Text="已完成" FontSize="25" FontWeight="Bold" HorizontalAlignment="Center"/>
-
+                    <!-- 已完成任务 -->
+                    <StackPanel Grid.Column="0" Margin="0,0,10,0">
+                        <TextBlock Text="✔ 已完成" 
+                                 FontSize="24" 
+                                 FontWeight="Bold" 
+                                 HorizontalAlignment="Center"
+                                 Margin="0,0,0,10"/>
                         <ItemsControl ItemsSource="{Binding CompletedTasks}">
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate>
-                                    <TextBlock Text="{Binding Name}" Margin="0,10" FontSize="24"/>
+                                    <Border Background="#F5F5F5" 
+                                            CornerRadius="8" 
+                                            Padding="10" 
+                                            Margin="0,5">
+                                        <TextBlock Text="{Binding Name}" 
+                                                 FontSize="18"/>
+                                    </Border>
                                 </DataTemplate>
                             </ItemsControl.ItemTemplate>
                         </ItemsControl>
                     </StackPanel>
 
-                    <!--右列：未完成任务-->
-                    <StackPanel Grid.Column="1">
-                        <TextBlock Text="未完成" FontSize="25" FontWeight="Bold" HorizontalAlignment="Center"/>
+                    <!-- 未完成任务 -->
+                    <StackPanel Grid.Column="1" Margin="10,0,0,0">
+                        <TextBlock Text="❌ 未完成" 
+                                 FontSize="24" 
+                                 FontWeight="Bold" 
+                                 HorizontalAlignment="Center"
+                                 Margin="0,0,0,10"/>
                         <ItemsControl ItemsSource="{Binding UncompletedTasks}">
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate>
-                                    <StackPanel Orientation="Horizontal" Margin="0,5">
-                                        <TextBlock Text="{Binding Name}" Width="250" VerticalAlignment="Center" FontSize="24"/>
-
-                                        <!-- 推迟按钮 -->
-                                        <Button Content="{Binding Status, Converter={StaticResource PostponeTextConverter}}"
-                                        IsEnabled="{Binding Status, Converter={StaticResource PostponeEnabledConverter}}"
-                                        Margin="10,0" Padding="10" FontSize="20"
-                                        Click="PostponeButton_Click"/>
-
-
-
-                                        <!-- 放弃按钮 -->
-                                        <Button Content="{Binding Status, Converter={StaticResource AbandonTextConverter}}"
-                                        IsEnabled="{Binding Status, Converter={StaticResource AbandonEnabledConverter}}"
-                                        Margin="0,0" Padding="10" FontSize="20"
-                                        Click="AbandonButton_Click"/>
-
-
-
-                                    </StackPanel>
+                                    <Border Background="#F5F5F5" 
+                                            CornerRadius="8" 
+                                            Padding="10" 
+                                            Margin="0,5">
+                                        <TextBlock Text="{Binding Name}" 
+                                                 FontSize="18"/>
+                                    </Border>
                                 </DataTemplate>
                             </ItemsControl.ItemTemplate>
                         </ItemsControl>
                     </StackPanel>
-
-
                 </Grid>
-            </StackPanel>
+            </Grid>
+
+            <!-- 右侧未处理任务区域 -->
+            <Grid Grid.Column="1" Margin="20,0,0,0">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+
+                <TextBlock Text="{Binding PendingTasksCount, StringFormat='⏰ 等待处理的任务（共 {0} 项）'}" 
+                          FontSize="20" 
+                          FontWeight="Bold" 
+                          HorizontalAlignment="Center"
+                          Margin="0,0,0,10"/>
+
+                <ScrollViewer Grid.Row="1">
+                    <ItemsControl ItemsSource="{Binding PendingTasks}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Border Background="#F5F5F5" 
+                                        CornerRadius="8" 
+                                        Padding="15" 
+                                        Margin="0,5">
+                                    <Grid>
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="Auto"/>
+                                            <RowDefinition Height="Auto"/>
+                                            <RowDefinition Height="Auto"/>
+                                            <RowDefinition Height="Auto"/>
+                                        </Grid.RowDefinitions>
+
+                                        <TextBlock Grid.Row="0" 
+                                                 Text="{Binding PlannedDate, StringFormat='🗓 {0:yyyy-MM-dd}'}" 
+                                                 FontSize="14" 
+                                                 Margin="0,0,0,5"/>
+
+                                        <TextBlock Grid.Row="1" 
+                                                 Text="{Binding Name}" 
+                                                 FontSize="18" 
+                                                 FontWeight="Bold" 
+                                                 Margin="0,0,0,5"/>
+
+                                        <TextBlock Grid.Row="2" 
+                                                 Text="{Binding IsAllDay, Converter={StaticResource BoolToTimeTextConverter}}" 
+                                                 FontSize="14" 
+                                                 Margin="0,0,0,10"/>
+
+                                        <StackPanel Grid.Row="3" 
+                                                  Orientation="Horizontal" 
+                                                  HorizontalAlignment="Right">
+                                            <Button Content="{Binding Status, Converter={StaticResource PostponeTextConverter}}"  
+                                                    Click="PostponeButton_Click"
+                                                    IsEnabled="{Binding Status, Converter={StaticResource PostponeEnabledConverter}}"
+                                                    Margin="0,0,10,0"
+                                                    />
+                                            <Button Content="{Binding Status, Converter={StaticResource AbandonTextConverter}}"  
+                                                    Click="AbandonButton_Click"
+                                                    IsEnabled="{Binding Status, Converter={StaticResource AbandonEnabledConverter}}"
+                                                    />
+                                        </StackPanel>
+                                    </Grid>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </ScrollViewer>
+            </Grid>
+        </Grid>
+
+        <!-- 底部提示栏 -->
+        <Border Grid.Row="3" 
+                Background="#FFF3CD" 
+                BorderBrush="#FFEEBA" 
+                BorderThickness="1" 
+                CornerRadius="4" 
+                Margin="20,0,20,20" 
+                Padding="15"
+                Visibility="{Binding PendingTasksCount, Converter={StaticResource CountToVisibilityConverter}}">
+            <TextBlock Text="{Binding PendingTasksCount, StringFormat='🎯 你还有 {0} 项过期任务未处理，建议尽快处理以保持计划清晰~'}" 
+                      FontSize="16"/>
         </Border>
     </Grid>
 </ui:Page>

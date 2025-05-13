@@ -4,16 +4,21 @@ using System.Windows.Data;
 using TimeController.ViewModels;
 
 namespace TimeController.Converters
-{ 
-public class AbandonEnabledConverter : IValueConverter
 {
-    public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+    public class AbandonEnabledConverter : IValueConverter
     {
-        return (ReviewStatus)value == ReviewStatus.None;
+        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            if (value is MyTaskStatus status)
+            {
+                return status == MyTaskStatus.Pending;
+            }
+            return false;
+        }
+
+        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            throw new NotImplementedException();
+        }
     }
-
-    public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
-        => throw new NotImplementedException();
-}
-
 }

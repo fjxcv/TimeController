@@ -9,13 +9,20 @@ namespace TimeController.Converters
     {
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
-            if ((ReviewStatus)value == ReviewStatus.Postponed)
-                return "已推迟";
+            if (value is MyTaskStatus status)
+            {
+                if (status == MyTaskStatus.Postponed)
+                {
+                    return "已推迟";
+                }
+                return "推迟";
+            }
             return "推迟";
         }
 
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
-            => throw new NotImplementedException();
+        {
+            throw new NotImplementedException();
+        }
     }
-
 }

@@ -4,8 +4,242 @@
         xmlns:ui="http://schemas.inkore.net/lib/ui/wpf/modern"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-        xmlns:local="clr-namespace:TimeController.Views.CasualMode"
         mc:Ignorable="d" 
-        Title="" d:DesignHeight="800" d:DesignWidth="1104">
+         Title="" d:DesignHeight="800" d:DesignWidth="1104"
+         MinHeight="600" MinWidth="800">
 
+
+    <ui:Page.Resources>
+        <!-- 布尔值到可见性的转换器 -->
+        <BooleanToVisibilityConverter x:Key="BoolToVisibility"/>
+
+        <!-- 按钮样式 -->
+        <Style x:Key="IconButtonStyle" TargetType="Button">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Padding" Value="8"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}">
+                            <Border.Effect>
+                                <DropShadowEffect BlurRadius="4" ShadowDepth="0" Color="#20000000"/>
+                            </Border.Effect>
+                            <ContentPresenter HorizontalAlignment="Center" 
+                                            VerticalAlignment="Center"/>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Background" Value="#20000000"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+    </ui:Page.Resources>
+
+    <Grid Margin="0">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="4*" MinWidth="400"/>
+            <ColumnDefinition Width="2*" MinWidth="300"/>
+        </Grid.ColumnDefinitions>
+
+        <!-- 左侧主板块 -->
+        <StackPanel Grid.Column="0" Margin="30,20,20,20">
+            <!-- 顶部进度条区域 -->
+            <StackPanel Orientation="Horizontal" VerticalAlignment="Top" Margin="0,0,0,20">
+                <TextBlock Text="本周进度" FontSize="18" FontWeight="Bold" VerticalAlignment="Center"/>
+                <ProgressBar Width="Auto" MinWidth="200" Height="16" Margin="16,0,8,0" VerticalAlignment="Center" Value="{Binding Progress}"/>
+                <Button Content="奖" Width="36" Height="28" Margin="0,0,0,0" VerticalAlignment="Center" Style="{StaticResource IconButtonStyle}"/>
+            </StackPanel>
+
+            <!-- 四个模块 2x2 -->
+            <Grid Margin="0,0,0,0" Height="622">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="*" MinHeight="150"/>
+                    <RowDefinition Height="*" MinHeight="150"/>
+                </Grid.RowDefinitions>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" MinWidth="200"/>
+                    <ColumnDefinition Width="*" MinWidth="200"/>
+                </Grid.ColumnDefinitions>
+
+                <!-- 自我滋养 -->
+                <Border Grid.Row="0" Grid.Column="0" Background="#D6F3ED" Margin="8" MouseDown="SelfNourishBorder_MouseDown">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                        </Grid.RowDefinitions>
+                        <TextBlock Text="自我滋养" FontSize="20" FontWeight="Bold" VerticalAlignment="Top" HorizontalAlignment="Left" Margin="10,10,0,0"/>
+                        <!-- 任务列表 -->
+                        <ListView Grid.Row="1" ItemsSource="{Binding Modules[0].Tasks}" Margin="10,40,10,50" Background="Transparent" BorderThickness="0">
+                            <ListView.ItemTemplate>
+                                <DataTemplate>
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="30"/>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        <CheckBox Grid.Column="0" 
+                                                  IsChecked="{Binding IsCompleted, Mode=TwoWay}" 
+                                                  VerticalAlignment="Center"/>
+                                        <TextBlock Grid.Column="1" Text="{Binding Name}" Margin="0,0,0,0" VerticalAlignment="Center">
+                                            <TextBlock.Style>
+                                                <Style TargetType="TextBlock">
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding IsCompleted}" Value="True">
+                                                            <Setter Property="TextDecorations" Value="Strikethrough"/>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </TextBlock.Style>
+                                        </TextBlock>
+                                        <Button Grid.Column="2" Content="×" Width="20" Height="20" Margin="10,0,0,0"
+                                            Command="{Binding DataContext.DeleteTaskCommand, RelativeSource={RelativeSource AncestorType=ui:Page}}"
+                                            CommandParameter="{Binding}">
+                                            <Button.Style>
+                                                <Style TargetType="Button" BasedOn="{StaticResource IconButtonStyle}">
+                                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                                    <Setter Property="FontSize" Value="18"/>
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding IsMouseOver, RelativeSource={RelativeSource AncestorType=ListViewItem}}" Value="True">
+                                                            <Setter Property="Visibility" Value="Visible"/>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </Button.Style>
+                                        </Button>
+                                    </Grid>
+                                </DataTemplate>
+                            </ListView.ItemTemplate>
+                        </ListView>
+                        <!-- 新任务输入框（可见性绑定） -->
+                        <Grid Grid.Row="1" Margin="10,0,10,10" VerticalAlignment="Bottom" Visibility="{Binding Modules[0].IsInputVisible, Converter={StaticResource BoolToVisibility}}">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBox Text="{Binding Modules[0].NewTaskText, UpdateSourceTrigger=PropertyChanged}"
+                                     KeyDown="NewTaskTextBox_KeyDown"
+                                     Tag="{Binding Modules[0]}"
+                                     Margin="0,0,5,0"/>
+                            <Button Grid.Column="1" Content="×" Width="20" Height="20" FontSize="18" Margin="0,0,0,5"
+                                    Click="SelfNourishInputCancel_Click"
+                                    Style="{StaticResource IconButtonStyle}"/>
+                        </Grid>
+                    </Grid>
+                </Border>
+
+                <!-- 创造表达 -->
+                <Border Grid.Row="0" Grid.Column="1" Background="#D6F3ED" Margin="8">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                        </Grid.RowDefinitions>
+                        <TextBlock Text="创造表达" FontSize="20" FontWeight="Bold" VerticalAlignment="Top" HorizontalAlignment="Left" Margin="10,10,0,0"/>
+                        <ListView Grid.Row="1" ItemsSource="{Binding Modules[1].Tasks}" Margin="10,40,10,10" Background="Transparent" BorderThickness="0">
+                            <ListView.ItemTemplate>
+                                <DataTemplate>
+                                    <StackPanel Orientation="Horizontal" Margin="0,5">
+                                        <CheckBox IsChecked="{Binding IsCompleted}" Command="{Binding DataContext.ToggleTaskCommand, RelativeSource={RelativeSource AncestorType=ui:Page}}" CommandParameter="{Binding}" VerticalAlignment="Center"/>
+                                        <TextBlock Text="{Binding Name}" Margin="5,0,0,0" VerticalAlignment="Center">
+                                            <TextBlock.Style>
+                                                <Style TargetType="TextBlock">
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding IsCompleted}" Value="True">
+                                                            <Setter Property="TextDecorations" Value="Strikethrough"/>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </TextBlock.Style>
+                                        </TextBlock>
+                                    </StackPanel>
+                                </DataTemplate>
+                            </ListView.ItemTemplate>
+                        </ListView>
+                    </Grid>
+                </Border>
+
+                <!-- 生活杂务 -->
+                <Border Grid.Row="1" Grid.Column="0" Background="#D6F3ED" Margin="8">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                        </Grid.RowDefinitions>
+                        <TextBlock Text="生活杂务" FontSize="20" FontWeight="Bold" VerticalAlignment="Top" HorizontalAlignment="Left" Margin="10,10,0,0"/>
+                        <ListView Grid.Row="1" ItemsSource="{Binding Modules[2].Tasks}" Margin="10,40,10,10" Background="Transparent" BorderThickness="0">
+                            <ListView.ItemTemplate>
+                                <DataTemplate>
+                                    <StackPanel Orientation="Horizontal" Margin="0,5">
+                                        <CheckBox IsChecked="{Binding IsCompleted}" Command="{Binding DataContext.ToggleTaskCommand, RelativeSource={RelativeSource AncestorType=ui:Page}}" CommandParameter="{Binding}" VerticalAlignment="Center"/>
+                                        <TextBlock Text="{Binding Name}" Margin="5,0,0,0" VerticalAlignment="Center">
+                                            <TextBlock.Style>
+                                                <Style TargetType="TextBlock">
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding IsCompleted}" Value="True">
+                                                            <Setter Property="TextDecorations" Value="Strikethrough"/>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </TextBlock.Style>
+                                        </TextBlock>
+                                    </StackPanel>
+                                </DataTemplate>
+                            </ListView.ItemTemplate>
+                        </ListView>
+                    </Grid>
+                </Border>
+
+                <!-- 人际连接 -->
+                <Border Grid.Row="1" Grid.Column="1" Background="#D6F3ED" Margin="8">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                        </Grid.RowDefinitions>
+                        <TextBlock Text="人际连接" FontSize="20" FontWeight="Bold" VerticalAlignment="Top" HorizontalAlignment="Left" Margin="10,10,0,0"/>
+                        <ListView Grid.Row="1" ItemsSource="{Binding Modules[3].Tasks}" Margin="10,40,10,10" Background="Transparent" BorderThickness="0">
+                            <ListView.ItemTemplate>
+                                <DataTemplate>
+                                    <StackPanel Orientation="Horizontal" Margin="0,5">
+                                        <CheckBox IsChecked="{Binding IsCompleted}" Command="{Binding DataContext.ToggleTaskCommand, RelativeSource={RelativeSource AncestorType=ui:Page}}" CommandParameter="{Binding}" VerticalAlignment="Center"/>
+                                        <TextBlock Text="{Binding Name}" Margin="5,0,0,0" VerticalAlignment="Center">
+                                            <TextBlock.Style>
+                                                <Style TargetType="TextBlock">
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding IsCompleted}" Value="True">
+                                                            <Setter Property="TextDecorations" Value="Strikethrough"/>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </TextBlock.Style>
+                                        </TextBlock>
+                                    </StackPanel>
+                                </DataTemplate>
+                            </ListView.ItemTemplate>
+                        </ListView>
+                    </Grid>
+                </Border>
+            </Grid>
+        </StackPanel>
+
+        <!-- 右侧板块 -->
+        <StackPanel Grid.Column="1" Margin="0,20,30,20">
+            <!-- 长期备忘 -->
+            <Border Background="#D6F3ED" Margin="0,0,0,16" Padding="16" MinHeight="200" Height="352">
+                <TextBlock FontSize="20" FontWeight="Bold" ><Run Text="&#x9;     "/><Run Language="zh-cn" Text=" "/><Run Text="长期备忘"/></TextBlock>
+            </Border>
+            <!-- 本周复盘 -->
+            <Border Background="#D6F3ED" Padding="16" MinHeight="200">
+                <TextBlock FontSize="20" FontWeight="Bold" Height="255" Text="&#x9;      本周复盘" />
+            </Border>
+        </StackPanel>
+    </Grid>
 </ui:Page>

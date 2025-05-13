@@ -1,23 +1,22 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
 using System.Globalization;
 using System.Windows.Data;
-using TimeController.ViewModels;
 
 namespace TimeController.Converters
 {
-    public class AbandonTextConverter : IValueConverter
+    public class BoolToTimeTextConverter : IValueConverter
     {
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
-            if (value is MyTaskStatus status)
+            if (value is bool isAllDay)
             {
-                if (status == MyTaskStatus.Abandoned)
-                {
-                    return "已放弃";
-                }
-                return "放弃";
+                return isAllDay ? "⏱ 全天" : "⏱ 时间段";
             }
-            return "放弃";
+            return "⏱ 未设置时间";
         }
 
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
