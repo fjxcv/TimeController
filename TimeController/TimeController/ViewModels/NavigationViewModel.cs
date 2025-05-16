@@ -37,7 +37,7 @@ namespace TimeController.ViewModels
                     "CasualMode" => new CasualModeView(),
                     "MonthView" => new MonthView(),
                     "WeekView" => new WeekView(),
-                    "Review" => new ReviewView_everyday(_navigationService),
+                    "Review" => new ReviewView_everyday(),
                     //"settings" => 
                     //"about" => 
                     _ => new CasualModeView()

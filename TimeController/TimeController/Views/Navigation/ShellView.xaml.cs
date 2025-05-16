@@ -6,27 +6,34 @@ using TimeController.Views.Review;
 using System;
 using System.Windows;
 using TimeController.Services;
+using TimeController.Helpers;
+using Microsoft.Extensions.DependencyInjection;
+using TimeController.ViewModels;
+using MessageBox = iNKORE.UI.WPF.Modern.Controls.MessageBox;
 
 namespace TimeController.Views.Navigation
 {
-    public partial class ShellView : System.Windows.Controls.UserControl, INavigationService
+    public partial class ShellView : System.Windows.Controls.UserControl
     {
 
-        private readonly INavigationService _navigationService;
+        //private readonly INavigationService _navigationService;
 
         // 预先创建页面实例
         public CasualModeView Page_CasualMode = new CasualModeView();
         public WeekView Page_WeekView = new WeekView();
         public MonthView Page_MonthView = new MonthView();
-        public ReviewView_everyday Page_Review;
+        //public ReviewView_everyday Page_Review;
         //public SettingsView Page_Settings = new SettingsView();
         //public AboutView Page_About = new AboutView();
 
         public ShellView()
         {
             InitializeComponent();
-            _navigationService = new NavigationService(ContentFrame);
-            Page_Review = new ReviewView_everyday(_navigationService);
+
+            AppFrame.Instance = this.ContentFrame;
+
+            //_navigationService = new NavigationService(ContentFrame);
+
             // 设置默认选中项
             NavigationView_Root.SelectedItem = NavigationViewItem_CasualMode;
 
@@ -53,7 +60,20 @@ namespace TimeController.Views.Navigation
             }
             else if (item == NavigationViewItem_Review_everyday)
             {
-                page = Page_Review;
+                page = new ReviewView_everyday();
+                var vm = App.AppHost.Services.GetRequiredService<ReviewViewModel_everyday>();
+
+                vm.NavigateToEveryweekRequested += () =>
+                {
+                    var nav = App.AppHost.Services.GetRequiredService<INavigationService>();
+                    nav.NavigateTo(AppFrame.Instance!, "Everyweek");
+                };
+
+                page.DataContext = vm;
+
+                ContentFrame.Navigate(page);
+                NavigationView_Root.Header = page.Title;
+                return;
             }
             else if (item == NavigationViewItem_Settings)
             {
@@ -76,11 +96,37 @@ namespace TimeController.Views.Navigation
             switch (viewKey)
             {
                 case "Everyday":
-                    ContentFrame.Navigate(new ReviewView_everyday(this));
-                    break;
+                    {
+                        var page = new ReviewView_everyday();
+                        var vm = App.AppHost.Services.GetRequiredService<ReviewViewModel_everyday>();
+
+                        vm.NavigateToEveryweekRequested += () =>
+                        {
+                            NavigateTo("Everyweek");
+                        };
+
+                        page.DataContext = vm;
+                        ContentFrame.Navigate(page);
+                        break;
+                    }
+
                 case "Everyweek":
-                    ContentFrame.Navigate(new ReviewView_everyweek(this));
-                    break;
+                    {
+                        var page = new ReviewView_everyweek();
+                        var vm = App.AppHost.Services.GetRequiredService<ReviewViewModel_everyweek>();
+
+                        vm.NavigateToEverydayRequested += () =>
+                        {
+                            NavigateTo("Everyday");
+                        };
+
+                        page.DataContext = vm;
+                        ContentFrame.Navigate(page);
+                        break;
+                    }
+
+                default:
+                    throw new ArgumentException($"Unknown view key: {viewKey}");
             }
         }
 

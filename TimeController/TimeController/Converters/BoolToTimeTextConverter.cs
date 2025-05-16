@@ -14,7 +14,7 @@ namespace TimeController.Converters
         {
             if (value is bool isAllDay)
             {
-                return isAllDay ? "⏱ 全天" : "⏱ 时间段";
+                return isAllDay ? "🌙 全天" : "⏱ 时间段";
             }
             return "⏱ 未设置时间";
         }

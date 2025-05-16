@@ -8,113 +8,25 @@ using System.Collections.ObjectModel;
 using System.Windows.Input;
 using TimeController.Models;
 using TimeController.Services;
+using System.Windows.Controls;
+using TimeController.Views.Dialogs;
 
 namespace TimeController.ViewModels
 {
 
-    public class ReviewTaskItem : INotifyPropertyChanged
-    {
-        private DateTime? _postponeDate;
-        public DateTime? PostponeDate
-        {
-            get => _postponeDate;
-            set
-            {
-                _postponeDate = value;
-                OnPropertyChanged(nameof(PostponeDate));
-            }
-        }
-
-        public string Name { get; set; } = string.Empty;
-
-        private MyTaskStatus _status = MyTaskStatus.Pending;
-        public MyTaskStatus Status
-        {
-            get => _status;
-            set
-            {
-                if (_status != value)
-                {
-                    _status = value;
-                    OnPropertyChanged(nameof(Status));
-                }
-            }
-        }
-
-        private string? _reason;
-        public string? Reason
-        {
-            get => _reason;
-            set
-            {
-                if (_reason != value)
-                {
-                    _reason = value;
-                    OnPropertyChanged(nameof(Reason));
-                }
-            }
-        }
-
-        private DateTime? _plannedDate;
-        public DateTime? PlannedDate
-        {
-            get => _plannedDate;
-            set
-            {
-                _plannedDate = value;
-                OnPropertyChanged(nameof(PlannedDate));
-            }
-        }
-
-        private bool _isAllDay;
-        public bool IsAllDay
-        {
-            get => _isAllDay;
-            set
-            {
-                _isAllDay = value;
-                OnPropertyChanged(nameof(IsAllDay));
-            }
-        }
-
-        private DateTime? _startTime;
-        public DateTime? StartTime
-        {
-            get => _startTime;
-            set
-            {
-                _startTime = value;
-                OnPropertyChanged(nameof(StartTime));
-            }
-        }
-
-        private DateTime? _endTime;
-        public DateTime? EndTime
-        {
-            get => _endTime;
-            set
-            {
-                _endTime = value;
-                OnPropertyChanged(nameof(EndTime));
-            }
-        }
-
-
-        public event PropertyChangedEventHandler? PropertyChanged;
-        protected void OnPropertyChanged(string propertyName) =>
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
-    }
-
     public class ReviewViewModel_everyday : INotifyPropertyChanged
     {
-        private readonly INavigationService _navigationService;
+        private readonly ITaskService _taskService;
+        public event Action? NavigateToEveryweekRequested;
+        //private readonly INavigationService _navigationService;
         private bool _isEverydayPage = true;
         private bool _isAllDay;
         private DateTime? _startTime;
         private DateTime? _endTime;
         private DateTime? _plannedDate;
         private DateTime? _selectedDate;
-        private ObservableCollection<ReviewTaskItem> _pendingTasks;
+        private ObservableCollection<TaskModel> _todayPendingTasks;
+        private ObservableCollection<TaskModel> _overduePendingTasks;
         private ObservableCollection<string> _reviewReasons;
 
         public bool IsEverydayPage
@@ -135,6 +47,14 @@ namespace TimeController.ViewModels
         public ICommand PostponeTaskCommand { get; }
         public ICommand AbandonTaskCommand { get; }
         public ICommand BatchProcessCommand { get; }
+        
+        //放弃和推迟按钮的命令声明
+        public ICommand ShowAbandonMenuCommand { get; }
+        public ICommand AbandonReasonCommand { get; }
+
+        public ICommand ShowPostponeMenuCommand { get; }
+        public ICommand PostponeReasonCommand { get; }
+
 
         public DateTime? SelectedDate
         {
@@ -153,21 +73,27 @@ namespace TimeController.ViewModels
         
         public ObservableCollection<TaskModel> CompletedTasks { get; set; }
         public ObservableCollection<TaskModel> UncompletedTasks { get; set; }
-        public ObservableCollection<ReviewTaskItem> PendingTasks
+        public ObservableCollection<TaskModel> TodayPendingTasks
         {
-            get => _pendingTasks;
+            get => _todayPendingTasks;
             set
             {
-                if (_pendingTasks != value)
-                {
-                    _pendingTasks = value;
-                    OnPropertyChanged(nameof(PendingTasks));
-                    OnPropertyChanged(nameof(PendingTasksCount));
-                }
+                _todayPendingTasks = value;
+                OnPropertyChanged(nameof(TodayPendingTasks));
             }
         }
 
-        public int PendingTasksCount => PendingTasks?.Count ?? 0;
+        public ObservableCollection<TaskModel> OverduePendingTasks
+        {
+            get => _overduePendingTasks;
+            set
+            {
+                _overduePendingTasks = value;
+                OnPropertyChanged(nameof(OverduePendingTasks));
+            }
+        }
+
+        public int PendingTasksCount => OverduePendingTasks.Count;
 
         public ObservableCollection<string> ReviewReasons
         {
@@ -182,103 +108,28 @@ namespace TimeController.ViewModels
             }
         }
 
-        public ReviewViewModel_everyday(INavigationService navigationService)
+        public ReviewViewModel_everyday(ITaskService taskService)
         {
-            _navigationService = navigationService;
+            //_navigationService = navigationService;
+            _taskService = taskService;
+
+            CompletedTasks = new ObservableCollection<TaskModel>();
+            UncompletedTasks = new ObservableCollection<TaskModel>();
+
+            ShowAbandonMenuCommand = new RelayCommand<Button>(ShowAbandonReasonMenu);
+            AbandonReasonCommand = new RelayCommand<Tuple<TaskModel, string>>(AbandonWithReason);
+
+            ShowPostponeMenuCommand = new RelayCommand<Button>(ShowPostponeReasonMenu);
+            PostponeReasonCommand = new RelayCommand<Tuple<TaskModel, string>>(PostponeWithReason);
+
             NavigateToEverydayCommand = new RelayCommand(_ => { });
-            NavigateToEveryweekCommand = new RelayCommand(_ => _navigationService.NavigateTo("Everyweek"));
+            NavigateToEveryweekCommand = new RelayCommand(_ => NavigateToEveryweekRequested?.Invoke());
+
             PostponeTaskCommand = new RelayCommand<TaskModel>(PostponeTask);
             AbandonTaskCommand = new RelayCommand<TaskModel>(AbandonTask);
             BatchProcessCommand = new RelayCommand<object>(BatchProcess);
 
-            IsEverydayPage = true;
-            SelectedDate = DateTime.Today;
 
-            CompletedTasks = new ObservableCollection<TaskModel>();
-            UncompletedTasks = new ObservableCollection<TaskModel>();
-            PendingTasks = new ObservableCollection<ReviewTaskItem>();
-
-
-            // 添加一些测试数据
-            // 今日已完成任务
-            CompletedTasks.Add(new TaskModel
-            {
-                Name = "完成项目文档",
-                IsCompleted = true,
-                PlannedDate = DateTime.Today,
-                IsAllDay = true
-            });
-            CompletedTasks.Add(new TaskModel
-            {
-                Name = "团队会议",
-                IsCompleted = true,
-                PlannedDate = DateTime.Today,
-                IsAllDay = false,
-                StartTime = DateTime.Today.AddHours(10),
-                EndTime = DateTime.Today.AddHours(11)
-            });
-
-            // 今日未完成任务
-            UncompletedTasks.Add(new TaskModel
-            {
-                Name = "代码审查",
-                IsCompleted = false,
-                PlannedDate = DateTime.Today,
-                IsAllDay = false,
-                StartTime = DateTime.Today.AddHours(14),
-                EndTime = DateTime.Today.AddHours(15)
-            });
-            UncompletedTasks.Add(new TaskModel
-            {
-                Name = "准备周报",
-                IsCompleted = false,
-                PlannedDate = DateTime.Today,
-                IsAllDay = true
-            });
-
-            // 未处理任务（过期任务）
-            PendingTasks.Add(new ReviewTaskItem
-            {
-                Name = "整理工作笔记",
-                Status = MyTaskStatus.Pending,
-                PlannedDate = DateTime.Today.AddDays(-3),
-                IsAllDay = true
-            });
-
-            PendingTasks.Add(new ReviewTaskItem
-            {
-                Name = "项目进度汇报",
-                Status = MyTaskStatus.Pending,
-                PlannedDate = DateTime.Today.AddDays(-2),
-                IsAllDay = false,
-                StartTime = DateTime.Today.AddDays(-2).AddHours(15),
-                EndTime = DateTime.Today.AddDays(-2).AddHours(16)
-            });
-            PendingTasks.Add(new ReviewTaskItem
-            {
-                Name = "更新项目计划",
-                Status = MyTaskStatus.Pending,
-                PlannedDate = DateTime.Today.AddDays(-1),
-                IsAllDay = true
-            });
-            PendingTasks.Add(new ReviewTaskItem
-            {
-                Name = "客户需求分析",
-                Status = MyTaskStatus.Pending,
-                PlannedDate = DateTime.Today.AddDays(-5),
-                IsAllDay = false,
-                StartTime = DateTime.Today.AddDays(-5).AddHours(9),
-                EndTime = DateTime.Today.AddDays(-5).AddHours(11)
-            });
-
-
-            //监听逻辑
-            PendingTasks.CollectionChanged += (s, e) =>
-            {
-                OnPropertyChanged(nameof(PendingTasksCount));
-            };
-
-            // 初始化复盘原因列表
             ReviewReasons = new ObservableCollection<string>
             {
                 "时间安排问题",
@@ -289,20 +140,124 @@ namespace TimeController.ViewModels
                 "不明确"
             };
 
-            LoadTasks();
+
+            SelectedDate = DateTime.Today;
         }
 
-        private void LoadTasks()
+
+        private async void LoadTasksForDate(DateTime date)
         {
-            // TODO: 从数据源加载任务
-            // 这里需要实现从数据库或文件加载任务数据的逻辑
+            // 清空现有任务
+            CompletedTasks.Clear();
+            UncompletedTasks.Clear();
+
+            // 从数据库或服务中获取指定日期的任务
+            var tasks = await _taskService.GetTasksForDate(date);
+
+            // 分类任务
+            foreach (var task in tasks)
+            {
+                if (task.Status == MyTaskStatus.Completed)
+                {
+                    CompletedTasks.Add(task);
+                }
+                else
+                {
+                    UncompletedTasks.Add(task);
+                }
+            }
+
+            // 更新待处理任务
+            var today = DateTime.Today;
+            TodayPendingTasks = new ObservableCollection<TaskModel>(
+                tasks.Where(t => t.Status == MyTaskStatus.Pending && t.PlannedDate.Date == today));
+
+            OverduePendingTasks = new ObservableCollection<TaskModel>(
+                tasks.Where(t => t.Status == MyTaskStatus.Pending && t.PlannedDate.Date < today));
+
+            OnPropertyChanged(nameof(PendingTasksCount));
         }
 
-        private void LoadTasksForDate(DateTime date)
+        private void ShowAbandonReasonMenu(Button button)
         {
-            // TODO: 根据日期加载任务
-            // 这里需要实现根据日期加载任务数据的逻辑
+            if (button?.DataContext is not TaskModel task || task.Status != MyTaskStatus.Pending)
+                return;
+
+            var contextMenu = new ContextMenu();
+
+            foreach (var reason in ReviewReasons)
+            {
+                var item = new MenuItem
+                {
+                    Header = reason,
+                    DataContext = new Tuple<TaskModel, string>(task, reason),
+                    Command = AbandonReasonCommand,
+                    CommandParameter = new Tuple<TaskModel, string>(task, reason)
+                };
+                contextMenu.Items.Add(item);
+            }
+
+            contextMenu.PlacementTarget = button;
+            contextMenu.IsOpen = true;
         }
+
+        // 放弃任务（异步加保存到数据库）
+        private async void AbandonWithReason(Tuple<TaskModel, string> param)
+        {
+            var (task, reason) = param;
+            task.Reason = reason;
+            task.Status = MyTaskStatus.Abandoned;
+
+            await _taskService.UpdateTaskAsync(task);
+        }
+
+
+        private void ShowPostponeReasonMenu(Button button)
+        {
+            if (button?.DataContext is not TaskModel task || task.Status != MyTaskStatus.Pending)
+                return;
+
+            var contextMenu = new ContextMenu();
+
+            foreach (var reason in ReviewReasons)
+            {
+                var item = new MenuItem
+                {
+                    Header = reason,
+                    DataContext = new Tuple<TaskModel, string>(task, reason),
+                    Command = PostponeReasonCommand,
+                    CommandParameter = new Tuple<TaskModel, string>(task, reason)
+                };
+                contextMenu.Items.Add(item);
+            }
+
+            contextMenu.PlacementTarget = button;
+            contextMenu.IsOpen = true;
+        }
+
+        // 推迟任务（异步加保存到数据库）
+        private async void PostponeWithReason(Tuple<TaskModel, string> param)
+        {
+            var (task, reason) = param;
+            task.Reason = reason;
+
+            var dialog = new PostponeDateDialog();
+            bool? result = dialog.ShowDialog();
+
+            if (result == true && dialog.SelectedDate.HasValue)
+            {
+                task.PostponeDate = dialog.SelectedDate;
+                task.Status = MyTaskStatus.Postponed;
+
+                await _taskService.UpdateTaskAsync(task);
+            }
+            else
+            {
+                task.Reason = null;
+            }
+        }
+
+
 
         private void PostponeTask(TaskModel task)
         {

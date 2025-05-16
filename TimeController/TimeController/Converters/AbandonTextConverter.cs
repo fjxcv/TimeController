@@ -2,6 +2,7 @@
 using System.Globalization;
 using System.Windows.Data;
 using TimeController.ViewModels;
+using TimeController.Models;
 
 namespace TimeController.Converters
 {

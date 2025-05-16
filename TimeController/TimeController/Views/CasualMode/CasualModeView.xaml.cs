@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
-using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
@@ -15,7 +15,7 @@ using System.Windows.Navigation;
 using System.Windows.Shapes;
 using TimeController.ViewModels;
 using Page = iNKORE.UI.WPF.Modern.Controls.Page;
-
+using TimeController.Models;
 
 namespace TimeController.Views.CasualMode
 {
@@ -27,11 +27,10 @@ namespace TimeController.Views.CasualMode
         public CasualModeView()
         {
             InitializeComponent();
-            _viewModel = new CasualModeViewModel();
-            DataContext = _viewModel;
+            DataContext = new CasualModeViewModel();
         }
 
-        private readonly CasualModeViewModel _viewModel;
+
 
         private void NewTaskTextBox_KeyDown(object sender, KeyEventArgs e)
         {
@@ -69,19 +68,109 @@ namespace TimeController.Views.CasualMode
             }
         }
 
-        //private void ToggleTask(TaskModel task)
-        //{
-        //    task.IsCompleted = !task.IsCompleted;
-        //    // 只对当前模块排序
-        //    var module = _viewModel.Modules.FirstOrDefault(m => m.Tasks.Contains(task));
-        //    if (module != null)
-        //    {
-        //        var sorted = module.Tasks.OrderBy(t => t.IsCompleted).ToList();
-        //        module.Tasks.Clear();
-        //        foreach (var t in sorted)
-        //            module.Tasks.Add(t);
-        //    }
-        //    _viewModel.UpdateProgress();
-        //}
+        private void CreateExpressionBorder_MouseDown(object sender, MouseButtonEventArgs e)
+        {
+            var viewModel = DataContext as CasualModeViewModel;
+            if (viewModel != null)
+            {
+                viewModel.Modules[1].IsInputVisible = true;
+            }
+        }
+
+        private void CreateExpressionInputCancel_Click(object sender, RoutedEventArgs e)
+        {
+            var viewModel = DataContext as CasualModeViewModel;
+            if (viewModel != null)
+            {
+                viewModel.Modules[1].IsInputVisible = false;
+                viewModel.Modules[1].NewTaskText = string.Empty;
+            }
+        }
+
+        private void LifeChoresBorder_MouseDown(object sender, MouseButtonEventArgs e)
+        {
+            var viewModel = DataContext as CasualModeViewModel;
+            if (viewModel != null)
+            {
+                viewModel.Modules[2].IsInputVisible = true;
+            }
+        }
+
+        private void LifeChoresInputCancel_Click(object sender, RoutedEventArgs e)
+        {
+            var viewModel = DataContext as CasualModeViewModel;
+            if (viewModel != null)
+            {
+                viewModel.Modules[2].IsInputVisible = false;
+                viewModel.Modules[2].NewTaskText = string.Empty;
+            }
+        }
+
+        private void InterpersonalConnectionBorder_MouseDown(object sender, MouseButtonEventArgs e)
+        {
+            var viewModel = DataContext as CasualModeViewModel;
+            if (viewModel != null)
+            {
+                viewModel.Modules[3].IsInputVisible = true;
+            }
+        }
+
+        private void InterpersonalConnectionInputCancel_Click(object sender, RoutedEventArgs e)
+        {
+            var viewModel = DataContext as CasualModeViewModel;
+            if (viewModel != null)
+            {
+                viewModel.Modules[3].IsInputVisible = false;
+                viewModel.Modules[3].NewTaskText = string.Empty;
+            }
+        }
+
+        private void LongTermMemoInputCancel_Click(object sender, RoutedEventArgs e)
+        {
+            var viewModel = DataContext as CasualModeViewModel;
+            if (viewModel != null)
+            {
+                viewModel.Modules[4].IsInputVisible = false;
+                viewModel.Modules[4].NewTaskText = string.Empty;
+            }
+        }
+        private void LongTermMemoBorder_MouseDown(object sender, MouseButtonEventArgs e)
+        {
+            var viewModel = DataContext as CasualModeViewModel;
+            if (viewModel != null)
+            {
+                viewModel.Modules[4].IsInputVisible = true;
+            }
+        }
+        // 转换器代码（添加到项目任意位置）
+        public class InverseBooleanToVisibilityConverter : IValueConverter
+        {
+            public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+            {
+                return (value is bool boolValue && boolValue) ? Visibility.Collapsed : Visibility.Visible;
+            }
+
+            public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+            {
+                throw new NotImplementedException();
+            }
+        }
+        private void TaskNameTextBox_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Key == Key.Enter && sender is TextBox textBox)
+            {
+                textBox.MoveFocus(new TraversalRequest(FocusNavigationDirection.Next));
+                var task = textBox.DataContext as TaskModel;
+                task.IsEditing = false;
+            }
+        }
+        private void ListViewItem_DoubleClick(object sender, MouseButtonEventArgs e)
+        {
+            if (e.OriginalSource is FrameworkElement element &&
+                element.DataContext is TaskModel task)
+            {
+                task.IsEditing = true;
+            }
+        }
     }
 }

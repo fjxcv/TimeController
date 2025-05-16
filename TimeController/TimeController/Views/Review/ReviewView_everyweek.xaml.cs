@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.Extensions.DependencyInjection;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -23,10 +24,9 @@ namespace TimeController.Views.Review
     /// </summary>
     public partial class ReviewView_everyweek : Page
     {
-        public ReviewView_everyweek(INavigationService navService)
+        public ReviewView_everyweek()
         {
             InitializeComponent();
-            this.DataContext = new ReviewViewModel_everyweek(navService);
         }
     }
 }
