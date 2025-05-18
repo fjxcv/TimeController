@@ -14,7 +14,6 @@ namespace TimeController.ViewModels
     public class ReviewViewModel_everyweek : INotifyPropertyChanged
     {
         private readonly ITaskService _taskService;
-        //private readonly INavigationService _navigationService;
         public event Action? NavigateToEverydayRequested;
         private DateTime _selectedWeekStart;
         private ObservableCollection<TaskModel> _weeklyCompletedTasks;
@@ -32,6 +31,17 @@ namespace TimeController.ViewModels
                     OnPropertyChanged(nameof(SelectedWeekStart));
                     LoadTasksForWeek(value);
                 }
+            }
+        }
+        //推迟or放弃的任务
+        private ObservableCollection<TaskModel> _skippedTasks = new();
+        public ObservableCollection<TaskModel> SkippedTasks
+        {
+            get => _skippedTasks;
+            set
+            {
+                _skippedTasks = value;
+                OnPropertyChanged(nameof(SkippedTasks));
             }
         }
 
@@ -68,6 +78,20 @@ namespace TimeController.ViewModels
             }
         }
 
+        private bool _isEverydayPage = false;
+        public bool IsEverydayPage
+        {
+            get => _isEverydayPage;
+            set
+            {
+                if (_isEverydayPage != value)
+                {
+                    _isEverydayPage = value;
+                    OnPropertyChanged(nameof(IsEverydayPage));
+                }
+            }
+        }
+
         public ICommand NavigateToEverydayCommand { get; }
         public ICommand NavigateToEveryweekCommand { get; }
         public ICommand PreviousWeekCommand { get; }
@@ -75,12 +99,15 @@ namespace TimeController.ViewModels
 
         public ReviewViewModel_everyweek()
         {
-            //_navigationService = navigationService;
+            IsEverydayPage = false;
+
             NavigateToEverydayCommand = new RelayCommand(_ =>
             {
                 NavigateToEverydayRequested?.Invoke();
             });
-            NavigateToEveryweekCommand = new RelayCommand(_ => { });
+            NavigateToEverydayCommand = new RelayCommand(_ => NavigateToEverydayRequested?.Invoke());
+            NavigateToEveryweekCommand = new RelayCommand(_ => { }); // 当前页，不处理
+
             PreviousWeekCommand = new RelayCommand(_ => MoveToPreviousWeek());
             NextWeekCommand = new RelayCommand(_ => MoveToNextWeek());
 
@@ -105,28 +132,29 @@ namespace TimeController.ViewModels
 
         private async void LoadTasksForWeek(DateTime weekStart)
         {
-            // 清空现有任务
+            //清空任务
             WeeklyCompletedTasks.Clear();
             WeeklyUncompletedTasks.Clear();
+            SkippedTasks.Clear(); 
 
-            // 计算周结束日期
             var weekEnd = weekStart.AddDays(6);
 
-            // 从数据库或服务中获取指定周的任务
             var tasks = await _taskService.GetTasksForDateRange(weekStart, weekEnd);
 
-
-
-            // 分类任务
             foreach (var task in tasks)
             {
-                if (task.Status == MyTaskStatus.Completed)
+                switch (task.Status)
                 {
-                    WeeklyCompletedTasks.Add(task);
-                }
-                else
-                {
-                    WeeklyUncompletedTasks.Add(task);
+                    case MyTaskStatus.Completed:
+                        WeeklyCompletedTasks.Add(task);
+                        break;
+                    case MyTaskStatus.Pending:
+                        WeeklyUncompletedTasks.Add(task);
+                        break;
+                    case MyTaskStatus.Postponed:
+                    case MyTaskStatus.Abandoned:
+                        SkippedTasks.Add(task);
+                        break;
                 }
             }
         }

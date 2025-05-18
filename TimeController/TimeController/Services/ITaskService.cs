@@ -11,9 +11,16 @@ namespace TimeController.Services
     {
         Task<List<TaskModel>> GetTasksForDate(DateTime date);
         Task<List<TaskModel>> GetTasksForDateRange(DateTime startDate, DateTime endDate);
-        
 
+        //过期任务不随日期变动，得到所有过期任务
+        Task<IEnumerable<TaskModel>> GetAllPendingTasksAsync();
+
+
+        //更新任务状态
         Task UpdateTaskAsync(TaskModel task);
+
+        //种子数据
+        Task ResetTaskDataAsync();
 
     }
 }

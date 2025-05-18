@@ -15,7 +15,7 @@ namespace TimeController.Services
         public TaskDbContext(DbContextOptions<TaskDbContext> options)
             : base(options)
         {
-            Database.EnsureCreated(); // 启动时自动创建数据库
+
         }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -27,6 +27,12 @@ namespace TimeController.Services
             modelBuilder.Entity<TaskModel>()
                 .Property(t => t.Mode)
                 .HasConversion<string>();
+
+            modelBuilder.Entity<TaskModel>()
+                .Property(t => t.Type)
+                .HasConversion<string>();
+
+            base.OnModelCreating(modelBuilder);
         }
     }
 }

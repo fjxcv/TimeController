@@ -4,6 +4,7 @@ using System;
 using System.Windows;
 using Microsoft.EntityFrameworkCore;
 using TimeController.Services;
+using TimeController.ViewModels;
 
 namespace TimeController
 {
@@ -16,7 +17,13 @@ namespace TimeController
             base.OnStartup(e);
 
             var taskService = AppHost.Services.GetRequiredService<ITaskService>();
-            await ((TaskService)taskService).SeedTestDataAsync();
+
+            //获取 DbContext 实例，确保数据库使用迁移初始化
+            var db = AppHost.Services.GetRequiredService<TaskDbContext>();
+            db.Database.Migrate();
+
+            //重置开发数据
+            await ((TaskService)taskService).ResetTaskDataAsync();
 
             // 打开主窗口
             var mainWindow = new MainWindow();
@@ -38,8 +45,9 @@ namespace TimeController
                     services.AddSingleton<INavigationService, NavigationService>();
 
                     // 注册ViewModel
-                    services.AddSingleton<ViewModels.ReviewViewModel_everyday>();
-                    services.AddSingleton<ViewModels.ReviewViewModel_everyweek>();
+                    services.AddScoped<ReviewViewModel_everyday>();
+                    services.AddScoped<ReviewViewModel_everyweek>();
+
                 })
                 .Build();
 

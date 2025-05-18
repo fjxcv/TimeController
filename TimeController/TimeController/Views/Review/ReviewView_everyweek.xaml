@@ -11,7 +11,7 @@
       Title="ReviewView_everyweek">
 
 
-    <Page.Resources>
+    <ui:Page.Resources>
 
         <!-- 复盘卡片样式 -->
         <Style x:Key="CardStyle" TargetType="Border">
@@ -31,11 +31,8 @@
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
-                        <Border Background="{TemplateBinding Background}"
-                            CornerRadius="20"
-                            Padding="{TemplateBinding Padding}">
-                            <ContentPresenter HorizontalAlignment="Center" 
-                                        VerticalAlignment="Center"/>
+                        <Border Background="{TemplateBinding Background}" CornerRadius="20" Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
                         </Border>
                     </ControlTemplate>
                 </Setter.Value>
@@ -47,7 +44,6 @@
             </Style.Triggers>
         </Style>
 
-
         <!-- 本周复盘按钮样式 -->
         <Style x:Key="EveryweekButtonStyle" TargetType="Button">
             <Setter Property="Background" Value="White"/>
@@ -55,11 +51,8 @@
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
-                        <Border Background="{TemplateBinding Background}"
-                            CornerRadius="20"
-                            Padding="{TemplateBinding Padding}">
-                            <ContentPresenter HorizontalAlignment="Center" 
-                                        VerticalAlignment="Center"/>
+                        <Border Background="{TemplateBinding Background}" CornerRadius="20" Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
                         </Border>
                     </ControlTemplate>
                 </Setter.Value>
@@ -71,6 +64,7 @@
             </Style.Triggers>
         </Style>
 
+
         <!--滚动卡片-->
         <Style x:Key="ListItemBorderStyle" TargetType="Border">
             <Setter Property="Background" Value="#F5F5F5"/>
@@ -81,7 +75,7 @@
             <Setter Property="BorderThickness" Value="1"/>
         </Style>
         
-    </Page.Resources>
+    </ui:Page.Resources>
 
     <Grid>
         <Grid.RowDefinitions>
@@ -90,30 +84,42 @@
             <RowDefinition Height="auto"/>
         </Grid.RowDefinitions>
 
-        <StackPanel Orientation="Horizontal" Grid.Row="0">
-            <TextBlock Text="强目标模式" 
-                HorizontalAlignment="Left" 
-                VerticalAlignment="Top" 
-                FontSize="40" 
-                FontWeight="Bold" 
-                Foreground="{DynamicResource {x:Static SystemColors.ControlTextBrushKey}}" 
-                Margin="20,20,600,0"/>
-            <Button x:Name="Button1" 
-                    Command="{Binding NavigateToEverydayCommand}" 
-                    Content="每日复盘" 
-                    IsEnabled="True" 
-                    Padding="10" 
-                    FontSize="24" 
-                    Margin="0,0,20,0"
-                    Style="{StaticResource EverydayButtonStyle}" Height="50"/>
-            <Button x:Name="Button2" 
-                    Command="{Binding NavigateToEveryweekCommand}" 
-                    Content="本周复盘" 
-                    IsEnabled="True" 
-                    Padding="10" 
-                    FontSize="24"
-                    Style="{StaticResource EveryweekButtonStyle}" Height="50"/>
-        </StackPanel>
+        
+        <!--顶部区域-->
+        <Grid Grid.Row="0" Margin="20,20,20,0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <!-- 左：标题 -->
+                <ColumnDefinition Width="Auto"/>
+                <!-- 右：按钮组 -->
+            </Grid.ColumnDefinitions>
+
+            <!-- 左边：标题 -->
+            <TextBlock Text="每周复盘"
+               FontSize="36"
+               FontWeight="Bold"
+               VerticalAlignment="Center"
+               HorizontalAlignment="Left"/>
+
+            <!-- 右边：切换按钮（样式与每日复盘一致） -->
+            <StackPanel Grid.Column="1"
+                Orientation="Horizontal"
+                VerticalAlignment="Center"
+                HorizontalAlignment="Right">
+                <Button Content="每日复盘"
+                FontSize="18"
+                Command="{Binding NavigateToEverydayCommand}"
+                Style="{StaticResource EverydayButtonStyle}"
+                Margin="0,0,10,0"
+                Padding="15,10"/>
+                <Button Content="每周复盘"
+                FontSize="18"
+                Command="{Binding NavigateToEveryweekCommand}"
+                Style="{StaticResource EveryweekButtonStyle}"
+                Padding="15,10"/>
+            </StackPanel>
+        </Grid>
+
 
         <StackPanel Grid.Row="1" Orientation="Horizontal" VerticalAlignment="Center" HorizontalAlignment="Right" Width="1104">
 

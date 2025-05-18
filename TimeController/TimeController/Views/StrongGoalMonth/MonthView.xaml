@@ -2,13 +2,84 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:ui="http://schemas.inkore.net/lib/ui/wpf/modern"
-        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:local="clr-namespace:TimeController.Views.StrongGoalMonth"
         mc:Ignorable="d" 
         Title="" d:DesignHeight="800" d:DesignWidth="1104">
+    <Grid >
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
 
-    <Grid>
-        
+        <!-- 顶部：标题 + 年月导航 + 进入复盘 -->
+        <Grid Grid.Row="0" Margin="24,0,24,0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="229*"/>
+                <ColumnDefinition Width="39*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+
+            <!-- 左侧标题 -->
+            <TextBlock
+               Text="强目标模式"
+               FontSize="24"
+               FontWeight="Bold"
+               VerticalAlignment="Center"
+               HorizontalAlignment="Center"/>
+
+            <!-- 中间：导航 -->
+            <StackPanel Grid.Column="1"
+                Orientation="Horizontal"
+                HorizontalAlignment="Left"
+                VerticalAlignment="Center" Margin="231,0,0,0">
+
+                <!-- 年份导航 -->
+                <Button x:Name="PrevYearBtn" Content="&lt;" Margin="4,0"/>
+                <TextBlock x:Name="YearText" Text="2025年" FontSize="20" FontWeight="Bold" Margin="8,0" VerticalAlignment="Center"/>
+                <Button x:Name="NextYearBtn" Content="&gt;" Margin="4,0"/>
+
+                <!-- 月份导航 -->
+                <Button x:Name="PrevMonthBtn" Content="&lt;" Margin="20,0,4,0"/>
+                <TextBlock x:Name="MonthText" Text="5月" FontSize="20" FontWeight="Bold" Margin="8,0" VerticalAlignment="Center"/>
+                <Button x:Name="NextMonthBtn" Content="&gt;" Margin="4,0"/>
+            </StackPanel>
+
+            <!-- 右侧复盘按钮 -->
+            <Button x:Name="ReviewBtn"
+            Grid.Column="3"
+            Content="进入复盘"
+            Padding="16,8"        
+/>
+        </Grid>
+
+
+        <!-- 星期栏 -->
+        <Grid Grid.Row="2" Margin="40,30,40,0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition/>
+                <ColumnDefinition/>
+                <ColumnDefinition/>
+                <ColumnDefinition/>
+                <ColumnDefinition/>
+                <ColumnDefinition/>
+                <ColumnDefinition/>
+            </Grid.ColumnDefinitions>
+            <TextBlock Text="一" Grid.Column="0" HorizontalAlignment="Center" FontSize="20"/>
+            <TextBlock Text="二" Grid.Column="1" HorizontalAlignment="Center" FontSize="20"/>
+            <TextBlock Text="三" Grid.Column="2" HorizontalAlignment="Center" FontSize="20"/>
+            <TextBlock Text="四" Grid.Column="3" HorizontalAlignment="Center" FontSize="20"/>
+            <TextBlock Text="五" Grid.Column="4" HorizontalAlignment="Center" FontSize="20"/>
+            <TextBlock Text="六" Grid.Column="5" HorizontalAlignment="Center" FontSize="20"/>
+            <TextBlock Text="日" Grid.Column="6" HorizontalAlignment="Center" FontSize="20"/>
+        </Grid>
+        <!-- 日历网格区域（后续填充） -->
+        <ScrollViewer Grid.Row="3" Margin="40,10,40,40">
+            <UniformGrid x:Name="CalendarGrid" Rows="6" Columns="7"/>
+        </ScrollViewer>
     </Grid>
 </ui:Page>
+

@@ -10,10 +10,6 @@
          Title="ReviewView_everyday"
          d:DesignHeight="764" d:DesignWidth="1104">
 
-    <!--<ui:Page.DataContext>
-        <vm:ReviewViewModel_everyday />
-    </ui:Page.DataContext>-->
-
     <ui:Page.Resources>
         <local:PostponeTextConverter x:Key="PostponeTextConverter"/>
         <local:AbandonTextConverter x:Key="AbandonTextConverter"/>
@@ -45,6 +41,47 @@
                 </Trigger>
             </Style.Triggers>
         </Style>
+
+        <!-- 每日复盘按钮样式 -->
+        <Style x:Key="EverydayButtonStyle" TargetType="Button">
+            <Setter Property="Background" Value="White"/>
+            <Setter Property="Foreground" Value="{DynamicResource {x:Static SystemColors.ControlTextBrushKey}}"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}" CornerRadius="20" Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding IsEverydayPage}" Value="True">
+                    <Setter Property="Background" Value="#cbf1f5"/>
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+
+        <!-- 本周复盘按钮样式 -->
+        <Style x:Key="EveryweekButtonStyle" TargetType="Button">
+            <Setter Property="Background" Value="White"/>
+            <Setter Property="Foreground" Value="{DynamicResource {x:Static SystemColors.ControlTextBrushKey}}"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}" CornerRadius="20" Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding IsEverydayPage}" Value="False">
+                    <Setter Property="Background" Value="#cbf1f5"/>
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+
     </ui:Page.Resources>
 
     <Grid>
@@ -58,16 +95,67 @@
         </Grid.RowDefinitions>
 
         <!-- 顶部区域：标题 + 日期选择 -->
-        <StackPanel Orientation="Horizontal" Grid.Row="0" Margin="20,20,20,0" HorizontalAlignment="Center">
-            <TextBlock Text="每日复盘" FontSize="36" FontWeight="Bold" Margin="0,0,40,0"/>
-            <DatePicker SelectedDate="{Binding SelectedDate}" 
-                        Height="40" FontSize="18"
-                        Width="200"/>
-        </StackPanel>
+        <Grid Grid.Row="0" Margin="20,20,20,0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <!-- 左：标题+日期 -->
+                <ColumnDefinition Width="Auto"/>
+                <!-- 右：按钮组 -->
+            </Grid.ColumnDefinitions>
+
+            <!-- 左边：标题 + 日期 -->
+            <StackPanel Grid.Column="0"
+                Orientation="Horizontal"
+                VerticalAlignment="Center"
+                HorizontalAlignment="Left">
+                <TextBlock Text="每日复盘"
+                   FontSize="36"
+                   FontWeight="Bold"
+                   VerticalAlignment="Center"
+                   Margin="0,0,20,0"/>
+
+                <DatePicker SelectedDate="{Binding SelectedDate}" 
+                    Height="40"
+                    FontSize="18"
+                    Width="200"
+                    VerticalAlignment="Center"/>
+            </StackPanel>
+
+            <!-- 右边：切换按钮 -->
+            <StackPanel Grid.Column="1"
+                Orientation="Horizontal"
+                VerticalAlignment="Center"
+                HorizontalAlignment="Right">
+                <Button Content="每日复盘"
+                FontSize="18"
+                Command="{Binding NavigateToEverydayCommand}"
+                Style="{StaticResource EverydayButtonStyle}"
+                Margin="0,0,10,0"
+                Padding="15,10"/>
+                <Button Content="每周复盘"
+                FontSize="18"
+                Command="{Binding NavigateToEveryweekCommand}"
+                Style="{StaticResource EveryweekButtonStyle}"
+                Padding="15,10"/>
+            </StackPanel>
+        </Grid>
+
+
 
         <!-- 主体区域：ScrollViewer 包裹 StackPanel -->
         <ScrollViewer Grid.Row="1" Margin="20,10,20,10">
             <StackPanel Margin="0,0,0,30">
+
+                <!-- 调试：显示任务数量 --><!--
+                <StackPanel Orientation="Vertical" Margin="0,0,0,10">
+                    <TextBlock Text="{Binding CompletedTasks.Count, StringFormat='✔ 已完成任务数: {0}'}" FontSize="14" Foreground="Green"/>
+                    <TextBlock Text="{Binding TodayPendingTasks.Count, StringFormat='📌 今日待处理任务数: {0}'}" FontSize="14" Foreground="DarkOrange"/>
+                    <TextBlock Text="{Binding OverduePendingTasks.Count, StringFormat='⏰ 过期任务数: {0}'}" FontSize="14" Foreground="Red"/>
+                    <TextBlock Text="{Binding UncompletedTasks.Count, StringFormat='❌ 所有未完成任务数: {0}'}" FontSize="14" Foreground="Blue"/>
+                    <TextBlock Text="{Binding SelectedDate}" Foreground="DarkGray"/>
+
+                </StackPanel>-->
+
 
                 <!-- 今日任务概览 -->
                 <StackPanel>

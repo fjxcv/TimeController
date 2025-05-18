@@ -10,6 +10,7 @@ using TimeController.Models;
 using TimeController.Services;
 using System.Windows.Controls;
 using TimeController.Views.Dialogs;
+using System.Diagnostics;
 
 namespace TimeController.ViewModels
 {
@@ -20,15 +21,16 @@ namespace TimeController.ViewModels
         public event Action? NavigateToEveryweekRequested;
         //private readonly INavigationService _navigationService;
         private bool _isEverydayPage = true;
-        private bool _isAllDay;
-        private DateTime? _startTime;
-        private DateTime? _endTime;
-        private DateTime? _plannedDate;
+        //private bool _isAllDay;
+        //private DateTime? _startTime;
+        //private DateTime? _endTime;
+        //private DateTime? _plannedDate;
         private DateTime? _selectedDate;
         private ObservableCollection<TaskModel> _todayPendingTasks;
         private ObservableCollection<TaskModel> _overduePendingTasks;
         private ObservableCollection<string> _reviewReasons;
 
+        //是否是今日复盘
         public bool IsEverydayPage
         {
             get => _isEverydayPage;
@@ -41,6 +43,7 @@ namespace TimeController.ViewModels
                 }
             }
         }
+
 
         public ICommand NavigateToEverydayCommand { get; }
         public ICommand NavigateToEveryweekCommand { get; }
@@ -110,8 +113,10 @@ namespace TimeController.ViewModels
 
         public ReviewViewModel_everyday(ITaskService taskService)
         {
-            //_navigationService = navigationService;
             _taskService = taskService;
+
+            //调试用
+            _ = ResetDataForDevelopment();
 
             CompletedTasks = new ObservableCollection<TaskModel>();
             UncompletedTasks = new ObservableCollection<TaskModel>();
@@ -122,8 +127,12 @@ namespace TimeController.ViewModels
             ShowPostponeMenuCommand = new RelayCommand<Button>(ShowPostponeReasonMenu);
             PostponeReasonCommand = new RelayCommand<Tuple<TaskModel, string>>(PostponeWithReason);
 
-            NavigateToEverydayCommand = new RelayCommand(_ => { });
-            NavigateToEveryweekCommand = new RelayCommand(_ => NavigateToEveryweekRequested?.Invoke());
+            NavigateToEverydayCommand = new RelayCommand(_ => IsEverydayPage = true);
+            NavigateToEveryweekCommand = new RelayCommand(_ =>
+            {
+                IsEverydayPage = false;
+                NavigateToEveryweekRequested?.Invoke();
+            });
 
             PostponeTaskCommand = new RelayCommand<TaskModel>(PostponeTask);
             AbandonTaskCommand = new RelayCommand<TaskModel>(AbandonTask);
@@ -142,9 +151,17 @@ namespace TimeController.ViewModels
 
 
             SelectedDate = DateTime.Today;
+
+            LoadTasksForDate(DateTime.Today);
+
         }
 
-
+        private async Task ResetDataForDevelopment()
+        {
+        #if DEBUG
+                    await _taskService.ResetTaskDataAsync();
+        #endif
+        }
         private async void LoadTasksForDate(DateTime date)
         {
             // 清空现有任务
@@ -153,6 +170,20 @@ namespace TimeController.ViewModels
 
             // 从数据库或服务中获取指定日期的任务
             var tasks = await _taskService.GetTasksForDate(date);
+
+            //调试！！！！
+            System.Diagnostics.Debug.WriteLine($"任务加载数: {tasks.Count}");
+            Debug.WriteLine($"[LoadTasksForDate] Loading tasks for date: {date:yyyy-MM-dd HH:mm:ss}");
+            try
+            {
+                var taskss = await _taskService.GetTasksForDate(date);
+                Debug.WriteLine($"[LoadTasksForDate] 加载任务成功: {taskss.Count}");
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"[LoadTasksForDate] 加载任务失败: {ex.Message}");
+            }
+
 
             // 分类任务
             foreach (var task in tasks)
@@ -172,8 +203,11 @@ namespace TimeController.ViewModels
             TodayPendingTasks = new ObservableCollection<TaskModel>(
                 tasks.Where(t => t.Status == MyTaskStatus.Pending && t.PlannedDate.Date == today));
 
+            // 获取所有 pending 任务
+            var allPending = await _taskService.GetAllPendingTasksAsync();
+
             OverduePendingTasks = new ObservableCollection<TaskModel>(
-                tasks.Where(t => t.Status == MyTaskStatus.Pending && t.PlannedDate.Date < today));
+                allPending.Where(t => t.Status == MyTaskStatus.Pending && t.PlannedDate.Date < today));
 
             OnPropertyChanged(nameof(PendingTasksCount));
         }

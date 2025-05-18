@@ -60,7 +60,8 @@ namespace TimeController.Views.Navigation
             }
             else if (item == NavigationViewItem_Review_everyday)
             {
-                page = new ReviewView_everyday();
+                var taskService = App.AppHost.Services.GetRequiredService<ITaskService>();
+                page = new ReviewView_everyday(taskService);
                 var vm = App.AppHost.Services.GetRequiredService<ReviewViewModel_everyday>();
 
                 vm.NavigateToEveryweekRequested += () =>
@@ -97,9 +98,11 @@ namespace TimeController.Views.Navigation
             {
                 case "Everyday":
                     {
-                        var page = new ReviewView_everyday();
+                        var taskService = App.AppHost.Services.GetRequiredService<ITaskService>();
+                        var page = new ReviewView_everyday(taskService);
                         var vm = App.AppHost.Services.GetRequiredService<ReviewViewModel_everyday>();
 
+                        vm.IsEverydayPage = true; //默认每日复盘按钮亮
                         vm.NavigateToEveryweekRequested += () =>
                         {
                             NavigateTo("Everyweek");
@@ -115,6 +118,7 @@ namespace TimeController.Views.Navigation
                         var page = new ReviewView_everyweek();
                         var vm = App.AppHost.Services.GetRequiredService<ReviewViewModel_everyweek>();
 
+                        vm.IsEverydayPage = false;
                         vm.NavigateToEverydayRequested += () =>
                         {
                             NavigateTo("Everyday");

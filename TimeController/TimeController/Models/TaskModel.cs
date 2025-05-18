@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 
 namespace TimeController.Models
@@ -17,6 +18,16 @@ namespace TimeController.Models
         Strong
     }
 
+    public enum TaskType
+    {
+        未分类,
+        学习学业,
+        项目实践任务,
+        日常任务,
+        自我提升,
+        其它
+    }
+
     public class TaskModel : INotifyPropertyChanged
     {
         public int Id { get; set; }
@@ -27,6 +38,15 @@ namespace TimeController.Models
             get => _name;
             set { _name = value; OnPropertyChanged(nameof(Name)); }
         }
+
+        private string? _note;
+        public string? Note
+        {
+            get => _note;
+            set { _note = value; OnPropertyChanged(nameof(Note)); }
+        }
+
+        public TaskType Type { get; set; } = TaskType.未分类;
 
         public TaskMode Mode { get; set; }
 
@@ -44,8 +64,9 @@ namespace TimeController.Models
             set { _isAllDay = value; OnPropertyChanged(nameof(IsAllDay)); }
         }
 
-        public DateTime? StartTime { get; set; }
-        public DateTime? EndTime { get; set; }
+        public TimeSpan? StartTime { get; set; }
+        public TimeSpan? EndTime { get; set; }
+
 
         private MyTaskStatus _status = MyTaskStatus.Pending;
         public MyTaskStatus Status
@@ -89,6 +110,20 @@ namespace TimeController.Models
             }
         }
 
+        private bool _isReminderEnabled;
+        public bool IsReminderEnabled
+        {
+            get => _isReminderEnabled;
+            set
+            {
+                if (_isReminderEnabled != value)
+                {
+                    _isReminderEnabled = value;
+                    OnPropertyChanged(nameof(IsReminderEnabled));
+                }
+            }
+        }
+
         private bool _isEditing;
         public bool IsEditing
         {
@@ -108,5 +143,28 @@ namespace TimeController.Models
         public event PropertyChangedEventHandler? PropertyChanged;
         protected void OnPropertyChanged(string propertyName) =>
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+
+        /// <summary>
+        /// 验证任务字段合法性
+        /// </summary>
+        /// <returns>错误信息列表</returns>
+        public List<string> Validate()
+        {
+            var errors = new List<string>();
+
+            if (string.IsNullOrWhiteSpace(Name))
+                errors.Add("任务名称不能为空");
+
+            if (Name?.Length > 10)
+                errors.Add("任务名称不能超过10个字符");
+
+            if (Note?.Length > 20)
+                errors.Add("任务备注不能超过20个字符");
+
+            if (!IsAllDay && StartTime.HasValue && EndTime.HasValue && StartTime > EndTime)
+                errors.Add("开始时间不能晚于结束时间");
+
+            return errors;
+        }
     }
 }
