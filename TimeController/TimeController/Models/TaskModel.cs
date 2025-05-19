@@ -28,7 +28,7 @@ namespace TimeController.Models
         其它
     }
 
-    public class TaskModel : INotifyPropertyChanged
+    public partial class TaskModel : INotifyPropertyChanged
     {
         public int Id { get; set; }
 
@@ -138,6 +138,17 @@ namespace TimeController.Models
             }
         }
 
+        public string StatusText => Status switch
+        {
+            MyTaskStatus.Postponed => "已推迟",
+            MyTaskStatus.Abandoned => "已放弃",
+            MyTaskStatus.Completed => "已完成",
+            MyTaskStatus.Pending => "待处理",
+            _ => "未知"
+        };
+
+
+        public int PostponedCount { get; set; } // 非数据库字段，用于复盘卡片
         public bool RequiresSort => true;
 
         public event PropertyChangedEventHandler? PropertyChanged;

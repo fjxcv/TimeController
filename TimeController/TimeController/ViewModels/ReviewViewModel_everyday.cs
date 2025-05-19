@@ -18,31 +18,12 @@ namespace TimeController.ViewModels
     public class ReviewViewModel_everyday : INotifyPropertyChanged
     {
         private readonly ITaskService _taskService;
-        public event Action? NavigateToEveryweekRequested;
-        //private readonly INavigationService _navigationService;
-        private bool _isEverydayPage = true;
-        //private bool _isAllDay;
-        //private DateTime? _startTime;
-        //private DateTime? _endTime;
-        //private DateTime? _plannedDate;
         private DateTime? _selectedDate;
         private ObservableCollection<TaskModel> _todayPendingTasks;
         private ObservableCollection<TaskModel> _overduePendingTasks;
         private ObservableCollection<string> _reviewReasons;
-
-        //是否是今日复盘
-        public bool IsEverydayPage
-        {
-            get => _isEverydayPage;
-            set
-            {
-                if (_isEverydayPage != value)
-                {
-                    _isEverydayPage = value;
-                    OnPropertyChanged(nameof(IsEverydayPage));
-                }
-            }
-        }
+        public bool IsEverydayPage { get; set; } = true;
+        public event Action? NavigateToEveryweekRequested;
 
 
         public ICommand NavigateToEverydayCommand { get; }
@@ -113,6 +94,7 @@ namespace TimeController.ViewModels
 
         public ReviewViewModel_everyday(ITaskService taskService)
         {
+            IsEverydayPage = true;
             _taskService = taskService;
 
             //调试用
@@ -127,12 +109,8 @@ namespace TimeController.ViewModels
             ShowPostponeMenuCommand = new RelayCommand<Button>(ShowPostponeReasonMenu);
             PostponeReasonCommand = new RelayCommand<Tuple<TaskModel, string>>(PostponeWithReason);
 
-            NavigateToEverydayCommand = new RelayCommand(_ => IsEverydayPage = true);
-            NavigateToEveryweekCommand = new RelayCommand(_ =>
-            {
-                IsEverydayPage = false;
-                NavigateToEveryweekRequested?.Invoke();
-            });
+            NavigateToEverydayCommand = new RelayCommand(_ => { }); // 当前页，不跳转
+            NavigateToEveryweekCommand = new RelayCommand(_ => NavigateToEveryweekRequested?.Invoke());
 
             PostponeTaskCommand = new RelayCommand<TaskModel>(PostponeTask);
             AbandonTaskCommand = new RelayCommand<TaskModel>(AbandonTask);

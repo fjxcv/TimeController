@@ -61,8 +61,8 @@ namespace TimeController.Views.Navigation
             else if (item == NavigationViewItem_Review_everyday)
             {
                 var taskService = App.AppHost.Services.GetRequiredService<ITaskService>();
-                page = new ReviewView_everyday(taskService);
-                var vm = App.AppHost.Services.GetRequiredService<ReviewViewModel_everyday>();
+
+                var vm = new ReviewViewModel_everyday(taskService);
 
                 vm.NavigateToEveryweekRequested += () =>
                 {
@@ -70,7 +70,7 @@ namespace TimeController.Views.Navigation
                     nav.NavigateTo(AppFrame.Instance!, "Everyweek");
                 };
 
-                page.DataContext = vm;
+                page = new ReviewView_everyday(vm);
 
                 ContentFrame.Navigate(page);
                 NavigationView_Root.Header = page.Title;
@@ -92,47 +92,46 @@ namespace TimeController.Views.Navigation
             }
         }
 
-        public void NavigateTo(string viewKey)
-        {
-            switch (viewKey)
-            {
-                case "Everyday":
-                    {
-                        var taskService = App.AppHost.Services.GetRequiredService<ITaskService>();
-                        var page = new ReviewView_everyday(taskService);
-                        var vm = App.AppHost.Services.GetRequiredService<ReviewViewModel_everyday>();
+        //public void NavigateTo(string viewKey)
+        //{
+        //    switch (viewKey)
+        //    {
+        //        case "Everyday":
+        //            {
+        //                var taskService = App.AppHost.Services.GetRequiredService<ITaskService>();
+        //                var page = new ReviewView_everyday(taskService);
+        //                var vm = App.AppHost.Services.GetRequiredService<ReviewViewModel_everyday>();
 
-                        vm.IsEverydayPage = true; //默认每日复盘按钮亮
-                        vm.NavigateToEveryweekRequested += () =>
-                        {
-                            NavigateTo("Everyweek");
-                        };
+        //                vm.IsEverydayPage = true; //默认每日复盘按钮亮
+        //                vm.NavigateToEveryweekRequested += () =>
+        //                {
+        //                    NavigateTo("Everyweek");
+        //                };
 
-                        page.DataContext = vm;
-                        ContentFrame.Navigate(page);
-                        break;
-                    }
+        //                page.DataContext = vm;
+        //                ContentFrame.Navigate(page);
+        //                break;
+        //            }
 
-                case "Everyweek":
-                    {
-                        var page = new ReviewView_everyweek();
-                        var vm = App.AppHost.Services.GetRequiredService<ReviewViewModel_everyweek>();
+        //        case "Everyweek":
+        //            {
+        //                var vm = App.AppHost.Services.GetRequiredService<ReviewViewModel_everyweek>();
+        //                vm.IsEverydayPage = false;
 
-                        vm.IsEverydayPage = false;
-                        vm.NavigateToEverydayRequested += () =>
-                        {
-                            NavigateTo("Everyday");
-                        };
+        //                vm.NavigateToEverydayRequested += () =>
+        //                {
+        //                    NavigateTo("Everyday");
+        //                };
 
-                        page.DataContext = vm;
-                        ContentFrame.Navigate(page);
-                        break;
-                    }
+        //                var page = new ReviewView_everyweek(vm);
+        //                ContentFrame.Navigate(page);
+        //                break;
+        //            }
 
-                default:
-                    throw new ArgumentException($"Unknown view key: {viewKey}");
-            }
-        }
+        //        default:
+        //            throw new ArgumentException($"Unknown view key: {viewKey}");
+        //    }
+        //}
 
 
 

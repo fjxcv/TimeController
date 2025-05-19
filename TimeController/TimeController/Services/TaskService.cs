@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -35,6 +36,17 @@ namespace TimeController.Services
 
         public async Task<List<TaskModel>> GetTasksForDateRange(DateTime startDate, DateTime endDate)
         {
+            var tasks = await _context.Tasks
+                .Where(t => t.PlannedDate.Date >= startDate.Date && t.PlannedDate.Date <= endDate.Date)
+                .ToListAsync();
+
+            // 这里是调试代码，输出加载到的任务数量和状态
+            Debug.WriteLine($"[周复盘] 加载到的任务数量: {tasks.Count}");
+            foreach (var task in tasks)
+            {
+                Debug.WriteLine($"任务状态: {task.Name} - {task.Status}");
+            }
+
             return await _context.Tasks
                 .Where(t => t.PlannedDate.Date >= startDate.Date && t.PlannedDate.Date <= endDate.Date)
                 .ToListAsync();

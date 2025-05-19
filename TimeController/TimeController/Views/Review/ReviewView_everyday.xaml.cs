@@ -12,20 +12,11 @@ namespace TimeController.Views.Review
 {
     public partial class ReviewView_everyday : Page
     {
-        public ReviewView_everyday(ITaskService taskService)
+        public ReviewView_everyday(ReviewViewModel_everyday vm)
         {
             InitializeComponent();
+            DataContext = vm;
 
-            //var vm = App.AppHost.Services.GetRequiredService<ReviewViewModel_everyday>();
-            //var navService = App.AppHost.Services.GetRequiredService<INavigationService>();
-
-            //// 绑定导航事件
-            //vm.NavigateToEveryweekRequested += () =>
-            //{
-            //    navService.NavigateTo(AppFrame.Instance, "Everyweek");
-            //};
-
-            //this.DataContext = vm;
         }
 
     }

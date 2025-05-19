@@ -24,9 +24,11 @@ namespace TimeController.Views.Review
     /// </summary>
     public partial class ReviewView_everyweek : Page
     {
-        public ReviewView_everyweek()
+        public ReviewView_everyweek(ReviewViewModel_everyweek vm)
         {
             InitializeComponent();
+            DataContext = vm;
         }
+
     }
 }

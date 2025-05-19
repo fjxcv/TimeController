@@ -42,45 +42,83 @@
             </Style.Triggers>
         </Style>
 
+
+
+        <!--定义通用按钮样式-->
+        <Style x:Key="BaseReviewButtonStyle" TargetType="Button">
+            <Setter Property="Background" Value="LightGray"/>
+            <Setter Property="Foreground" Value="Black"/>
+            <Setter Property="BorderBrush" Value="Transparent"/>
+        </Style>
+
         <!-- 每日复盘按钮样式 -->
         <Style x:Key="EverydayButtonStyle" TargetType="Button">
-            <Setter Property="Background" Value="White"/>
-            <Setter Property="Foreground" Value="{DynamicResource {x:Static SystemColors.ControlTextBrushKey}}"/>
+            <!-- 基础外观设置 -->
+            <Setter Property="Background" Value="Transparent"/>
+
+            <Setter Property="Foreground" Value="Black"/>
+            <Setter Property="Padding" Value="15,10"/>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
-                        <Border Background="{TemplateBinding Background}" CornerRadius="20" Padding="{TemplateBinding Padding}">
-                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        <Border Background="{TemplateBinding Background}"
+                    BorderBrush="{TemplateBinding BorderBrush}"
+                    BorderThickness="1"
+                    CornerRadius="6">
+                            <!-- ✅ 让文字和边框有空隙 -->
+                            <ContentPresenter HorizontalAlignment="Center"
+                              VerticalAlignment="Center"
+                              Margin="{TemplateBinding Padding}" />
                         </Border>
                     </ControlTemplate>
+
                 </Setter.Value>
             </Setter>
+
+            <!-- ✅ 高亮激活态 -->
             <Style.Triggers>
                 <DataTrigger Binding="{Binding IsEverydayPage}" Value="True">
-                    <Setter Property="Background" Value="#cbf1f5"/>
+                    <Setter Property="Background" Value="#00BFA5"/>
+                    <!-- 高亮色 -->
+                    <Setter Property="Foreground" Value="White"/>
                 </DataTrigger>
             </Style.Triggers>
         </Style>
 
+
+
         <!-- 本周复盘按钮样式 -->
         <Style x:Key="EveryweekButtonStyle" TargetType="Button">
-            <Setter Property="Background" Value="White"/>
-            <Setter Property="Foreground" Value="{DynamicResource {x:Static SystemColors.ControlTextBrushKey}}"/>
+            <!-- 和 Everyday 样式一样的结构 -->
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Foreground" Value="Black"/>
+            <Setter Property="Padding" Value="15,10"/>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
-                        <Border Background="{TemplateBinding Background}" CornerRadius="20" Padding="{TemplateBinding Padding}">
-                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        <Border Background="{TemplateBinding Background}"
+                        BorderBrush="{TemplateBinding BorderBrush}"
+                        BorderThickness="1"
+                        CornerRadius="6">
+                            <ContentPresenter HorizontalAlignment="Center"
+                                      VerticalAlignment="Center"
+                                      Margin="{TemplateBinding Padding}" />
                         </Border>
                     </ControlTemplate>
                 </Setter.Value>
             </Setter>
+
+            <!-- ✅ 每周按钮只在 IsEverydayPage 为 false 时高亮 -->
             <Style.Triggers>
                 <DataTrigger Binding="{Binding IsEverydayPage}" Value="False">
-                    <Setter Property="Background" Value="#cbf1f5"/>
+                    <Setter Property="Background" Value="#00BFA5"/>
+                    <Setter Property="Foreground" Value="White"/>
                 </DataTrigger>
             </Style.Triggers>
         </Style>
+
+
+
 
     </ui:Page.Resources>
 
@@ -95,7 +133,7 @@
         </Grid.RowDefinitions>
 
         <!-- 顶部区域：标题 + 日期选择 -->
-        <Grid Grid.Row="0" Margin="20,20,20,0">
+        <Grid Grid.Row="0" Margin="20,10,20,0">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*"/>
                 <!-- 左：标题+日期 -->
@@ -130,13 +168,12 @@
                 FontSize="18"
                 Command="{Binding NavigateToEverydayCommand}"
                 Style="{StaticResource EverydayButtonStyle}"
-                Margin="0,0,10,0"
-                Padding="15,10"/>
+                Margin="0,0,15,0"/>
+                
                 <Button Content="每周复盘"
                 FontSize="18"
                 Command="{Binding NavigateToEveryweekCommand}"
-                Style="{StaticResource EveryweekButtonStyle}"
-                Padding="15,10"/>
+                Style="{StaticResource EveryweekButtonStyle}"/>
             </StackPanel>
         </Grid>
 

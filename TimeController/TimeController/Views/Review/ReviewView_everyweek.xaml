@@ -24,45 +24,80 @@
             <Setter Property="Height" Value="166"/>
         </Style>
 
+        <!--定义通用按钮样式-->
+        <Style x:Key="BaseReviewButtonStyle" TargetType="Button">
+            <Setter Property="Background" Value="LightGray"/>
+            <Setter Property="Foreground" Value="Black"/>
+            <Setter Property="BorderBrush" Value="Transparent"/>
+        </Style>
+
         <!-- 每日复盘按钮样式 -->
         <Style x:Key="EverydayButtonStyle" TargetType="Button">
-            <Setter Property="Background" Value="White"/>
-            <Setter Property="Foreground" Value="{DynamicResource {x:Static SystemColors.ControlTextBrushKey}}"/>
+            <!-- 基础外观设置 -->
+            <Setter Property="Background" Value="Transparent"/>
+            
+            <Setter Property="Foreground" Value="Black"/>
+            <Setter Property="Padding" Value="15,10"/>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
-                        <Border Background="{TemplateBinding Background}" CornerRadius="20" Padding="{TemplateBinding Padding}">
-                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        <Border Background="{TemplateBinding Background}"
+                            BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="1"
+                            CornerRadius="6">       
+                            <!-- ✅ 让文字和边框有空隙 -->
+                            <ContentPresenter HorizontalAlignment="Center"
+                                      VerticalAlignment="Center"
+                                      Margin="{TemplateBinding Padding}" />
                         </Border>
                     </ControlTemplate>
+
                 </Setter.Value>
             </Setter>
+
+            <!-- ✅ 高亮激活态 -->
             <Style.Triggers>
                 <DataTrigger Binding="{Binding IsEverydayPage}" Value="True">
-                    <Setter Property="Background" Value="#cbf1f5"/>
+                    <Setter Property="Background" Value="#00BFA5"/>
+                    <!-- 高亮色 -->
+                    <Setter Property="Foreground" Value="White"/>
                 </DataTrigger>
             </Style.Triggers>
         </Style>
 
+
+
         <!-- 本周复盘按钮样式 -->
         <Style x:Key="EveryweekButtonStyle" TargetType="Button">
-            <Setter Property="Background" Value="White"/>
-            <Setter Property="Foreground" Value="{DynamicResource {x:Static SystemColors.ControlTextBrushKey}}"/>
+            <!-- 和 Everyday 样式一样的结构 -->
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Foreground" Value="Black"/>
+            <Setter Property="Padding" Value="15,10"/>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
-                        <Border Background="{TemplateBinding Background}" CornerRadius="20" Padding="{TemplateBinding Padding}">
-                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        <Border Background="{TemplateBinding Background}"
+                        BorderBrush="{TemplateBinding BorderBrush}"
+                        BorderThickness="1"
+                        CornerRadius="6">
+                            <ContentPresenter HorizontalAlignment="Center"
+                                      VerticalAlignment="Center"
+                                      Margin="{TemplateBinding Padding}" />
                         </Border>
                     </ControlTemplate>
                 </Setter.Value>
             </Setter>
+
+            <!-- ✅ 每周按钮只在 IsEverydayPage 为 false 时高亮 -->
             <Style.Triggers>
                 <DataTrigger Binding="{Binding IsEverydayPage}" Value="False">
-                    <Setter Property="Background" Value="#cbf1f5"/>
+                    <Setter Property="Background" Value="#00BFA5"/>
+                    <Setter Property="Foreground" Value="White"/>
                 </DataTrigger>
             </Style.Triggers>
         </Style>
+
+
 
 
         <!--滚动卡片-->
@@ -80,13 +115,14 @@
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="88"/>
-            <RowDefinition Height="66"/>
+            <RowDefinition Height="30"/>
+            <RowDefinition Height="55"/>
             <RowDefinition Height="auto"/>
         </Grid.RowDefinitions>
 
         
         <!--顶部区域-->
-        <Grid Grid.Row="0" Margin="20,20,20,0">
+        <Grid Grid.Row="0" Margin="20,10,20,0">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*"/>
                 <!-- 左：标题 -->
@@ -110,18 +146,26 @@
                 FontSize="18"
                 Command="{Binding NavigateToEverydayCommand}"
                 Style="{StaticResource EverydayButtonStyle}"
-                Margin="0,0,10,0"
-                Padding="15,10"/>
+                Margin="0,0,15,0"
+
+                />
+                
                 <Button Content="每周复盘"
                 FontSize="18"
+
                 Command="{Binding NavigateToEveryweekCommand}"
                 Style="{StaticResource EveryweekButtonStyle}"
-                Padding="15,10"/>
+                />
             </StackPanel>
         </Grid>
 
+        <TextBlock Text="{Binding CurrentWeekRangeText}" Grid.Row="1"
+           FontSize="16"
+           Foreground="Gray"
+           HorizontalAlignment="Center"
+           Margin="0,0,0,10"/>
 
-        <StackPanel Grid.Row="1" Orientation="Horizontal" VerticalAlignment="Center" HorizontalAlignment="Right" Width="1104">
+        <StackPanel Grid.Row="2" Orientation="Horizontal" VerticalAlignment="Center" HorizontalAlignment="Right" Width="1104">
 
             <!-- 当前月份 -->
             <TextBlock Text="{Binding CurrentMonthText}" FontWeight="Bold" FontSize="28" Margin="345,0,40,0"/>
@@ -137,7 +181,7 @@
 
         </StackPanel>
 
-        <Grid Grid.Row="2" Margin="20,10,20,20">
+        <Grid Grid.Row="3" Margin="20,0,20,20">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="3*"/>
                 <ColumnDefinition Width="2*"/>
@@ -180,22 +224,41 @@
 
                 <StackPanel  Grid.Row="1">
                 <TextBlock Text="本周被推迟/放弃的任务" FontWeight="Bold" FontSize="24" HorizontalAlignment="Center" Margin="0,0,0,10"/>
-                
-                    <!-- 滚动列表 -->
-                <ScrollViewer VerticalScrollBarVisibility="Auto" Height="200">
+
+                    <!-- 如果有任务就显示列表 -->
+                    <ScrollViewer VerticalScrollBarVisibility="Auto" Height="200">
                     <ItemsControl ItemsSource="{Binding SkippedTasks}">
                         <ItemsControl.ItemTemplate>
                             <DataTemplate>
                                     <Border Style="{StaticResource ListItemBorderStyle}">
                                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Stretch">
                                         <TextBlock Text="{Binding Name}" Width="200" FontSize="18" Margin="20,0,0,0"/>
-                                        <TextBlock Text="{Binding Status}" Margin="100,0,0,0" HorizontalAlignment="Right" FontSize="18"/>
+                                            <TextBlock Text="{Binding StatusText}" Margin="100,0,0,0" HorizontalAlignment="Right" FontSize="18"/>
                                     </StackPanel>
                                 </Border>
                             </DataTemplate>
                         </ItemsControl.ItemTemplate>
                     </ItemsControl>
                 </ScrollViewer>
+
+                    <!--如果没任务就显示提示 -->
+                    <TextBlock Text="🎉 本周没有被推迟或放弃的任务"
+                               FontStyle="Italic"
+                               Foreground="Gray"
+                               HorizontalAlignment="Center">    
+                        <TextBlock.Style>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="Visibility" Value="Collapsed"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding HasSkippedTasks}" Value="False">
+                                        <Setter Property="Visibility" Value="Visible"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBlock.Style>
+                    </TextBlock>
+
+
                 </StackPanel>
                 
             </Grid>
