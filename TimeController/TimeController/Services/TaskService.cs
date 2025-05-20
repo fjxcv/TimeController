@@ -18,6 +18,7 @@ namespace TimeController.Services
             _context = context;
         }
 
+
         public async Task<List<TaskModel>> GetTasksForDate(DateTime date)
         {
             var startOfDay = date.Date;
@@ -50,6 +51,11 @@ namespace TimeController.Services
             return await _context.Tasks
                 .Where(t => t.PlannedDate.Date >= startDate.Date && t.PlannedDate.Date <= endDate.Date)
                 .ToListAsync();
+        }
+
+        public Task<List<TaskModel>> GetAllTasksAsync()
+        {
+            return _context.Tasks.OrderByDescending(t => t.PlannedDate).ToListAsync();
         }
 
         //更新任务状态

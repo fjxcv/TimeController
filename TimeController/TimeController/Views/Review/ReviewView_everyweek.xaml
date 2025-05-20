@@ -167,11 +167,8 @@
 
         <StackPanel Grid.Row="2" Orientation="Horizontal" VerticalAlignment="Center" HorizontalAlignment="Right" Width="1104">
 
-            <!-- 当前月份 -->
-            <TextBlock Text="{Binding CurrentMonthText}" FontWeight="Bold" FontSize="28" Margin="345,0,40,0"/>
-
             <!-- 中间部分带背景、圆角 -->
-            <Border CornerRadius="15" Padding="10,5" Background="#80AAAAAA">
+            <Border CornerRadius="15" Padding="10,5" Background="#80AAAAAA" Margin="375,0,0,0">
                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                     <Button Content="&lt;" Command="{Binding PreviousWeekCommand}" Margin="5,0"/>
                     <TextBlock Text="{Binding CurrentWeekText}" FontWeight="Bold" Margin="10,0" FontSize="24"/>
@@ -187,28 +184,50 @@
                 <ColumnDefinition Width="2*"/>
             </Grid.ColumnDefinitions>
 
-            <!-- 卡片区域 -->
-            <UniformGrid Rows="3" Columns="2" Grid.Column="0" Margin="0,0,20,0">
-                <Border Style="{StaticResource CardStyle}">
-                    <TextBlock Text="{Binding Card1Text}" TextWrapping="Wrap" FontSize="18"/>
-                </Border>
-                <Border Style="{StaticResource CardStyle}">
-                    <TextBlock Text="{Binding Card2Text}" TextWrapping="Wrap" FontSize="18"/>
-                </Border>
-                <Border Style="{StaticResource CardStyle}">
-                    <TextBlock Text="{Binding Card3Text}" TextWrapping="Wrap" FontSize="18"/>
-                </Border>
-                <Border Style="{StaticResource CardStyle}">
-                    <TextBlock Text="{Binding Card4Text}" TextWrapping="Wrap" FontSize="18"/>
-                </Border>
-                <Border Style="{StaticResource CardStyle}">
-                    <TextBlock Text="{Binding Card5Text}" TextWrapping="Wrap" FontSize="18"/>
-                </Border>
-                <Border Style="{StaticResource CardStyle}">
-                    <TextBlock Text="{Binding Card6Text}" TextWrapping="Wrap" FontSize="18"/>
-                </Border>
-            </UniformGrid>
+            <!-- 复盘卡片区域 -->
+            <ItemsControl ItemsSource="{Binding WeeklyReviewCards}" Margin="0,0,20,0">
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <UniformGrid Rows="3" Columns="2" />
+                    </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
 
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <Border Style="{StaticResource CardStyle}">
+
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="5"/>
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                
+                                <!-- 彩色条 -->
+                                <Border Background="{Binding AccentColor}" Grid.Column="0" />
+
+                                <StackPanel Grid.Column="1" Margin="12,8,10,8">
+                                <!-- 图标 -->
+                                <TextBlock Text="{Binding Icon}" FontSize="20" Opacity="0.7" Margin="0,0,0,6"/>
+
+                                <!--复盘标题-->
+                                <TextBlock Text="{Binding Title}"
+                                           FontSize="16"
+                                           FontWeight="SemiBold"
+                                           Foreground="#222"
+                                           Margin="0,0,0,15"/>
+                                <TextBlock Text="{Binding Message}"
+                                           FontSize="18"
+                                           Foreground="#444"
+                                           TextWrapping="Wrap"/>
+
+                            </StackPanel>
+                            </Grid>
+                        </Border>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+
+            <!-- 右边：折线图和被推迟/放弃的任务列表 -->
             <Grid Grid.Column="1">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>

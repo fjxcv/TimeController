@@ -17,6 +17,7 @@ namespace TimeController
             base.OnStartup(e);
 
             var taskService = AppHost.Services.GetRequiredService<ITaskService>();
+            var navService = AppHost.Services.GetRequiredService<INavigationService>();
 
             //获取 DbContext 实例，确保数据库使用迁移初始化
             var db = AppHost.Services.GetRequiredService<TaskDbContext>();
@@ -27,6 +28,17 @@ namespace TimeController
 
             // 打开主窗口
             var mainWindow = new MainWindow();
+
+
+            // 提醒复盘
+            _ = Task.Run(async () =>
+            {
+                await Task.Delay(1000); // 延迟 1 秒
+                await Application.Current.Dispatcher.InvokeAsync(async () =>
+                {
+                    await ReviewReminderService.TryShowReviewReminderAsync(taskService, navService);
+                });
+            });
 
         }
 

@@ -9,6 +9,10 @@ using TimeController.Services;
 using System.Threading.Tasks;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 using System.Diagnostics;
+using LiveChartsCore;
+using LiveChartsCore.SkiaSharpView;
+using LiveChartsCore.SkiaSharpView.Painting;
+using SkiaSharp;
 
 namespace TimeController.ViewModels
 {
@@ -22,6 +26,13 @@ namespace TimeController.ViewModels
         public bool IsEverydayPage { get; set; } = false;
         public event Action? NavigateToEverydayRequested;
         public bool HasSkippedTasks => SkippedTasks != null && SkippedTasks.Count > 0;
+        public ObservableCollection<ReviewCardModel> WeeklyReviewCards { get; set; } = new();
+
+        //折线图相关
+        public ISeries[] Series { get; set; }
+        public Axis[] XAxes { get; set; }
+        public Axis[] YAxes { get; set; }
+        public SolidColorPaint TooltipTextPaint { get; set; }
 
 
         public DateTime SelectedWeekStart
@@ -161,7 +172,7 @@ namespace TimeController.ViewModels
             t.Status == MyTaskStatus.Postponed ||
             t.Status == MyTaskStatus.Abandoned).ToList();
 
-            // ✅ 卡片分析逻辑（加在这儿）
+            //卡片分析逻辑
             var allTasks = await _taskService.GetAllTasksAsync(); // 加一个历史任务获取接口
             var generator = new ReviewCardGenerator();
 
@@ -170,6 +181,7 @@ namespace TimeController.ViewModels
             );
 
             SkippedTasks = new ObservableCollection<TaskModel>(skipped);
+            LoadChart(tasks);
             OnPropertyChanged(nameof(SkippedTasks));
             OnPropertyChanged(nameof(HasSkippedTasks));
             OnPropertyChanged(nameof(WeeklyReviewCards));
@@ -219,17 +231,99 @@ namespace TimeController.ViewModels
             SelectedWeekStart = SelectedWeekStart.AddDays(7);
         }
 
-
-
-        public Task<List<TaskModel>> GetAllTasksAsync()
+        //折线图赋值
+        private void LoadChart(List<TaskModel> weeklyTasks)
         {
-            return _context.Tasks.OrderByDescending(t => t.PlannedDate).ToListAsync();
+            var days = Enumerable.Range(0, 7)
+                .Select(offset => DateTime.Today.StartOfWeek(DayOfWeek.Monday).AddDays(offset))
+                .ToArray();
+
+            var completedCounts = new List<int>();
+            var pendingCounts = new List<int>();
+            var postponedCounts = new List<int>();
+
+
+            foreach (var day in days)
+            {
+                completedCounts.Add(weeklyTasks.Count(t =>
+                    t.PlannedDate.Date == day.Date &&
+                    t.Status == MyTaskStatus.Completed));
+
+                postponedCounts.Add(weeklyTasks.Count(t =>
+                    t.PlannedDate.Date == day.Date &&
+                    (t.Status == MyTaskStatus.Postponed || t.Status == MyTaskStatus.Abandoned)));
+            }
+
+            int safeMax(List<int> list) => list.Any() ? list.Max() : 0;//预防无任务记录的情况
+            int maxValue = Math.Max(
+                Math.Max(safeMax(completedCounts), safeMax(pendingCounts)),
+                safeMax(postponedCounts));
+
+            int dynamicMax = Math.Max(5, maxValue + 1); // 任务上限至少是5，再+1防止顶格
+
+            Series = new ISeries[]
+            {
+                new LineSeries<int>
+                {
+                    Values = completedCounts,
+                    Name = "已完成",
+                    Stroke = new SolidColorPaint(SKColors.Green, 2),
+                    Fill = null
+                },
+
+                new LineSeries<int>
+                {
+                    Values = postponedCounts,
+                    Name = "推迟/放弃",
+                    Stroke = new SolidColorPaint(SKColors.Red, 2),
+                    Fill = null
+                }
+                    };
+
+            XAxes = new Axis[]
+                {
+                    new Axis
+                    {
+                        Labels = days.Select(d => d.ToString("MM/dd")).ToArray(),
+                        LabelsRotation = 0
+                    }
+                };
+
+            YAxes = new Axis[]
+                {
+                    new Axis
+                    {
+                        MinLimit = 0,
+                        MaxLimit = dynamicMax
+                    }
+                };
+
+            //设置个字体防止框框
+            TooltipTextPaint = new SolidColorPaint(SKColors.Black)
+            {
+                SKTypeface = SKTypeface.FromFamilyName("微软雅黑")
+            };
+
+
+            OnPropertyChanged(nameof(Series));
+            OnPropertyChanged(nameof(XAxes));
+            OnPropertyChanged(nameof(YAxes));
+            OnPropertyChanged(nameof(TooltipTextPaint));
         }
-
-
 
         public event PropertyChangedEventHandler? PropertyChanged;
         protected void OnPropertyChanged(string propertyName) =>
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
     }
+
+    // 扩展方法：获取本周的开始日期
+    public static class DateTimeExtensions
+    {
+        public static DateTime StartOfWeek(this DateTime dt, DayOfWeek startOfWeek)
+        {
+            int diff = (7 + (dt.DayOfWeek - startOfWeek)) % 7;
+            return dt.AddDays(-1 * diff).Date;
+        }
+    }
+
 }

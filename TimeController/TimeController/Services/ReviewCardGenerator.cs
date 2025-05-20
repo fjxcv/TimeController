@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using TimeController.Helpers;
 using TimeController.Models;
 
 namespace TimeController.Services
@@ -57,14 +58,14 @@ namespace TimeController.Services
                 if (rate >= 0.9)
                     message = "🎉 本周完成率非常高，继续保持！";
                 else if (rate >= 0.6)
-                    message = "✅ 本周任务完成良好，可以略作优化。";
+                    message = "✅ 本周任务率完成良好，可以略作优化。";
                 else if (rate >= 0.3)
-                    message = "⚠️ 本周任务完成较低，建议复盘原因。";
+                    message = "⚠️ 本周任务完成率较低，建议复盘原因。";
                 else
                     message = "🚨 完成率偏低，可考虑减少任务数量或优化计划。";
             }
 
-            return new ReviewCardModel(icon, title, message);
+            return new ReviewCardModel(icon, title, message, CardAccentHelper.GetAccentColor(title));
         }
 
         private ReviewCardModel GenerateRepeatedPostponeCard(List<TaskModel> tasksThisWeek, List<TaskModel> taskHistory)
@@ -113,7 +114,7 @@ namespace TimeController.Services
                 message = "本周没有任务被连续推迟，干得漂亮！";
             }
 
-            return new ReviewCardModel(icon, title, message);
+            return new ReviewCardModel(icon, title, message, CardAccentHelper.GetAccentColor(title));
         }
 
         private ReviewCardModel GenerateTaskDistributionCard(List<TaskModel> tasks)
@@ -134,7 +135,7 @@ namespace TimeController.Services
             else
                 message = "✅ 任务分配较合理，继续保持当前节奏。";
 
-            return new ReviewCardModel(icon, title, message);
+            return new ReviewCardModel(icon, title, message, CardAccentHelper.GetAccentColor(title));
         }
 
         private ReviewCardModel GenerateOverPlanningCard(List<TaskModel> tasks)
@@ -154,7 +155,7 @@ namespace TimeController.Services
             else
                 message = "📊 任务计划适中，完成情况合理。";
 
-            return new ReviewCardModel(icon, title, message);
+            return new ReviewCardModel(icon, title, message, CardAccentHelper.GetAccentColor(title));
         }
 
         private ReviewCardModel GenerateLifeTaskBalanceCard(List<TaskModel> tasks)
@@ -162,21 +163,35 @@ namespace TimeController.Services
             var icon = "🧩";
             var title = "生活类任务反思";
 
-            // 假设 Type == "生活" 是生活任务
-            int lifeTasks = tasks.Count(t => t.Type == "生活");
+            //生活分类判断
+            var lifeTypes = new[] { TaskType.日常任务, TaskType.自我提升, TaskType.其它 };
+
+            int lifeTasks = tasks.Count(t => lifeTypes.Contains(t.Type));
+
             int total = tasks.Count;
 
             string message;
 
-            if (lifeTasks == 0)
-                message = "🧘‍♂️ 本周没有生活类任务，建议加入一些放松安排。";
+            if (total == 0)
+            {
+                message = "📝 本周没有任务记录，建议设定适当目标。";
+            }
+            else if (lifeTasks == 0)
+            {
+                message = "🧘‍ 本周没有生活类任务，建议加入一些放松安排。";
+            }
             else if (lifeTasks >= total * 0.6)
+            {
                 message = "📌 生活任务占比较高，注意兼顾工作目标。";
+            }
             else
+            {
                 message = "✅ 生活与工作安排平衡得很好，继续保持。";
+            }
 
-            return new ReviewCardModel(icon, title, message);
+            return new ReviewCardModel(icon, title, message, CardAccentHelper.GetAccentColor(title));
         }
+
 
         private ReviewCardModel GenerateFinalEncouragementCard(List<TaskModel> tasks)
         {
@@ -199,10 +214,10 @@ namespace TimeController.Services
                 else if (rate >= 0.6)
                     message = "👏 完成率不错，继续加油！";
                 else
-                    message = "💡 虽然完成不多，但每一个努力都值得鼓励！";
+                    message = "💡 虽然完成不多，但每一个努力都值得鼓励！";  
             }
 
-            return new ReviewCardModel(icon, title, message);
+            return new ReviewCardModel(icon, title, message, CardAccentHelper.GetAccentColor(title));
         }
 
     }
