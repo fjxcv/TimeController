@@ -23,8 +23,10 @@ namespace TimeController
             var db = AppHost.Services.GetRequiredService<TaskDbContext>();
             db.Database.Migrate();
 
-            //重置开发数据
+        
             await ((TaskService)taskService).ResetTaskDataAsync();
+        
+
 
             // 打开主窗口
             var mainWindow = new MainWindow();

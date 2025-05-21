@@ -41,7 +41,7 @@
                    Width="120" 
                    Height="40"
                    FontSize="18" 
-                   Background="#8ED6D4" 
+                   Background="#FFCCCCCC" 
                    BorderThickness="0"
                    HorizontalAlignment="Right" 
                    VerticalAlignment="Top" 
@@ -59,13 +59,13 @@
                    Command="{Binding PrevYearCommand}" 
                    Width="50" 
                    Height="40" 
-                   Background="#8ED6D4" 
+                   Background="#FFCCCCCC" 
                    BorderThickness="0" 
                    FontSize="20" 
                    Margin="0,0,10,0"/>
             
             <!-- 当前年份 -->
-            <Border Background="#B2E3E0" 
+            <Border Background="#FFEBEBEB" 
                    CornerRadius="20" 
                    Padding="20,0" 
                    Margin="0,0,10,0">
@@ -81,7 +81,7 @@
                    Command="{Binding NextYearCommand}" 
                    Width="50" 
                    Height="40" 
-                   Background="#8ED6D4" 
+                   Background="#FFCCCCCC" 
                    BorderThickness="0" 
                    FontSize="20" 
                    Margin="0,0,30,0"/>
@@ -92,13 +92,13 @@
                    Command="{Binding PrevMonthCommand}" 
                    Width="50" 
                    Height="40" 
-                   Background="#8ED6D4" 
+                   Background="#FFCCCCCC" 
                    BorderThickness="0" 
                    FontSize="20" 
                    Margin="0,0,10,0"/>
             
             <!-- 当前月份 -->
-            <Border Background="#B2E3E0" 
+            <Border Background="#FFEBEBEB" 
                    CornerRadius="20" 
                    Padding="20,0" 
                    Margin="0,0,10,0">
@@ -114,7 +114,7 @@
                    Command="{Binding NextMonthCommand}" 
                    Width="50" 
                    Height="40" 
-                   Background="#8ED6D4" 
+                   Background="#FFCCCCCC" 
                    BorderThickness="0" 
                    FontSize="20"/>
         </StackPanel>

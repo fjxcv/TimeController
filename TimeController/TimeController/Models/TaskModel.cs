@@ -1,4 +1,25 @@
-﻿using System;
+﻿
+
+//Id = table.Column<int>(type: "INTEGER", nullable: false)              任务的id
+//Name = table.Column<string>(type: "TEXT", nullable: false),           任务名称
+//Note = table.Column<string>(type: "TEXT", nullable: true),            任务备注（强管理）
+//Type = table.Column<string>(type: "TEXT", nullable: true),            任务类型（强管理）
+//Mode = table.Column<string>(type: "TEXT", nullable: false),           咸鱼or强管理模式
+//PlannedDate = table.Column<DateTime>(type: "TEXT", nullable: false),  任务所在日期（强管理）
+//IsAllDay = table.Column<bool>(type: "INTEGER", nullable: false),      是否为全天任务（强管理）
+//StartTime = table.Column<DateTime>(type: "TEXT", nullable: true),     开始时间（强管理）
+//EndTime = table.Column<DateTime>(type: "TEXT", nullable: true),       结束时间（强管理）
+//Status = table.Column<string>(type: "TEXT", nullable: false),         任务状态（强管理）
+//Reason = table.Column<string>(type: "TEXT", nullable: true),          推迟和放弃原因（强管理）
+//PostponeDate = table.Column<DateTime>(type: "TEXT", nullable: true),  推迟的日期（强管理）
+//Category = table.Column<string>(type: "TEXT", nullable: true),        分类（咸鱼模式）
+//CreatedAt = table.Column<DateTime>(type: "TEXT", nullable: false),    创建时间（咸鱼模式）
+//IsCompleted = table.Column<bool>(type: "INTEGER", nullable: false),   是否完成（咸鱼模式，疑似冗余）
+//IsReminderEnabled = table.Column<bool>(type: "INTEGER", nullable: false),是否提醒（强管理）
+//IsEditing = table.Column<bool>(type: "INTEGER", nullable: false)       是否正在编辑（咸鱼模式，疑似冗余）
+
+
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 

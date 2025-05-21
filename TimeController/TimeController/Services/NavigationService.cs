@@ -38,9 +38,6 @@ namespace TimeController.Services
                             nav.NavigateTo(AppFrame.Instance!, "Everyday");
                         };
 
-                        //手动刷新数据
-                        vm.ReloadThisWeek();
-
                         var page = new ReviewView_everyweek(vm);
                         frame.Navigate(page);
                         break;
