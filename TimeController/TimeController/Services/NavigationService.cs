@@ -1,0 +1,54 @@
+
+
+using System;
+using System.Windows.Controls;
+using TimeController.Views.Review;
+using Microsoft.Extensions.DependencyInjection;
+using TimeController.ViewModels;
+using TimeController.Helpers;
+
+namespace TimeController.Services
+{
+    public class NavigationService : INavigationService
+    {
+        public void NavigateTo(Frame frame, string viewKey)
+        {
+            switch (viewKey)
+            {
+                case "Everyday":
+                    {
+                        var taskService = App.AppHost.Services.GetRequiredService<ITaskService>();
+                        var vm = new ReviewViewModel_everyday(taskService);
+                        vm.NavigateToEveryweekRequested += () =>
+                        {
+                            NavigateTo(frame, "Everyweek");
+                        };
+                        var page = new ReviewView_everyday(vm);
+                        frame.Navigate(page);
+                        break;
+                    }
+                case "Everyweek":
+                    {
+                        var taskService = App.AppHost.Services.GetRequiredService<ITaskService>();
+                        var vm = new ReviewViewModel_everyweek(taskService);
+
+                        vm.NavigateToEverydayRequested += () =>
+                        {
+                            var nav = App.AppHost.Services.GetRequiredService<INavigationService>();
+                            nav.NavigateTo(AppFrame.Instance!, "Everyday");
+                        };
+
+                        //手动刷新数据
+                        vm.ReloadThisWeek();
+
+                        var page = new ReviewView_everyweek(vm);
+                        frame.Navigate(page);
+                        break;
+                    }
+                default:
+                    throw new ArgumentException($"Unknown view key: {viewKey}");
+            }
+        }
+    }
+
+}
