@@ -213,7 +213,7 @@
 
 
                     <!-- Task Grid -->
-                    <Grid Grid.Row="1" Grid.ColumnSpan="7">
+                    <Grid x:Name="taskGrid" Grid.Row="1" Grid.ColumnSpan="7">
                         
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="140"/> 
@@ -287,10 +287,32 @@
                         <Border x:Name="TaskColumn4" Grid.Column="4" Grid.Row="0" Grid.RowSpan="25" Background="Transparent"/>
                         <Border x:Name="TaskColumn5" Grid.Column="5" Grid.Row="0" Grid.RowSpan="25" Background="Transparent"/>
                         <Border x:Name="TaskColumn6" Grid.Column="6" Grid.Row="0" Grid.RowSpan="25" Background="Transparent"/>
+                        
+                        
+                        <ItemsControl ItemsSource="{Binding TaskBlocks}">
+                            <ItemsControl.ItemContainerStyle>
+                                <Style TargetType="ContentPresenter">
+                                    <Setter Property="Grid.Column" Value="{Binding Column}" />
+                                    <Setter Property="Grid.Row" Value="{Binding Row}" />
+                                    <Setter Property="Grid.RowSpan" Value="{Binding RowSpan}" />
+                                </Style>
+                            </ItemsControl.ItemContainerStyle>
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Border Background="{Binding Brush}">
+                                        <TextBlock Text="{Binding Name}" />
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+
+
+
 
                     </Grid>
                 </Grid>
-
+                
+                
 
             </Grid>
         </ScrollViewer>
@@ -303,6 +325,11 @@
             Click="AddTaskButton_Click"
             />
         </Canvas>
+        
+
+
+
+
     </Grid>
 </ui:Page>
  

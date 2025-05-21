@@ -10,7 +10,7 @@ namespace TimeController.ViewModels
     public class AddTaskDialogViewModel : INotifyPropertyChanged
     {
 
-        public ICommand SaveCommand { get; }
+        public RelayCommand SaveCommand { get; }
 
         public TaskModel Task { get; } = new TaskModel();
 
@@ -27,14 +27,30 @@ namespace TimeController.ViewModels
 
         }
 
-
         public event Action<TaskModel>? SaveRequested;
 
         private void OnSave()
         {
-            SaveRequested?.Invoke(Task);
+            // 创建 Task 的副本，避免外部修改 ViewModel 内部状态
+            var newTask = new TaskModel
+            {
+                Name = this.Name,
+                Note = this.Note,
+                Type = this.Type,
+                IsAllDay = this.IsAllDay,
+                IsReminderEnabled = this.IsReminderEnabled,
+                StartTime = this.Task.StartTime,
+                EndTime = this.Task.EndTime,
+                PlannedDate = this.Task.PlannedDate,
+                // 其他需要的属性
+            };
+            SaveRequested?.Invoke(newTask);
+            // 可选：保存后自动关闭窗口
+            CloseAction?.Invoke();
         }
 
+        // 增加关闭窗口的回调
+        public Action? CloseAction { get; set; }
 
         public string Name
         {
@@ -45,14 +61,15 @@ namespace TimeController.ViewModels
         private string? _note;
         public string? Note
         {
-            get => _note;
+            get => Task.Note;
             set
             {
-                _note = value;
+                Task.Note = value;
                 OnPropertyChanged();
                 OnPropertyChanged(nameof(NoteCharHint));
             }
         }
+
 
         public string NoteCharHint => $"{Note?.Length ?? 0}/200";
 

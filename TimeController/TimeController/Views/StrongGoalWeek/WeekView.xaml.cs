@@ -13,7 +13,9 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using Microsoft.Extensions.DependencyInjection;
 using TimeController.Models;
+using TimeController.Services;
 using TimeController.ViewModels;
 using Page = iNKORE.UI.WPF.Modern.Controls.Page;
 
@@ -45,6 +47,14 @@ namespace TimeController.Views.StrongGoalWeek
                     UpdateDateDisplay(_viewModel.CurrentDate);
                 }
             };
+
+            // 假设 taskGrid 是你的 Task Grid
+            //taskGrid.RowDefinitions.Clear();
+            //for (int i = 0; i < 25; i++)
+             //   taskGrid.RowDefinitions.Add(new RowDefinition { Height = new GridLength(40) });
+           // taskGrid.ColumnDefinitions.Clear();
+            //for (int i = 0; i < 7; i++)
+              //  taskGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(140) });
 
 
         }
@@ -79,11 +89,6 @@ namespace TimeController.Views.StrongGoalWeek
             var currentDate = vm?.CurrentDate ?? DateTime.Today;
 
             DateTime monday = currentDate.Date;
-            while (monday.DayOfWeek != DayOfWeek.Monday)
-            {
-                monday = monday.AddDays(-1);
-            }
-
             while (monday.DayOfWeek != DayOfWeek.Monday)
             {
                 monday = monday.AddDays(-1);
@@ -134,6 +139,8 @@ namespace TimeController.Views.StrongGoalWeek
 
         }
 
+
+
         //取消选中的方法
         private void ClearSelection()
         {
@@ -152,8 +159,6 @@ namespace TimeController.Views.StrongGoalWeek
             _clickedDate = null; // 清除选择的日期（你要先把 _clickedDate 声明为 Nullable）
         }
 
-
-
         //高亮
         private void HighlightColumn(int index)
         {
@@ -168,10 +173,6 @@ namespace TimeController.Views.StrongGoalWeek
                     taskCol.Background = Brushes.Transparent; // 任务区域默认透明
             }
 
-            var selectedDateCol = FindName($"DateColumn{index}") as Border;
-            if (selectedDateCol != null)
-                selectedDateCol.Background = new SolidColorBrush(Color.FromRgb(210, 210, 210)); // 顶部高亮
-
             var selectedTaskCol = FindName($"TaskColumn{index}") as Border;
             if (selectedTaskCol != null)
                 selectedTaskCol.Background = new SolidColorBrush(Color.FromRgb(230, 230, 230)); // 任务区高亮
@@ -180,18 +181,17 @@ namespace TimeController.Views.StrongGoalWeek
 
         private void AddTaskButton_Click(object sender, RoutedEventArgs e)
         {
-            var dialog = new AddTaskDialog(_clickedDate)
-            {
-                Owner = Window.GetWindow(this) //居中当前窗口
-            };
-            
+            var dialog = new AddTaskDialog(_clickedDate);
 
             if (dialog.ShowDialog() == true && dialog.ResultTask != null && !string.IsNullOrWhiteSpace(dialog.ResultTask.Name))
             {
                 var task = dialog.ResultTask;
 
-                // 添加到当前视图的任务列表中
-                _viewModel.Tasks.Add(task);
+                // 关键：设置任务的日期
+                if (_clickedDate.HasValue)
+                    task.PlannedDate = _clickedDate.Value.Date;
+
+                _viewModel.AddTask(task); // 推荐用 AddTask 方法，见前述建议
             }
 
             AddTaskButton.Visibility = Visibility.Collapsed;

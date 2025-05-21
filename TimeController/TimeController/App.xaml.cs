@@ -50,7 +50,7 @@ namespace TimeController
                 {
                     services.AddDbContext<TaskDbContext>(options =>
                     {
-                        options.UseSqlite("Data Source=tasks.db");
+                        options.UseSqlite("Data Source=task.db");
                     });
 
                     services.AddScoped<ITaskService, TaskService>();

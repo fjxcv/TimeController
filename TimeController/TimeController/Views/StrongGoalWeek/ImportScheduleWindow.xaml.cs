@@ -1,35 +1,30 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Shapes;
 using System.Diagnostics;
-
+using TimeController.ViewModels;
+using System.Windows.Controls;
 
 namespace TimeController.Views.StrongGoalWeek
 {
-    /// <summary>
-    /// ImportScheduleWindow.xaml 的交互逻辑
-    /// </summary>
     public partial class ImportScheduleWindow : Window
     {
         public ImportScheduleWindow()
         {
             InitializeComponent();
+            DataContext = new ImportScheduleViewModel(); // 绑定 ViewModel
         }
-
 
         // 通过链接导入
         private void Import_Click(object sender, RoutedEventArgs e)
         {
+            // Assuming InputBox is a TextBox defined in the XAML file
+            TextBox InputBox = this.FindName("InputBox") as TextBox;
+
+            if (InputBox == null)
+            {
+                MessageBox.Show("未找到名为 'InputBox' 的控件，请检查 XAML 文件。");
+                return;
+            }
+
             string input = InputBox.Text.Trim();
             if (string.IsNullOrEmpty(input))
             {
@@ -46,22 +41,6 @@ namespace TimeController.Views.StrongGoalWeek
 
             //TODO:导入逻辑
         }
-
-        // 文件导入
-        private void Download_Click(object sender, RoutedEventArgs e)
-        {
-            var openFileDialog = new Microsoft.Win32.OpenFileDialog
-            {
-                Filter = "Excel Files (*.xlsx)|*.xlsx|CSV Files (*.csv)|*.csv|All files (*.*)|*.*",
-                Title = "选择课表文件"
-            };
-
-            if (openFileDialog.ShowDialog() == true)
-            {
-                string filePath = openFileDialog.FileName;
-                // TODO: 解析并导入课表逻辑
-                MessageBox.Show("已选择文件：" + filePath + "，请在这里实现解析和导入逻辑。");
-            }
-        }
     }
 }
+
