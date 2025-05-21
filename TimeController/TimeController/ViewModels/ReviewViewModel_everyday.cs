@@ -179,7 +179,10 @@ namespace TimeController.ViewModels
             // 更新待处理任务
             var today = DateTime.Today;
             TodayPendingTasks = new ObservableCollection<TaskModel>(
-                tasks.Where(t => t.Status == MyTaskStatus.Pending && t.PlannedDate.Date == today));
+                tasks.Where(t =>
+                    (t.Status == MyTaskStatus.Pending || t.Status == MyTaskStatus.Postponed) &&
+                    t.PlannedDate.Date == date));       //只要PlannedDate == date，就显示
+
 
             // 获取所有 pending 任务
             var allPending = await _taskService.GetAllPendingTasksAsync();
@@ -221,6 +224,8 @@ namespace TimeController.ViewModels
             task.Status = MyTaskStatus.Abandoned;
 
             await _taskService.UpdateTaskAsync(task);
+
+            LoadTasksForDate(SelectedDate ?? DateTime.Today);
         }
 
 
@@ -262,6 +267,8 @@ namespace TimeController.ViewModels
                 task.Status = MyTaskStatus.Postponed;
 
                 await _taskService.UpdateTaskAsync(task);
+
+                LoadTasksForDate(SelectedDate ?? DateTime.Today);
             }
             else
             {

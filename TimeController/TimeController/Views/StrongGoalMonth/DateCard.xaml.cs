@@ -46,8 +46,8 @@ namespace TimeController.Views.StrongGoalMonth
         public DateCard()
         {
             InitializeComponent();
-            // 注册鼠标左键抬起事件处理程序
-            this.MouseLeftButtonUp += Border_MouseLeftButtonUp;
+            //// 注册鼠标左键抬起事件处理程序
+            //this.MouseLeftButtonUp += Border_MouseLeftButtonUp;
         }
 
         /// <summary>

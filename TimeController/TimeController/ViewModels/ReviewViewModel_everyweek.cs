@@ -98,6 +98,10 @@ namespace TimeController.ViewModels
         }
 
 
+        public void ReloadThisWeek()
+        {
+            LoadTasksForWeek(SelectedWeekStart);
+        }
 
 
         public ICommand NavigateToEverydayCommand { get; }
