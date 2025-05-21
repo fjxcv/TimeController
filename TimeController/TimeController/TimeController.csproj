@@ -10,13 +10,29 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="Converters\BoolToVisibilityConverter.txt" />
+    <None Remove="Converters\NewFile1.txt" />
+    <None Remove="Converters\NewFile2.txt" />
+    <None Remove="Helpers\NewFile1.txt" />
+    <None Remove="Services\NewFile1.txt" />
+    <None Remove="Services\NewFile2.txt" />
+    <None Remove="Services\NewFile3.txt" />
+    <None Remove="Services\NewFile4.txt" />
+    <None Remove="Services\NewFile5.txt" />
+    <None Remove="ViewModels\NewFile1.txt" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="iNKORE.UI.WPF" Version="1.2.8" />
     <PackageReference Include="iNKORE.UI.WPF.Modern" Version="0.10.0" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.5" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="9.0.5" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="9.0.5" />
+    <PackageReference Include="Microsoft.Extensions.Hosting" Version="9.0.5" />
   </ItemGroup>
 
   <ItemGroup>
     <Folder Include="Views\Components\" />
-    <Folder Include="Services\" />
     <Folder Include="Styles\" />
     <Folder Include="Assets\" />
   </ItemGroup>
