@@ -8,7 +8,355 @@
         mc:Ignorable="d" 
         Title="" d:DesignHeight="800" d:DesignWidth="1104">
 
-    <Grid>
+    <Grid x:Name="RootGrid">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <!-- Header -->
+        <Grid Grid.Row="0" Margin="24,0,24,0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+
+            <TextBlock Grid.Column="0" 
+                       Text="强目标模式"
+                       FontSize="24"
+                       FontWeight="Bold"
+                       VerticalAlignment="Center"/>
+
+            <StackPanel Grid.Column="1" 
+                        Orientation="Horizontal" 
+                        HorizontalAlignment="Center">
+                <Button Content="&lt;" Margin="8,0" Padding="8,4" Command="{Binding PreviousMonthCommand}"/>
+                <TextBlock x:Name="MonthText" Text="{Binding MonthText}" VerticalAlignment="Center" Margin="8,0"/>
+                <Button Content="&gt;" Margin="8,0" Padding="8,4" Command="{Binding NextMonthCommand}"/>
+                <Button Content="&lt;" Margin="24,0,8,0" Padding="8,4" Command="{Binding PreviousWeekCommand}"/>
+                <TextBlock x:Name="WeekText" Text="{Binding WeekText}" VerticalAlignment="Center" Margin="8,0"/>
+                <Button Content="&gt;" Margin="8,0" Padding="8,4" Command="{Binding NextWeekCommand}"/>
+            </StackPanel>
+
+            <!-- 导入课表按钮 -->
+            <Button Grid.Column="2"
+                    Content="导入课表" 
+                    Margin="0,0,16,0"
+                    Padding="16,8"
+                    Click="ImportSchedule_Click"/>
+
+            <!-- 进入复盘按钮 -->
+            <Button Grid.Column="3"
+                    Content="进入复盘" 
+                    Padding="16,8"/>
+        </Grid>
+
+        <!-- Content -->
+        <ScrollViewer Grid.Row="1" Margin="24,24,24,0" >
+            <Grid x:Name="WeekContentGrid" Background="Transparent" MouseDown="WeekContentGrid_MouseDown" Margin="0" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+
+
+                <!-- Time Axis -->
+                <Grid Grid.Column="0" Width="75">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="100"/>
+                        <!-- 全天任务 -->
+                        <RowDefinition Height="40"/>
+                        <!-- 0:00 -->
+                        <RowDefinition Height="40"/>
+                        <!-- 1:00 -->
+                        <RowDefinition Height="40"/>
+                        <!-- 2:00 -->
+                        <RowDefinition Height="40"/>
+                        <!-- 3:00 -->
+                        <RowDefinition Height="40"/>
+                        <!-- 4:00 -->
+                        <RowDefinition Height="40"/>
+                        <!-- 5:00 -->
+                        <RowDefinition Height="40"/>
+                        <!-- 6:00 -->
+                        <RowDefinition Height="40"/>
+                        <!-- 7:00 -->
+                        <RowDefinition Height="40"/>
+                        <!-- 8:00 -->
+                        <RowDefinition Height="40"/>
+                        <!-- 9:00 -->
+                        <RowDefinition Height="40"/>
+                        <!-- 10:00 -->
+                        <RowDefinition Height="40"/>
+                        <!-- 11:00 -->
+                        <RowDefinition Height="40"/>
+                        <!-- 12:00 -->
+                        <RowDefinition Height="40"/>
+                        <!-- 13:00 -->
+                        <RowDefinition Height="40"/>
+                        <!-- 14:00 -->
+                        <RowDefinition Height="40"/>
+                        <!-- 15:00 -->
+                        <RowDefinition Height="40"/>
+                        <!-- 16:00 -->
+                        <RowDefinition Height="40"/>
+                        <!-- 17:00 -->
+                        <RowDefinition Height="40"/>
+                        <!-- 18:00 -->
+                        <RowDefinition Height="40"/>
+                        <!-- 19:00 -->
+                        <RowDefinition Height="40"/>
+                        <!-- 20:00 -->
+                        <RowDefinition Height="40"/>
+                        <!-- 21:00 -->
+                        <RowDefinition Height="40"/>
+                        <!-- 22:00 -->
+                        <RowDefinition Height="40"/>
+                        <!-- 23:00 -->
+                    </Grid.RowDefinitions>
+                    <TextBlock Text="全天任务" Grid.Row="0" VerticalAlignment="Center" HorizontalAlignment="Left"/>
+                    <TextBlock Text="0:00" Grid.Row="1" VerticalAlignment="Center" HorizontalAlignment="Left"/>
+                    <TextBlock Text="1:00" Grid.Row="2" VerticalAlignment="Center" HorizontalAlignment="Left"/>
+                    <TextBlock Text="2:00" Grid.Row="3" VerticalAlignment="Center" HorizontalAlignment="Left"/>
+                    <TextBlock Text="3:00" Grid.Row="4" VerticalAlignment="Center" HorizontalAlignment="Left"/>
+                    <TextBlock Text="4:00" Grid.Row="5" VerticalAlignment="Center" HorizontalAlignment="Left"/>
+                    <TextBlock Text="5:00" Grid.Row="6" VerticalAlignment="Center" HorizontalAlignment="Left"/>
+                    <TextBlock Text="6:00" Grid.Row="7" VerticalAlignment="Center" HorizontalAlignment="Left"/>
+                    <TextBlock Text="7:00" Grid.Row="8" VerticalAlignment="Center" HorizontalAlignment="Left"/>
+                    <TextBlock Text="8:00" Grid.Row="9" VerticalAlignment="Center" HorizontalAlignment="Left"/>
+                    <TextBlock Text="9:00" Grid.Row="10" VerticalAlignment="Center" HorizontalAlignment="Left"/>
+                    <TextBlock Text="10:00" Grid.Row="11" VerticalAlignment="Center" HorizontalAlignment="Left"/>
+                    <TextBlock Text="11:00" Grid.Row="12" VerticalAlignment="Center" HorizontalAlignment="Left"/>
+                    <TextBlock Text="12:00" Grid.Row="13" VerticalAlignment="Center" HorizontalAlignment="Left"/>
+                    <TextBlock Text="13:00" Grid.Row="14" VerticalAlignment="Center" HorizontalAlignment="Left"/>
+                    <TextBlock Text="14:00" Grid.Row="15" VerticalAlignment="Center" HorizontalAlignment="Left"/>
+                    <TextBlock Text="15:00" Grid.Row="16" VerticalAlignment="Center" HorizontalAlignment="Left"/>
+                    <TextBlock Text="16:00" Grid.Row="17" VerticalAlignment="Center" HorizontalAlignment="Left"/>
+                    <TextBlock Text="17:00" Grid.Row="18" VerticalAlignment="Center" HorizontalAlignment="Left"/>
+                    <TextBlock Text="18:00" Grid.Row="19" VerticalAlignment="Center" HorizontalAlignment="Left"/>
+                    <TextBlock Text="19:00" Grid.Row="20" VerticalAlignment="Center" HorizontalAlignment="Left"/>
+                    <TextBlock Text="20:00" Grid.Row="21" VerticalAlignment="Center" HorizontalAlignment="Left"/>
+                    <TextBlock Text="21:00" Grid.Row="22" VerticalAlignment="Center" HorizontalAlignment="Left"/>
+                    <TextBlock Text="22:00" Grid.Row="23" VerticalAlignment="Center" HorizontalAlignment="Left"/>
+                    <TextBlock Text="23:00" Grid.Row="24" VerticalAlignment="Center" HorizontalAlignment="Left"/>
+                </Grid>
+
+                <!-- Week Grid -->
+                <Grid Grid.Column="1">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+
+                    <!-- Date Headers -->
+                    <Border x:Name="DateColumn0" Grid.Column="0" Margin="1" Background="#F0F0F0" CornerRadius="4" Height="100">
+                        <StackPanel>
+                            <TextBlock Text="一" HorizontalAlignment="Center"/>
+                            <TextBlock x:Name="DateTextBlock0" HorizontalAlignment="Center" FontSize="16" FontWeight="Bold"/>
+                        </StackPanel>
+                    </Border>
+
+                    <Border x:Name="DateColumn1" Grid.Column="1" Margin="2" Background="#F0F0F0" CornerRadius="4" Height="100">
+                        <StackPanel>
+                            <TextBlock Text="二" HorizontalAlignment="Center"/>
+                            <TextBlock x:Name="DateTextBlock1" HorizontalAlignment="Center" FontSize="16" FontWeight="Bold"/>
+                        </StackPanel>
+                    </Border>
+
+                    <Border x:Name="DateColumn2" Grid.Column="2" Margin="2" Background="#F0F0F0" CornerRadius="4" Height="100">
+                        <StackPanel>
+                            <TextBlock Text="三" HorizontalAlignment="Center"/>
+                            <TextBlock x:Name="DateTextBlock2" HorizontalAlignment="Center" FontSize="16" FontWeight="Bold"/>
+                        </StackPanel>
+                    </Border>
+
+                    <Border x:Name="DateColumn3" Grid.Column="3" Margin="2" Background="#F0F0F0" CornerRadius="4" Height="100">
+                        <StackPanel>
+                            <TextBlock Text="四" HorizontalAlignment="Center"/>
+                            <TextBlock x:Name="DateTextBlock3" HorizontalAlignment="Center" FontSize="16" FontWeight="Bold"/>
+                        </StackPanel>
+                    </Border>
+
+                    <Border x:Name="DateColumn4" Grid.Column="4" Margin="2" Background="#F0F0F0" CornerRadius="4" Height="100">
+                        <StackPanel>
+                            <TextBlock Text="五" HorizontalAlignment="Center"/>
+                            <TextBlock x:Name="DateTextBlock4" HorizontalAlignment="Center" FontSize="16" FontWeight="Bold"/>
+                        </StackPanel>
+                    </Border>
+
+                    <Border x:Name="DateColumn5" Grid.Column="5" Margin="2" Background="#F0F0F0" CornerRadius="4" Height="100">
+                        <StackPanel>
+                            <TextBlock Text="六" HorizontalAlignment="Center"/>
+                            <TextBlock x:Name="DateTextBlock5" HorizontalAlignment="Center" FontSize="16" FontWeight="Bold"/>
+                        </StackPanel>
+                    </Border>
+
+                    <Border x:Name="DateColumn6" Grid.Column="6" Margin="2" Background="#F0F0F0" CornerRadius="4" Height="100">
+                        <StackPanel>
+                            <TextBlock Text="日" HorizontalAlignment="Center"/>
+                            <TextBlock x:Name="DateTextBlock6" HorizontalAlignment="Center" FontSize="16" FontWeight="Bold"/>
+                        </StackPanel>
+                    </Border>
+
+
+
+                    <!-- Task Grid -->
+                    <Grid  Grid.Row="1" Grid.ColumnSpan="7">
+                        
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="140"/> 
+                            <ColumnDefinition Width="140"/>
+                            <ColumnDefinition Width="140"/>
+                            <ColumnDefinition Width="140"/>
+                            <ColumnDefinition Width="140"/>
+                            <ColumnDefinition Width="140"/>
+                            <ColumnDefinition Width="140"/>
+                        </Grid.ColumnDefinitions>
+
+                        <Grid.RowDefinitions>
+                            <!-- 全天任务 -->
+                            <RowDefinition Height="40"/>
+                            
+                            <RowDefinition Height="40"/>
+                            <!-- 0:00 -->
+                            <RowDefinition Height="40"/>
+                            <!-- 1:00 -->
+                            <RowDefinition Height="40"/>
+                            <!-- 2:00 -->
+                            <RowDefinition Height="40"/>
+                            <!-- 3:00 -->
+                            <RowDefinition Height="40"/>
+                            <!-- 4:00 -->
+                            <RowDefinition Height="40"/>
+                            <!-- 5:00 -->
+                            <RowDefinition Height="40"/>
+                            <!-- 6:00 -->
+                            <RowDefinition Height="40"/>
+                            <!-- 7:00 -->
+                            <RowDefinition Height="40"/>
+                            <!-- 8:00 -->
+                            <RowDefinition Height="40"/>
+                            <!-- 9:00 -->
+                            <RowDefinition Height="40"/>
+                            <!-- 10:00 -->
+                            <RowDefinition Height="40"/>
+                            <!-- 11:00 -->
+                            <RowDefinition Height="40"/>
+                            <!-- 12:00 -->
+                            <RowDefinition Height="40"/>
+                            <!-- 13:00 -->
+                            <RowDefinition Height="40"/>
+                            <!-- 14:00 -->
+                            <RowDefinition Height="40"/>
+                            <!-- 15:00 -->
+                            <RowDefinition Height="40"/>
+                            <!-- 16:00 -->
+                            <RowDefinition Height="40"/>
+                            <!-- 17:00 -->
+                            <RowDefinition Height="40"/>
+                            <!-- 18:00 -->
+                            <RowDefinition Height="40"/>
+                            <!-- 19:00 -->
+                            <RowDefinition Height="40"/>
+                            <!-- 20:00 -->
+                            <RowDefinition Height="40"/>
+                            <!-- 21:00 -->
+                            <RowDefinition Height="40"/>
+                            <!-- 22:00 -->
+                            <RowDefinition Height="40"/>
+                            <!-- 23:00 -->
+                        </Grid.RowDefinitions>
+
+                        <!-- 背景高亮层 -->
+                        <Border x:Name="TaskColumn0" Grid.Column="0" Grid.Row="0" Grid.RowSpan="25" Background="Transparent"/>
+                        <Border x:Name="TaskColumn1" Grid.Column="1" Grid.Row="0" Grid.RowSpan="25" Background="Transparent"/>
+                        <Border x:Name="TaskColumn2" Grid.Column="2" Grid.Row="0" Grid.RowSpan="25" Background="Transparent"/>
+                        <Border x:Name="TaskColumn3" Grid.Column="3" Grid.Row="0" Grid.RowSpan="25" Background="Transparent"/>
+                        <Border x:Name="TaskColumn4" Grid.Column="4" Grid.Row="0" Grid.RowSpan="25" Background="Transparent"/>
+                        <Border x:Name="TaskColumn5" Grid.Column="5" Grid.Row="0" Grid.RowSpan="25" Background="Transparent"/>
+                        <Border x:Name="TaskColumn6" Grid.Column="6" Grid.Row="0" Grid.RowSpan="25" Background="Transparent"/>
+
+
+                        <ItemsControl ItemsSource="{Binding TaskBlocks}">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <Grid x:Name="taskGrid"/>
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                            <ItemsControl.ItemContainerStyle>
+                                <Style TargetType="ContentPresenter">
+                                    <Setter Property="Grid.Column" Value="{Binding Column}" />
+                                    <Setter Property="Grid.Row" Value="{Binding Row}" />
+                                    <Setter Property="Grid.RowSpan" Value="{Binding RowSpan}" />
+                                </Style>
+                            </ItemsControl.ItemContainerStyle>
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Border Background="{Binding Brush}" CornerRadius="3" Margin="2">
+                                        <Grid>
+                                            <TextBlock Text="{Binding Name}" Margin="5" TextWrapping="Wrap"/>
+                                            <Button Content="✕"
+                                                    Width="20" Height="20"
+                                                    HorizontalAlignment="Right"
+                                                    VerticalAlignment="Top"
+                                                    Margin="2"
+                                                    Visibility="Collapsed"
+                                                    Command="{Binding DataContext.RemoveTaskBlockCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                                                CommandParameter="{Binding}">
+                                                <Button.Style>
+                                                    <Style TargetType="Button">
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding IsMouseOver, RelativeSource={RelativeSource AncestorType=Border}}" Value="True">
+                                                                <Setter Property="Visibility" Value="Visible"/>
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </Button.Style>
+                                            </Button>
+                                        </Grid>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+
+
+
+
+
+
+                    </Grid>
+                </Grid>
+                
+                
+
+            </Grid>
+        </ScrollViewer>
+        <Canvas x:Name="RootCanvas">
+            <!-- 任务块... -->
+            <Button x:Name="AddTaskButton"
+            Content="＋"
+            Width="40" Height="40"
+            Visibility="Collapsed"
+            Click="AddTaskButton_Click"
+            />
+        </Canvas>
         
+
+
+
+
     </Grid>
 </ui:Page>
+ 
