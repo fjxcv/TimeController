@@ -17,6 +17,7 @@ using TimeController.ViewModels;
 using Page = iNKORE.UI.WPF.Modern.Controls.Page;
 using TimeController.Models;
 using System.ComponentModel;
+using System.Windows.Threading;
 
 namespace TimeController.Views.CasualMode
 {
@@ -24,35 +25,42 @@ namespace TimeController.Views.CasualMode
     /// CasualModeView.xaml 的交互逻辑
     /// </summary>
     public partial class CasualModeView : Page
+
     {
         public CasualModeView()
         {
             InitializeComponent();
             DataContext = new CasualModeViewModel();
+            RewardPopup.Opened += RewardPopup_Opened;
 
-            // 订阅ViewModel的属性变化，处理View层的UI操作
+            // ViewModel的属性变化，处理View层的UI操作
             if (DataContext is CasualModeViewModel vm)
             {
                 vm.PropertyChanged += ViewModel_PropertyChanged;
-                // 订阅Modules集合的变化，以便为每个模块添加属性变化监听
                 vm.Modules.CollectionChanged += Modules_CollectionChanged;
                 // 为初始加载的模块订阅属性变化
                 foreach (var module in vm.Modules)
                 {
                     module.PropertyChanged += Module_PropertyChanged;
                 }
-
-                // 在View加载完成后，为所有ListView订阅PreviewMouseLeftButtonDown事件
-                Loaded += (sender, e) =>
-                {
-                    var listViews = FindVisualChildren<ListView>(this);
-                    foreach (var listView in listViews)
-                    {
-                        listView.PreviewMouseLeftButtonDown += ListView_PreviewMouseLeftButtonDown;
-                    }
-                };
             }
         }
+
+        private void RewardPopup_Opened(object? sender, EventArgs e)
+        {
+            //确保弹窗完全打开
+            Dispatcher.BeginInvoke(DispatcherPriority.Input, new Action(() =>
+            {
+                if (RewardTaskInput != null)
+                {
+                    RewardTaskInput.Focus();
+                    Keyboard.Focus(RewardTaskInput);
+                }
+            }));
+        }
+
+        private TextBox? _currentEditingTextBox;
+        private TaskModel? _currentEditingTaskModel;
 
         private void Modules_CollectionChanged(object sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
         {
@@ -74,14 +82,7 @@ namespace TimeController.Views.CasualMode
 
         private void Module_PropertyChanged(object sender, PropertyChangedEventArgs e)
         {
-            if (e.PropertyName == nameof(ModuleViewModel.IsInputVisible))
-            {
-                if (sender is ModuleViewModel module && module.IsInputVisible)
-                {
-                    // 当输入框变为可见时，清除所有ListView的选中项
-                    ClearAllListViewSelections();
-                }
-            }
+
         }
 
         // 监听ViewModel的属性变化
@@ -91,126 +92,33 @@ namespace TimeController.Views.CasualMode
             {
                 if (e.PropertyName == nameof(CasualModeViewModel.IsRewardPopupOpen))
                 {
-                    if (vm.IsRewardPopupOpen)
-                    {
-                        // 使用Dispatcher确保在UI更新后获取焦点
-                        Dispatcher.BeginInvoke(
-                            System.Windows.Threading.DispatcherPriority.Input,
-                            new Action(() =>
-                            {
-                                try
-                                {
-                                    if (RewardTaskInput.IsVisible)
-                                    {
-                                        RewardTaskInput.Focus();
-                                        RewardTaskInput.SelectAll();
-                                    }
-                                }
-                                catch (Exception ex)
-                                {
-                                    Console.WriteLine($"Failed to set focus on RewardTaskInput: {ex.Message}");
-                                }
-                            }));
-                    }
-                }
-                else if (e.PropertyName == nameof(CasualModeViewModel.CurrentEditingTask))
-                {
-                     // 当CurrentEditingTask变化时，清除所有ListView的选中项
-                    ClearAllListViewSelections();
 
-                    if (vm.CurrentEditingTask != null)
-                    {
-                        // 使用Dispatcher确保在UI更新后获取焦点
-                        Dispatcher.BeginInvoke(
-                            System.Windows.Threading.DispatcherPriority.Input,
-                            new Action(() =>
-                            {
-                                try
-                                {
-                                    // 查找当前任务项中的TextBox
-                                    var listViewItems = FindVisualChildren<ListViewItem>(this);
-                                    foreach (var item in listViewItems)
-                                    {
-                                        var textBox = FindVisualChild<TextBox>(item);
-                                        if (textBox != null && textBox.DataContext == vm.CurrentEditingTask)
-                                        {
-                                            textBox.Focus();
-                                            textBox.SelectAll();
-                                            break;
-                                        }
-                                    }
-                                }
-                                catch (Exception ex)
-                                {
-                                    Console.WriteLine($"Failed to set focus on task TextBox: {ex.Message}");
-                                }
-                            }));
-                    }
                 }
             }
         }
-
-        // 新增一个方法来清除所有ListView的选中项
-        private void ClearAllListViewSelections()
+        //双击编辑后是空任务点击别处就直接删除
+        private void CurrentEditingTextBox_LostFocus(object sender, RoutedEventArgs e)
         {
-             var listViews = FindVisualChildren<ListView>(this);
-            foreach (var listView in listViews)
+            if (_currentEditingTaskModel != null && DataContext is CasualModeViewModel vm && _currentEditingTaskModel.IsEditing)
             {
-                listView.SelectedItem = null;
-            }
-        }
-
-        // 新增ListView的PreviewMouseLeftButtonDown事件处理程序
-        private void ListView_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
-        {
-            // 确保点击的是ListViewItem
-            var listViewItem = FindVisualParent<ListViewItem>(e.OriginalSource as DependencyObject);
-            if (listViewItem != null)
-            {
-                if (DataContext is CasualModeViewModel vm)
+               
+                if (string.IsNullOrWhiteSpace(_currentEditingTaskModel.Name))
                 {
-                    // 清除所有其他ListView的选中项
-                    var allListViews = FindVisualChildren<ListView>(this);
-                    foreach (var lv in allListViews)
+                    if (vm.EndEditTaskCommand.CanExecute(_currentEditingTaskModel))
                     {
-                        if (lv != sender)
-                        {
-                            lv.SelectedItem = null;
-                        }
+                        vm.EndEditTaskCommand.Execute(_currentEditingTaskModel);
                     }
-
-                    // 隐藏所有模块的输入框
-                    foreach (var module in vm.Modules)
-                    {
-                        module.IsInputVisible = false;
-                    }
-
-                    // 结束任何正在进行的任务编辑
-                    if (vm.CurrentEditingTask != null)
-                    {
-                        vm.CurrentEditingTask.IsEditing = false;
-                        vm.CurrentEditingTask = null;
-                    }
-                }
-            }
-        }
-
-        // 改进的FindVisualParent方法，以便在ListView_PreviewMouseLeftButtonDown中使用
-        private static T? FindVisualParent<T>(DependencyObject? child) where T : DependencyObject
-        {
-            if (child == null) return null;
-            var parent = VisualTreeHelper.GetParent(child);
-            while (parent != null)
-            {
-                if (parent is T result)
+                }  
+               
+                if (_currentEditingTextBox != null)
                 {
-                    return result;
+                    _currentEditingTextBox.LostFocus -= CurrentEditingTextBox_LostFocus;
                 }
-                parent = VisualTreeHelper.GetParent(parent);
+                _currentEditingTextBox = null;
+                _currentEditingTaskModel = null;
             }
-            return null;
         }
-
+        //
         private static T? FindVisualChild<T>(DependencyObject parent) where T : DependencyObject
         {
             for (int i = 0; i < VisualTreeHelper.GetChildrenCount(parent); i++)

@@ -5,12 +5,217 @@ using System.ComponentModel;
 using System.Linq;
 using System.Windows;
 using System.Windows.Input;
+using System.Xml.Linq;
 using TimeController.Models;
 
 namespace TimeController.ViewModels
 {
     public class CasualModeViewModel : INotifyPropertyChanged
     {
+        public ICommand ToggleRewardPopupCommand { get; }
+        public ICommand AddRewardTaskCommand { get; }
+
+        // —— 普通任务命令 —— 
+        public ICommand ToggleTaskCommand { get; }
+        public ICommand DeleteTaskCommand { get; }
+        public ICommand DeleteRewardTaskCommand { get; }
+
+        //控制普通模块输入框可见性的Command
+        public ICommand ToggleInputVisibilityCommand { get; }
+
+        // 添加普通任务的Command
+        public ICommand AddTaskCommand { get; }
+
+        //取消普通任务输入的Command
+        public ICommand CancelInputTaskCommand { get; }
+
+        // 开始编辑任务的Command
+        public ICommand StartEditTaskCommand { get; }
+
+        // 结束编辑任务的Command
+        public ICommand EndEditTaskCommand { get; }
+
+
+        public CasualModeViewModel()
+        {
+            // 初始化模块
+            Modules.Add(new ModuleViewModel { Name = "自我滋养", MaxTasks = 5 });
+            Modules.Add(new ModuleViewModel { Name = "创造表达", MaxTasks = 5 });
+            Modules.Add(new ModuleViewModel { Name = "生活杂务", MaxTasks = 5 });
+            Modules.Add(new ModuleViewModel { Name = "人际连接", MaxTasks = 5 });
+            Modules.Add(new ModuleViewModel { Name = "长期备忘" });
+
+            // 普通任务命令
+            ToggleTaskCommand = new RelayCommand<TaskModel>(ToggleTask);
+            // 删除任务命令
+            DeleteTaskCommand = new RelayCommand<TaskModel>(task =>
+            {
+                if (task != null)
+                {
+                    // 直接删除任务，不检查编辑状态
+                    DeleteTask(task);
+                }
+            });
+            //普通模块输入框是否可见
+            ToggleInputVisibilityCommand = new RelayCommand<ModuleViewModel>(module =>
+            {
+                if (module != null)
+                {
+                    // 如果有任务正在编辑，先结束编辑
+                    if (CurrentEditingTask != null)
+                    {
+                        CurrentEditingTask.IsEditing = false;
+                        CurrentEditingTask = null;
+                    }
+
+                    // 隐藏所有其他模块的输入框
+                    foreach (var m in Modules)
+                    {
+                        if (m != module && m.IsInputVisible)
+                        {
+                            m.IsInputVisible = false;
+                        }
+                    }
+
+                    // 切换当前模块的输入框可见性
+                    module.IsInputVisible = !module.IsInputVisible;
+                }
+            });
+
+            //编辑普通任务
+            // 初始化添加普通任务的Command
+            AddTaskCommand = new RelayCommand<ModuleViewModel>(module =>
+            {
+                if (module != null && !string.IsNullOrWhiteSpace(module.NewTaskText))
+                {
+                    AddTask(module, module.NewTaskText.Trim());
+                    // AddTask方法内部会设置IsInputVisible为false并清空NewTaskText
+                }
+            });
+
+            // 初始化取消普通任务输入的Command
+            CancelInputTaskCommand = new RelayCommand<ModuleViewModel>(module =>
+            {
+                if (module != null)
+                {
+                    module.IsInputVisible = false;
+                    module.NewTaskText = string.Empty;
+                }
+            });
+
+            // 初始化开始编辑任务的Command
+            StartEditTaskCommand = new RelayCommand<TaskModel>(task =>
+            {
+                if (task != null)
+                {
+                    // 隐藏所有模块的输入框
+                    foreach (var m in Modules)
+                    {
+                        m.IsInputVisible = false;
+                    }
+
+                    // 如果有其他任务正在编辑，先结束编辑
+                    if (CurrentEditingTask != null && CurrentEditingTask != task)
+                    {
+                        CurrentEditingTask.IsEditing = false;
+                    }
+
+                    // 直接进入编辑状态，不设置选中状态
+                    task.IsEditing = true;
+                    CurrentEditingTask = task;
+                }
+            });
+
+            // 初始化结束编辑任务的Command
+            EndEditTaskCommand = new RelayCommand<TaskModel>(task =>
+            {
+                if (task != null)
+                {
+                    if (task.IsEditing)
+                    {
+                        if (string.IsNullOrWhiteSpace(task.Name))
+                        {
+                            DeleteTask(task);
+                        }
+                        task.IsEditing = false;
+                        if (CurrentEditingTask == task)
+                        {
+                            CurrentEditingTask = null;
+                        }
+                    }
+                }
+            });
+
+            //奖励弹窗相关
+            // 删除奖励任务命令
+            DeleteRewardTaskCommand = new RelayCommand<TaskModel>(DeleteRewardTask);
+            // 奖励弹窗命令
+            ToggleRewardPopupCommand = new RelayCommand<object>(_ =>
+            {
+                IsRewardPopupOpen = !IsRewardPopupOpen;
+                // 如果弹窗打开，延迟设置焦点到输入框 (此逻辑保留在View)
+            });
+            //添加奖励任务
+            AddRewardTaskCommand = new RelayCommand<object>(_ =>
+            {
+                AddRewardTask(NewRewardTaskText);
+            });
+           
+            // 进度监听
+            foreach (var module in Modules)
+            {
+                module.Tasks.CollectionChanged += (sender, e) =>
+                {
+                    // 处理新增任务的属性订阅
+                    if (e.NewItems != null)
+                    {
+                        foreach (TaskModel task in e.NewItems)
+                        {
+                            task.PropertyChanged += Task_PropertyChanged;
+                        }
+                    }
+                    // 处理移除任务的属性取消订阅
+                    if (e.OldItems != null)
+                    {
+                        foreach (TaskModel task in e.OldItems)
+                        {
+                            task.PropertyChanged -= Task_PropertyChanged;
+                        }
+                    }
+
+                    // 直接触发进度更新
+                    UpdateProgress();
+                };
+
+                // 为初始化时已有的任务订阅事件
+                foreach (var task in module.Tasks)
+                {
+                    task.PropertyChanged += Task_PropertyChanged;
+                }
+            }
+
+            // 监听所有模块的任务列表变化
+            foreach (var module in Modules)
+            {
+                module.Tasks.CollectionChanged += (sender, e) =>
+                {
+                    if (e.NewItems != null)
+                    {
+                        foreach (TaskModel task in e.NewItems)
+                        {
+                            task.PropertyChanged += Task_PropertyChanged;
+                        }
+                    }
+                    if (e.OldItems != null)
+                    {
+                        foreach (TaskModel task in e.OldItems)
+                        {
+                            task.PropertyChanged -= Task_PropertyChanged;
+                        }
+                    }
+                };
+            }
+        }
         // —— 奖励弹窗相关 —— 
         private bool _isRewardPopupOpen;
         public bool IsRewardPopupOpen
@@ -33,10 +238,6 @@ namespace TimeController.ViewModels
                 }
             }
         }
-
-        public ICommand ToggleRewardPopupCommand { get; }
-        public ICommand AddRewardTaskCommand { get; }
-
         // —— 进度与模块 —— 
         private int _progress;
         public int Progress
@@ -80,7 +281,7 @@ namespace TimeController.ViewModels
                 }
             }
         }
-
+        //弹窗新任务的添加
         private string _newRewardTaskText = string.Empty;
         public string NewRewardTaskText
         {
@@ -95,20 +296,7 @@ namespace TimeController.ViewModels
             }
         }
 
-        // —— 普通任务命令 —— 
-        public ICommand ToggleTaskCommand { get; }
-        public ICommand DeleteTaskCommand { get; }
-        public ICommand DeleteRewardTaskCommand { get; }
-
-        // 新增：控制普通模块输入框可见性的Command
-        public ICommand ToggleInputVisibilityCommand { get; }
-        // 新增：添加普通任务的Command
-        public ICommand AddTaskCommand { get; }
-
-        // 新增：取消普通任务输入的Command
-        public ICommand CancelInputTaskCommand { get; }
-
-        // 新增：当前正在编辑的任务
+        // 当前正在编辑的任务
         private TaskModel? _currentEditingTask;
         public TaskModel? CurrentEditingTask
         {
@@ -122,184 +310,6 @@ namespace TimeController.ViewModels
                 }
             }
         }
-
-        // 修改：开始编辑任务的Command
-        public ICommand StartEditTaskCommand { get; }
-        // 修改：结束编辑任务的Command
-        public ICommand EndEditTaskCommand { get; }
-
-
-        public CasualModeViewModel()
-        {
-            // 初始化模块
-            Modules.Add(new ModuleViewModel { Name = "自我滋养", MaxTasks = 5 });
-            Modules.Add(new ModuleViewModel { Name = "创造表达", MaxTasks = 5 });
-            Modules.Add(new ModuleViewModel { Name = "生活杂务", MaxTasks = 5 });
-            Modules.Add(new ModuleViewModel { Name = "人际连接", MaxTasks = 5 });
-            Modules.Add(new ModuleViewModel { Name = "长期备忘" });
-
-            // 普通任务命令
-            ToggleTaskCommand = new RelayCommand<TaskModel>(ToggleTask);
-            DeleteTaskCommand = new RelayCommand<TaskModel>(task =>
-            {
-                if (task != null)
-                {
-                    // 直接删除任务，不检查编辑状态
-                    DeleteTask(task);
-                }
-            });
-            DeleteRewardTaskCommand = new RelayCommand<TaskModel>(DeleteRewardTask);
-
-            // 进度监听
-            foreach (var module in Modules)
-            {
-                module.Tasks.CollectionChanged += (sender, e) =>
-                {
-                    // 处理新增任务的属性订阅
-                    if (e.NewItems != null)
-                    {
-                        foreach (TaskModel task in e.NewItems)
-                        {
-                            task.PropertyChanged += Task_PropertyChanged;
-                        }
-                    }
-                    // 处理移除任务的属性取消订阅
-                    if (e.OldItems != null)
-                    {
-                        foreach (TaskModel task in e.OldItems)
-                        {
-                            task.PropertyChanged -= Task_PropertyChanged;
-                        }
-                    }
-
-                    // 直接触发进度更新
-                    UpdateProgress();
-                };
-
-                // 为初始化时已有的任务订阅事件
-                foreach (var task in module.Tasks)
-                {
-                    task.PropertyChanged += Task_PropertyChanged;
-                }
-            }
-
-            // 奖励弹窗命令
-            ToggleRewardPopupCommand = new RelayCommand<object>(_ =>
-            {
-                IsRewardPopupOpen = !IsRewardPopupOpen;
-                 // 如果弹窗打开，延迟设置焦点到输入框 (此逻辑保留在View)
-            });
-
-            // 始终可执行的添加奖励任务
-            AddRewardTaskCommand = new RelayCommand<object>(_ =>
-            {
-                AddRewardTask(NewRewardTaskText);
-                IsRewardPopupOpen = false; // 添加奖励任务后关闭弹窗
-            });
-
-            // 新增：初始化控制普通模块输入框可见性的Command
-            ToggleInputVisibilityCommand = new RelayCommand<ModuleViewModel>(module =>
-            {
-                if (module != null)
-                {
-                    // 如果有任务正在编辑，先结束编辑
-                    if (CurrentEditingTask != null)
-                    {
-                        CurrentEditingTask.IsEditing = false;
-                        CurrentEditingTask = null;
-                    }
-
-                    // 隐藏所有其他模块的输入框
-                    foreach (var m in Modules)
-                    {
-                        if (m != module && m.IsInputVisible)
-                        {
-                            m.IsInputVisible = false;
-                        }
-                    }
-
-                    // 切换当前模块的输入框可见性
-                    module.IsInputVisible = !module.IsInputVisible;
-                }
-            });
-
-            // 新增：初始化添加普通任务的Command
-            AddTaskCommand = new RelayCommand<ModuleViewModel>(module =>
-            {
-                if (module != null && !string.IsNullOrWhiteSpace(module.NewTaskText))
-                {
-                    AddTask(module, module.NewTaskText.Trim());
-                    // AddTask方法内部会设置IsInputVisible为false并清空NewTaskText
-                }
-            });
-
-            // 新增：初始化取消普通任务输入的Command
-            CancelInputTaskCommand = new RelayCommand<ModuleViewModel>(module =>
-            {
-                if (module != null)
-                {
-                    module.IsInputVisible = false;
-                    module.NewTaskText = string.Empty;
-                }
-            });
-
-            // 修改：初始化开始编辑任务的Command
-            StartEditTaskCommand = new RelayCommand<TaskModel>(task =>
-            {
-                if (task != null)
-                {
-                    // 隐藏所有模块的输入框
-                    foreach (var m in Modules)
-                    {
-                        m.IsInputVisible = false;
-                    }
-
-                    // 如果有其他任务正在编辑，先结束编辑
-                    if (CurrentEditingTask != null && CurrentEditingTask != task)
-                    {
-                        CurrentEditingTask.IsEditing = false;
-                    }
-                    task.IsEditing = true;
-                    CurrentEditingTask = task;
-                }
-            });
-
-            // 修改：初始化结束编辑任务的Command
-            EndEditTaskCommand = new RelayCommand<TaskModel>(task =>
-            {
-                if (task != null)
-                {
-                    task.IsEditing = false;
-                    if (CurrentEditingTask == task)
-                    {
-                        CurrentEditingTask = null;
-                    }
-                }
-            });
-
-            // 监听所有模块的任务列表变化
-            foreach (var module in Modules)
-            {
-                module.Tasks.CollectionChanged += (sender, e) =>
-                {
-                    if (e.NewItems != null)
-                    {
-                        foreach (TaskModel task in e.NewItems)
-                        {
-                            task.PropertyChanged += Task_PropertyChanged;
-                        }
-                    }
-                    if (e.OldItems != null)
-                    {
-                        foreach (TaskModel task in e.OldItems)
-                        {
-                            task.PropertyChanged -= Task_PropertyChanged;
-                        }
-                    }
-                };
-            }
-        }
-        
         private void Task_PropertyChanged(object sender, PropertyChangedEventArgs e)
         {
             if (e.PropertyName == nameof(TaskModel.IsCompleted))
@@ -314,7 +324,21 @@ namespace TimeController.ViewModels
                 Application.Current.Dispatcher.InvokeAsync(UpdateProgress);
             }
         }
-        // 修改后的 DeleteTask 方法
+
+        //切换任务
+        public void ToggleTask(TaskModel task)
+        {
+            task.IsCompleted = !task.IsCompleted;
+            UpdateProgress(); // 无论任务属于哪个模块，直接触发更新
+
+            // 任务完成且正在编辑，结束编辑
+            if (task.IsCompleted && task.IsEditing)
+            {
+                task.IsEditing = false;
+                CurrentEditingTask = null;
+            }
+        }
+
         private void DeleteTask(TaskModel task)
         {
             var module = Modules.FirstOrDefault(m => m.Tasks.Contains(task));
@@ -324,21 +348,7 @@ namespace TimeController.ViewModels
                 UpdateProgress(); // 直接触发更新
             }
         }
-
-        // 修改后的 ToggleTask 方法
-        // CasualModeViewModel.cs
-        public void ToggleTask(TaskModel task)
-        {
-            task.IsCompleted = !task.IsCompleted;
-            UpdateProgress(); // 无论任务属于哪个模块，直接触发更新
-
-            // 如果任务完成且正在编辑，结束编辑
-            if (task.IsCompleted && task.IsEditing)
-            {
-                task.IsEditing = false;
-                CurrentEditingTask = null;
-            }
-        }
+       
         // 删除奖励任务
         public void DeleteRewardTask(TaskModel task) =>
             RewardTasks.Remove(task);
@@ -365,6 +375,7 @@ namespace TimeController.ViewModels
             if (!string.IsNullOrWhiteSpace(taskName))
             {
                 module.Tasks.Add(new TaskModel { Name = taskName });
+
                 // 在ViewModel中处理排序
                 var sortedTasks = module.Tasks.OrderBy(t => t.IsCompleted).ToList();
                 for (int i = 0; i < sortedTasks.Count; i++)
@@ -375,7 +386,6 @@ namespace TimeController.ViewModels
                         module.Tasks.Move(currentIndex, i);
                     }
                 }
-
                 module.NewTaskText = string.Empty; // 清空输入框文本
                 module.IsInputVisible = false; // 添加任务后隐藏输入框
                 UpdateProgress();
@@ -384,7 +394,6 @@ namespace TimeController.ViewModels
         public void UpdateProgress()
         {
             int totalCompleted = Modules.Take(4).Sum(m => m.Tasks.Count(t => t.IsCompleted));
-
             // 计算余数
             int mod = totalCompleted % 4;
             // 如果刚好整除且 >0，就把进度显示为 4（满格），否则按照余数显示
@@ -397,7 +406,6 @@ namespace TimeController.ViewModels
                 IsRewardPopupOpen = true;
             }
         }
-
 
         public event PropertyChangedEventHandler? PropertyChanged;
         protected void OnPropertyChanged(string name) =>
@@ -492,8 +500,8 @@ namespace TimeController.ViewModels
 
         private void SortTasks()
         {
-            // 使用简单的OrderBy进行排序，已完成的任务排在后面
-            var sorted = Tasks.OrderBy(t => t.IsCompleted).ToList(); // 使用t.IsCompleted确保false在前
+            //已完成的任务排在后面
+            var sorted = Tasks.OrderBy(t => t.IsCompleted).ToList();
             for (int i = 0; i < sorted.Count; i++)
             {
                 int currentIndex = Tasks.IndexOf(sorted[i]);

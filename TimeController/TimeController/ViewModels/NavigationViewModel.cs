@@ -11,34 +11,44 @@ using TimeController.Views.CasualMode;
 using TimeController.Views.Review;
 using TimeController.Views.StrongGoalWeek;
 using TimeController.Views.StrongGoalMonth;
+using TimeController.Services;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace TimeController.ViewModels
 {
     public class NavigationViewModel
     {
         private readonly Frame _navigationFrame;
+        private readonly INavigationService _navigationService;
         public ICommand NavigateCommand { get; private set; }
 
-        public NavigationViewModel(Frame navigationFrame)
+        public NavigationViewModel(Frame navigationFrame, INavigationService navigationService)
         {
             _navigationFrame = navigationFrame;
-            NavigateCommand = new RelayCommand<string>(NavigateTo);
+            _navigationService = navigationService;
+            NavigateCommand = new RelayCommand(NavigateTo);
         }
 
-        private void NavigateTo(string tag)
+        private void NavigateTo(object parameter)
         {
-            Page pageToLoad = tag switch
+            if (parameter is string tag)
             {
-                "CasualMode" => new CasualModeView(),
-                "MonthView" => new MonthView(),
-                "WeekView" => new WeekView(),
-                "Review" => new ReviewView(),
-                //"settings" => 
-                //"about" => 
-                _ => new CasualModeView()
-            };
+                Page pageToLoad = tag switch
+                {
+                    "CasualMode" => new CasualModeView(),
+                    "MonthView" => new MonthView(),
+                    "WeekView" => new WeekView(),
+                    "Review" => new ReviewView_everyday(
+                        new ReviewViewModel_everyday(App.AppHost.Services.GetRequiredService<ITaskService>())
+                        ),
 
-            _navigationFrame.Navigate(pageToLoad);
+                    //"settings" => 
+                    //"about" => 
+                    _ => new CasualModeView()
+                };
+
+                _navigationFrame.Navigate(pageToLoad);
+            }
         }
     }
 
