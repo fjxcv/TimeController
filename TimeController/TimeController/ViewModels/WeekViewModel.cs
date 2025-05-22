@@ -10,6 +10,7 @@ using System.Globalization;
 using TimeController.Services;
 using System.Diagnostics;
 using System.Windows.Controls;
+using System.Windows.Data;
 
 namespace TimeController.ViewModels
 {
@@ -17,6 +18,8 @@ namespace TimeController.ViewModels
     {
         private DateTime _currentDate;
         private readonly ITaskService _taskService;
+        public IEnumerable<TaskBlock> AllDayTaskBlocks => TaskBlocks.Where(t => t.IsAllDay);
+        public IEnumerable<TaskBlock> TimedTaskBlocks => TaskBlocks.Where(t => !t.IsAllDay);
 
 
         public ObservableCollection<TaskModel> Tasks { get; set; } = new ObservableCollection<TaskModel>();
@@ -25,6 +28,7 @@ namespace TimeController.ViewModels
         public event Action<TaskModel>? SaveRequested;
 
         public ICommand RemoveTaskBlockCommand { get; }
+        public ICollectionView TimedTaskBlocksView { get; }
 
         public WeekViewModel(ITaskService taskService)
         {
@@ -39,6 +43,7 @@ namespace TimeController.ViewModels
             AddTask(task);
         }
 
+        //加载本周任务
         public async void LoadTasksForCurrentWeek()
         {
             // 清空当前任务块集合
@@ -76,7 +81,7 @@ namespace TimeController.ViewModels
         }
 
 
-        // 添加任务到视图（不持久化到数据库）
+        // 添加任务到视图
         private void AddTaskToView(TaskModel task)
         {
             // 计算本周一
@@ -87,33 +92,47 @@ namespace TimeController.ViewModels
             int column = (task.PlannedDate - monday).Days;
             if (column < 0 || column > 6) return; // 不在当前周的任务不显示
 
-            int row = task.IsAllDay ? 0 : (task.StartTime.HasValue ? task.StartTime.Value.Hours + 1 : 1) - 1;
-            int rowSpan = 1;
-            if (!task.IsAllDay && task.StartTime.HasValue && task.EndTime.HasValue)
-                rowSpan = Math.Max(1, (int)(task.EndTime.Value - task.StartTime.Value).TotalHours) + 1;
-
             var taskBlock = new TaskBlock
             {
                 Name = task.Name,
                 Note = task.Note,
                 Type = task.Type,
+                IsAllDay = task.IsAllDay,  // 确保设置IsAllDay属性
                 StartTime = task.StartTime ?? TimeSpan.Zero,
                 EndTime = task.EndTime ?? TimeSpan.Zero,
                 Brush = GetBrushForTaskType(task.Type),
                 Column = column,
-                Row = row,
-                RowSpan = rowSpan,
-                Id=task.Id
+                Row = task.StartTime.HasValue ? task.StartTime.Value.Hours : 0,
+                RowSpan = (!task.IsAllDay && task.StartTime.HasValue && task.EndTime.HasValue)
+                          ? Math.Max(1, (int)(task.EndTime.Value - task.StartTime.Value).TotalHours)+1 : 1,
+                Id = task.Id
             };
 
             TaskBlocks.Add(taskBlock);
         }
 
 
+        // 添加任务的事件，用于通知View层处理冲突
+        public event Action<TaskModel, List<TaskBlock>>? ConflictDetected;
 
-        // 修改 AddTask 方法，增加持久化后的加载
-        public async void AddTask(TaskModel task)
+
+        // 添加任务方法，增加冲突处理逻辑
+        public async void AddTask(TaskModel task, bool forceAdd = false)
         {
+            // 非强制添加模式下，先检查时间冲突
+            if (!forceAdd && !task.IsAllDay && task.StartTime.HasValue && task.EndTime.HasValue)
+            {
+                var (hasConflict, conflicts) = CheckTimeConflicts(task);
+
+                if (hasConflict)
+                {
+                    // 通知View层处理冲突
+                    ConflictDetected?.Invoke(task, conflicts);
+                    return; // 不继续执行添加，等待用户决定
+                }
+            }
+
+            // 无冲突或强制添加，执行正常的添加流程
             Tasks.Add(task);
 
             // 数据库持久化
@@ -133,7 +152,35 @@ namespace TimeController.ViewModels
             {
                 AddTaskToView(task);
             }
+            OnPropertyChanged(nameof(TimedTaskBlocks));
         }
+
+        // 处理冲突的方法：删除冲突任务并添加新任务
+        public async Task HandleConflictAndAddTask(TaskModel newTask, List<TaskBlock> conflicts)
+        {
+            // 先删除所有冲突的任务
+            foreach (var conflict in conflicts)
+            {
+                // 从UI集合移除
+                TaskBlocks.Remove(conflict);
+
+                // 找到对应的TaskModel并从数据库删除
+                var taskToRemove = Tasks.FirstOrDefault(t => t.Id == conflict.Id);
+                if (taskToRemove != null)
+                {
+                    Tasks.Remove(taskToRemove);
+                    if (_taskService != null)
+                    {
+                        await _taskService.DeleteTaskAsync(taskToRemove);
+                    }
+                }
+            }
+
+            // 然后以强制模式添加新任务
+            AddTask(newTask, true);
+            TimedTaskBlocksView.Refresh(); // 强制刷新视图
+        }
+
 
         private Brush GetBrushForTaskType(TaskType type)
         {
@@ -162,6 +209,7 @@ namespace TimeController.ViewModels
             public TimeSpan StartTime { get; set; }
             public TimeSpan EndTime { get; set; }
             public Brush Brush { get; set; }
+            public bool IsAllDay { get; set; }
 
             // 定位属性
             public int Column { get; set; } // 星期几（0=周一，1=周二...）
@@ -205,12 +253,16 @@ namespace TimeController.ViewModels
             NextWeekCommand = new RelayCommand(_ => NavigateWeek(7));
             PreviousMonthCommand = new RelayCommand(_ => NavigateMonth(-1));
             NextMonthCommand = new RelayCommand(_ => NavigateMonth(1));
+            TimedTaskBlocksView = CollectionViewSource.GetDefaultView(TaskBlocks);
+            TimedTaskBlocksView.Filter = obj => obj is TaskBlock block && !block.IsAllDay;
 
             SaveRequested += OnTaskSaved;
             LoadTasksForCurrentWeek();
             RemoveTaskBlockCommand = new RelayCommand<TaskBlock>(RemoveTaskBlock);
         }
 
+
+        // 移除任务块
         private async void RemoveTaskBlock(TaskBlock block)
         {
             if (block == null) return;
@@ -226,60 +278,46 @@ namespace TimeController.ViewModels
                 if (_taskService != null)
                     await _taskService.DeleteTaskAsync(task);
             }
+            OnPropertyChanged(nameof(TimedTaskBlocks));
+            TimedTaskBlocksView.Refresh(); // 强制刷新视图
         }
 
 
-        // 在 WeekViewModel.cs 中添加这个方法
+
+        // 检查分时任务时间冲突
         public (bool hasConflict, List<TaskBlock> conflicts) CheckTimeConflicts(TaskModel newTask)
         {
             var conflicts = new List<TaskBlock>();
 
-            // 如果是全天任务，则检查同一天的全天任务
-            if (newTask.IsAllDay)
+            if (newTask.StartTime.HasValue && newTask.EndTime.HasValue && newTask.StartTime.Value < newTask.EndTime.Value)
             {
-                foreach (var block in TaskBlocks)
-                {
-                    // 同一天的全天任务
-                    DateTime monday = CurrentDate.Date;
-                    while (monday.DayOfWeek != DayOfWeek.Monday)
-                        monday = monday.AddDays(-1);
-
-                    DateTime blockDate = monday.AddDays(block.Column);
-
-                    if (blockDate.Date == newTask.PlannedDate.Date && block.Row == 0)
-                    {
-                        conflicts.Add(block);
-                    }
-                }
-            }
-            else if (newTask.StartTime.HasValue && newTask.EndTime.HasValue)
-            {
-                // 计算当前任务的位置
+                // 计算本周一
                 DateTime monday = CurrentDate.Date;
                 while (monday.DayOfWeek != DayOfWeek.Monday)
                     monday = monday.AddDays(-1);
 
                 int column = (newTask.PlannedDate - monday).Days;
 
-                // 检查同一天的非全天任务是否有冲突
+                // 检查同一天的分时任务是否有冲突
                 foreach (var block in TaskBlocks)
                 {
-                    if (block.Column == column && block.Row > 0) // 非全天任务
+                    if (!block.IsAllDay && block.Column == column)
                     {
-                        // 检查时间是否重叠
-                        TimeSpan blockStart = block.StartTime;
-                        TimeSpan blockEnd = block.EndTime;
+                        // 跳过无效时间段
+                        if (block.StartTime >= block.EndTime) continue;
 
-                        if (!(newTask.EndTime.Value <= blockStart || newTask.StartTime.Value >= blockEnd))
+                        // 时间区间有重叠
+                        if (!(newTask.EndTime.Value <= block.StartTime || newTask.StartTime.Value >= block.EndTime))
                         {
                             conflicts.Add(block);
                         }
                     }
                 }
             }
-
             return (conflicts.Count > 0, conflicts);
         }
+
+
 
 
         private void NavigateWeek(int offset)

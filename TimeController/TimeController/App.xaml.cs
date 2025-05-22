@@ -5,8 +5,6 @@ using System.Windows;
 using Microsoft.EntityFrameworkCore;
 using TimeController.Services;
 using TimeController.ViewModels;
-using System.Windows.Navigation;
-
 
 namespace TimeController
 {
@@ -19,11 +17,11 @@ namespace TimeController
             base.OnStartup(e);
 
             var taskService = AppHost.Services.GetRequiredService<ITaskService>();
-           // var navService = AppHost.Services.GetRequiredService<INavigationService>();
+            var navService = AppHost.Services.GetRequiredService<INavigationService>();
 
             //获取 DbContext 实例，确保数据库使用迁移初始化
-            var db = AppHost.Services.GetRequiredService<TaskDbContext>();
-            db.Database.Migrate();
+            //var db = AppHost.Services.GetRequiredService<TaskDbContext>();
+            //db.Database.Migrate();
 
             //重置开发数据
             await ((TaskService)taskService).ResetTaskDataAsync();
@@ -33,14 +31,14 @@ namespace TimeController
 
 
             // 提醒复盘
-            //_ = Task.Run(async () =>
-            //{
-              //  await Task.Delay(1000); // 延迟 1 秒
-             //   await Application.Current.Dispatcher.InvokeAsync(async () =>
-               // {
-              //      await ReviewReminderService.TryShowReviewReminderAsync(taskService, navService);
-//});
-          //  });
+            _ = Task.Run(async () =>
+            {
+                await Task.Delay(1000); // 延迟 1 秒
+                await Application.Current.Dispatcher.InvokeAsync(async () =>
+                {
+                    await ReviewReminderService.TryShowReviewReminderAsync(taskService, navService);
+                });
+            });
 
         }
 
@@ -52,15 +50,15 @@ namespace TimeController
                 {
                     services.AddDbContext<TaskDbContext>(options =>
                     {
-                        options.UseSqlite("Data Source=task.db");
+                        options.UseSqlite("Data Source=tasks.db");
                     });
 
                     services.AddScoped<ITaskService, TaskService>();
-                    //services.AddSingleton<INavigationService, NavigationService>();
+                    services.AddSingleton<INavigationService, NavigationService>();
 
                     // 注册ViewModel
-                    //services.AddScoped<ReviewViewModel_everyday>();
-                    //services.AddScoped<ReviewViewModel_everyweek>();
+                    services.AddScoped<ReviewViewModel_everyday>();
+                    services.AddScoped<ReviewViewModel_everyweek>();
 
                 })
                 .Build();

@@ -23,7 +23,9 @@
             <Thickness x:Key="NavigationViewContentGridBorderThickness">0,0,0,0</Thickness>
         </FrameworkElement.Resources>
 
-        <ui:NavigationView.MenuItems>
+            
+            <!--导航菜单-->
+            <ui:NavigationView.MenuItems>
             <ui:NavigationViewItem x:Name="NavigationViewItem_CasualMode" 
                                   Content="咸鱼模式" 
                                   Tag="CasualMode" 
@@ -38,14 +40,16 @@
                     <ui:NavigationViewItem x:Name="NavigationViewItem_MonthView" 
                                           Content="月视图" 
                                           Tag="MonthView"/>
-                    <ui:NavigationViewItem x:Name="NavigationViewItem_Review" 
+                    <ui:NavigationViewItem x:Name="NavigationViewItem_Review_everyday" 
                                           Content="复盘" 
                                           Tag="Review"/>
                 </ui:NavigationViewItem.MenuItems>
             </ui:NavigationViewItem>
         </ui:NavigationView.MenuItems>
-
-        <ui:NavigationView.FooterMenuItems>
+            
+            
+            <!--页脚菜单-->
+            <ui:NavigationView.FooterMenuItems>
             <ui:NavigationViewItem x:Name="NavigationViewItem_Settings" 
                                   Content="设置" 
                                   Tag="settings" 
@@ -55,8 +59,14 @@
                                   Tag="about" 
                                   Icon="Info"/>
         </ui:NavigationView.FooterMenuItems>
-
-        <ui:Frame x:Name="ContentFrame"/>
+        
+            <!--内容框架-->
+            <ui:NavigationView.Content>
+                <ui:Frame x:Name="ContentFrame"
+                          Margin="0"
+              VerticalAlignment="Stretch"
+              HorizontalAlignment="Stretch"/>
+            </ui:NavigationView.Content>
 
     </ui:NavigationView>
 </UserControl>
