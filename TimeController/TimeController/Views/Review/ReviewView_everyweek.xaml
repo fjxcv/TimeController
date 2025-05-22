@@ -252,7 +252,7 @@
                                     <Border Style="{StaticResource ListItemBorderStyle}">
                                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Stretch">
                                         <TextBlock Text="{Binding Name}" Width="200" FontSize="18" Margin="20,0,0,0"/>
-                                            <TextBlock Text="{Binding StatusText}" Margin="100,0,0,0" HorizontalAlignment="Right" FontSize="18"/>
+                                            <TextBlock Text="{Binding StatusShownText}" Margin="100,0,0,0" HorizontalAlignment="Right" FontSize="18"/>
                                     </StackPanel>
                                 </Border>
                             </DataTemplate>

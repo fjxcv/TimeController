@@ -25,7 +25,7 @@ namespace TimeController.Services
             var start = date.Date;
             var end = start.AddDays(1);
 
-            return await _context.Tasks
+            return await _context.Task
                 .Where(t =>
                     t.PlannedDate >= start &&
                     t.PlannedDate < end
@@ -38,7 +38,7 @@ namespace TimeController.Services
 
         public async Task<List<TaskModel>> GetTasksForDateRange(DateTime startDate, DateTime endDate)
         {
-            var tasks = await _context.Tasks
+            var tasks = await _context.Task
                 .Where(t => t.PlannedDate.Date >= startDate.Date && t.PlannedDate.Date <= endDate.Date)
                 .ToListAsync();
 
@@ -49,20 +49,20 @@ namespace TimeController.Services
                 Debug.WriteLine($"任务状态: {task.Name} - {task.Status}");
             }
 
-            return await _context.Tasks
+            return await _context.Task
                 .Where(t => t.PlannedDate.Date >= startDate.Date && t.PlannedDate.Date <= endDate.Date)
                 .ToListAsync();
         }
 
         public Task<List<TaskModel>> GetAllTasksAsync()
         {
-            return _context.Tasks.OrderByDescending(t => t.PlannedDate).ToListAsync();
+            return _context.Task.OrderByDescending(t => t.PlannedDate).ToListAsync();
         }
 
         //更新任务状态
         public async Task UpdateTaskAsync(TaskModel task)
         {
-            _context.Tasks.Update(task);
+            _context.Task.Update(task);
             await _context.SaveChangesAsync();
 
             //调试输出
@@ -71,7 +71,7 @@ namespace TimeController.Services
 
         public async Task<IEnumerable<TaskModel>> GetAllPendingTasksAsync()
         {
-            return await _context.Tasks
+            return await _context.Task
                 .Where(t => t.Status == MyTaskStatus.Pending)
                 .ToListAsync() ?? new List<TaskModel>(); // 保证不是 null
         }
@@ -81,8 +81,8 @@ namespace TimeController.Services
         public async Task ResetTaskDataAsync()
         {
             // 清空旧数据
-            var all = await _context.Tasks.ToListAsync();
-            _context.Tasks.RemoveRange(all);
+            var all = await _context.Task.ToListAsync();
+            _context.Task.RemoveRange(all);
             await _context.SaveChangesAsync();
 
             var today = DateTime.Today;
@@ -133,7 +133,7 @@ namespace TimeController.Services
                 }
             };
 
-            _context.Tasks.AddRange(tasks);
+            _context.Task.AddRange(tasks);
             await _context.SaveChangesAsync();
 
         }

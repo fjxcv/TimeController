@@ -23,6 +23,9 @@ namespace TimeController.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
+                    b.Property<DateTime?>("AbandonedAt")
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("Category")
                         .HasColumnType("TEXT");
 
@@ -64,6 +67,9 @@ namespace TimeController.Migrations
                     b.Property<DateTime?>("PostponeDate")
                         .HasColumnType("TEXT");
 
+                    b.Property<DateTime?>("PostponedAt")
+                        .HasColumnType("TEXT");
+
                     b.Property<int>("PostponedCount")
                         .HasColumnType("INTEGER");
 
@@ -83,7 +89,7 @@ namespace TimeController.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Tasks");
+                    b.ToTable("Task");
                 });
 #pragma warning restore 612, 618
         }

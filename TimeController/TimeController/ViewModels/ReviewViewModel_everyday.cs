@@ -215,8 +215,10 @@ namespace TimeController.ViewModels
             var (task, reason) = param;
             task.Reason = reason;
             task.Status = MyTaskStatus.Abandoned;
+            task.MarkAbandoned(DateTime.Now);
 
             await _taskService.UpdateTaskAsync(task);
+            LoadTasksForDate(SelectedDate ?? DateTime.Today);
 
         }
 
@@ -258,19 +260,18 @@ namespace TimeController.ViewModels
             }
 
             var newDate = dialog.SelectedDate.Value;
-
+            // 记录推迟历史戳
+            task.PostponedAt = DateTime.Now;
+            // 更新到新日期
             task.PostponeDate = newDate;
             task.PlannedDate = newDate;
-
-            // 把已推迟的当成全新的“未完成”任务来处理
+            // —— 关键：第一次推迟也把状态设为 Pending，这样它就会被 TodayPendingTasks 包括进来 —— 
             task.Status = MyTaskStatus.Pending;
 
             await _taskService.UpdateTaskAsync(task);
 
             LoadTasksForDate(SelectedDate ?? DateTime.Today);
-
         }
-
 
 
 

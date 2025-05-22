@@ -148,46 +148,59 @@ namespace TimeController.ViewModels
             //清空任务
             WeeklyCompletedTasks.Clear();
             WeeklyUncompletedTasks.Clear();
-            SkippedTasks.Clear();
 
-            var weekEnd = weekStart.AddDays(6);
+            var weekEnd = weekStart.AddDays(7); // 半开区间 [weekStart, weekEnd)
+            var tasksThisWeek = await _taskService.GetTasksForDateRange(weekStart, weekEnd);
+            var allHistory = await _taskService.GetAllTasksAsync();
 
-            var tasks = await _taskService.GetTasksForDateRange(weekStart, weekStart.AddDays(6));
+            // 1. 拉出本周所在日期范围内的所有“按计划”任务
+            var scheduledTasks = await _taskService.GetTasksForDateRange(weekStart, weekStart.AddDays(6));
 
-
-            foreach (var task in tasks)
+            // 2. 按状态分类：本周“完成” & “未完成”
+            foreach (var t in scheduledTasks)
             {
-                switch (task.Status)
-                {
-                    case MyTaskStatus.Completed:
-                        WeeklyCompletedTasks.Add(task);
-                        break;
-                    case MyTaskStatus.Pending:
-                        WeeklyUncompletedTasks.Add(task);
-                        break;
-                    case MyTaskStatus.Postponed:
-                    case MyTaskStatus.Abandoned:
-                        SkippedTasks.Add(task);
-                        break;
-                }
+                if (t.Status == MyTaskStatus.Completed)
+                    WeeklyCompletedTasks.Add(t);
+                else if (t.Status == MyTaskStatus.Pending)
+                    WeeklyUncompletedTasks.Add(t);
             }
 
-            var skipped = tasks.Where(t =>
-            t.Status == MyTaskStatus.Postponed ||
-            t.Status == MyTaskStatus.Abandoned).ToList();
+            // 3. 拉出所有任务，找出本周发生过的“推迟/放弃”事件
+            var allTasks = await _taskService.GetAllTasksAsync();
+            var postponedThisWeek = allTasks
+                .Where(t => t.PostponedAt.HasValue
+                         && t.PostponedAt.Value >= weekStart
+                         && t.PostponedAt.Value < weekEnd);
 
-            //卡片分析逻辑
-            var allTasks = await _taskService.GetAllTasksAsync(); // 加一个历史任务获取接口
+            var abandonedThisWeek = allTasks
+                .Where(t => t.AbandonedAt.HasValue
+                         && t.AbandonedAt.Value >= weekStart
+                         && t.AbandonedAt.Value < weekEnd);
+
+            // 合并并按时间排序
+            var skippedThisWeek = postponedThisWeek
+            .Concat(abandonedThisWeek)
+            .OrderBy(t => t.PostponedAt ?? t.AbandonedAt)
+            // 按 Name 分组，取每组第一条，去重效果
+            .GroupBy(t => t.Name)
+            .Select(g => g.First())
+            .ToList();
+
+            SkippedTasks = new ObservableCollection<TaskModel>(skippedThisWeek);
+
+
+            // 生成卡片、折线图
             var generator = new ReviewCardGenerator();
-
             WeeklyReviewCards = new ObservableCollection<ReviewCardModel>(
-                generator.GenerateCards(tasks, allTasks)
+                generator.GenerateCards(tasksThisWeek, allHistory, weekStart, weekEnd)
             );
 
-            SkippedTasks = new ObservableCollection<TaskModel>(skipped);
-            LoadChart(tasks);
+            // 生成完成率卡片
+            LoadChart(tasksThisWeek);
+
+            OnPropertyChanged(nameof(WeeklyCompletedTasks));
+            OnPropertyChanged(nameof(WeeklyUncompletedTasks));
             OnPropertyChanged(nameof(SkippedTasks));
-            OnPropertyChanged(nameof(HasSkippedTasks));
             OnPropertyChanged(nameof(WeeklyReviewCards));
 
         }

@@ -11,8 +11,8 @@ using TimeController.Services;
 namespace TimeController.Migrations
 {
     [DbContext(typeof(TaskDbContext))]
-    [Migration("20250521080612_AddPostponeSupport")]
-    partial class AddPostponeSupport
+    [Migration("20250522034250_NewFields")]
+    partial class NewFields
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -25,6 +25,9 @@ namespace TimeController.Migrations
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
+
+                    b.Property<DateTime?>("AbandonedAt")
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("Category")
                         .HasColumnType("TEXT");
@@ -67,6 +70,9 @@ namespace TimeController.Migrations
                     b.Property<DateTime?>("PostponeDate")
                         .HasColumnType("TEXT");
 
+                    b.Property<DateTime?>("PostponedAt")
+                        .HasColumnType("TEXT");
+
                     b.Property<int>("PostponedCount")
                         .HasColumnType("INTEGER");
 
@@ -86,7 +92,7 @@ namespace TimeController.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Tasks");
+                    b.ToTable("Task");
                 });
 #pragma warning restore 612, 618
         }
