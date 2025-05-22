@@ -45,16 +45,14 @@ namespace TimeController.ViewModels
             get => _selectedDate;
             set
             {
-                if (_selectedDate != value)
-                {
-                    _selectedDate = value;
-                    OnPropertyChanged(nameof(SelectedDate));
-                    LoadTasksForDate(value ?? DateTime.Today);
-                }
+                _selectedDate = value;
+                OnPropertyChanged(nameof(SelectedDate));
+                LoadTasksForDate(value ?? DateTime.Today); //无条件刷新
             }
         }
 
-        
+
+
         public ObservableCollection<TaskModel> CompletedTasks { get; set; }
         public ObservableCollection<TaskModel> UncompletedTasks { get; set; }
         public ObservableCollection<TaskModel> TodayPendingTasks
@@ -151,17 +149,11 @@ namespace TimeController.ViewModels
 
             //调试！！！！
             System.Diagnostics.Debug.WriteLine($"任务加载数: {tasks.Count}");
-            Debug.WriteLine($"[LoadTasksForDate] Loading tasks for date: {date:yyyy-MM-dd HH:mm:ss}");
-            try
+            Debug.WriteLine($"▶▶ LoadTasksForDate for {date:yyyy-MM-dd}, total fetched: {tasks.Count}");
+            foreach (var t in tasks)
             {
-                var taskss = await _taskService.GetTasksForDate(date);
-                Debug.WriteLine($"[LoadTasksForDate] 加载任务成功: {taskss.Count}");
+                Debug.WriteLine($"任务: {t.Name} 状态: {t.Status} 日期: {t.PlannedDate:yyyy-MM-dd}");
             }
-            catch (Exception ex)
-            {
-                Debug.WriteLine($"[LoadTasksForDate] 加载任务失败: {ex.Message}");
-            }
-
 
             // 分类任务
             foreach (var task in tasks)
@@ -181,7 +173,7 @@ namespace TimeController.ViewModels
             TodayPendingTasks = new ObservableCollection<TaskModel>(
                 tasks.Where(t =>
                     (t.Status == MyTaskStatus.Pending || t.Status == MyTaskStatus.Postponed) &&
-                    t.PlannedDate.Date == date));       //只要PlannedDate == date，就显示
+                    t.PlannedDate.Date == date.Date));       //只要PlannedDate == date，就显示
 
 
             // 获取所有 pending 任务
@@ -191,6 +183,7 @@ namespace TimeController.ViewModels
                 allPending.Where(t => t.Status == MyTaskStatus.Pending && t.PlannedDate.Date < today));
 
             OnPropertyChanged(nameof(PendingTasksCount));
+
         }
 
         private void ShowAbandonReasonMenu(Button button)
@@ -225,7 +218,6 @@ namespace TimeController.ViewModels
 
             await _taskService.UpdateTaskAsync(task);
 
-            LoadTasksForDate(SelectedDate ?? DateTime.Today);
         }
 
 
@@ -259,22 +251,26 @@ namespace TimeController.ViewModels
             task.Reason = reason;
 
             var dialog = new PostponeDateDialog();
-            bool? result = dialog.ShowDialog();
-
-            if (result == true && dialog.SelectedDate.HasValue)
-            {
-                task.PostponeDate = dialog.SelectedDate;
-                task.Status = MyTaskStatus.Postponed;
-
-                await _taskService.UpdateTaskAsync(task);
-
-                LoadTasksForDate(SelectedDate ?? DateTime.Today);
-            }
-            else
+            if (dialog.ShowDialog() != true || !dialog.SelectedDate.HasValue)
             {
                 task.Reason = null;
+                return;
             }
+
+            var newDate = dialog.SelectedDate.Value;
+
+            task.PostponeDate = newDate;
+            task.PlannedDate = newDate;
+
+            // 把已推迟的当成全新的“未完成”任务来处理
+            task.Status = MyTaskStatus.Pending;
+
+            await _taskService.UpdateTaskAsync(task);
+
+            LoadTasksForDate(SelectedDate ?? DateTime.Today);
+
         }
+
 
 
 

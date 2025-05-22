@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Internal;
 using TimeController.Models;
 
 namespace TimeController.Services
@@ -21,17 +22,23 @@ namespace TimeController.Services
 
         public async Task<List<TaskModel>> GetTasksForDate(DateTime date)
         {
-            var startOfDay = date.Date;
-            var endOfDay = startOfDay.AddDays(1);
+            // 取出当天零点到次日零点之间的所有任务
+            var start = date.Date;
+            var end = start.AddDays(1);
 
             return await _context.Tasks
                 .Where(t =>
-                    (t.Status == MyTaskStatus.Pending || t.Status == MyTaskStatus.Completed) &&
-                    t.PlannedDate >= startOfDay &&
-                    t.PlannedDate < endOfDay)
+                    t.PlannedDate >= start &&
+                    t.PlannedDate < end
+                )
                 .ToListAsync();
         }
 
+        public async Task DeleteTaskAsync(TaskModel task)
+        {
+            _context.Tasks.Remove(task);
+            await _context.SaveChangesAsync();
+        }
 
 
 
@@ -63,6 +70,9 @@ namespace TimeController.Services
         {
             _context.Tasks.Update(task);
             await _context.SaveChangesAsync();
+
+            //调试输出
+            Debug.WriteLine($"[更新任务] {task.Name}, 状态={task.Status}, 计划时间={task.PlannedDate:yyyy-MM-dd}");
         }
 
         public async Task<IEnumerable<TaskModel>> GetAllPendingTasksAsync()

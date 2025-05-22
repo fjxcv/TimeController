@@ -20,8 +20,8 @@ namespace TimeController
             var navService = AppHost.Services.GetRequiredService<INavigationService>();
 
             //获取 DbContext 实例，确保数据库使用迁移初始化
-            var db = AppHost.Services.GetRequiredService<TaskDbContext>();
-            db.Database.Migrate();
+            //var db = AppHost.Services.GetRequiredService<TaskDbContext>();
+            //db.Database.Migrate();
 
             //重置开发数据
             await ((TaskService)taskService).ResetTaskDataAsync();
@@ -50,7 +50,7 @@ namespace TimeController
                 {
                     services.AddDbContext<TaskDbContext>(options =>
                     {
-                        options.UseSqlite("Data Source=task.db");
+                        options.UseSqlite("Data Source=tasks.db");
                     });
 
                     services.AddScoped<ITaskService, TaskService>();

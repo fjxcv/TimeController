@@ -22,6 +22,14 @@ namespace TimeController.Views.StrongGoalMonth
             typeof(DateCard),               // 所属控件类型
             new PropertyMetadata(null));    // 默认值null
 
+
+        // 新增IsToday依赖属性
+        public static readonly DependencyProperty IsTodayProperty = DependencyProperty.Register(
+            "IsToday",
+            typeof(bool),
+            typeof(DateCard),
+            new PropertyMetadata(false));
+
         /// <summary>
         /// 获取或设置卡片显示的日期
         /// </summary>
@@ -40,13 +48,19 @@ namespace TimeController.Views.StrongGoalMonth
             set => SetValue(CommandProperty, value);     // 设置依赖属性的命令
         }
 
+        public bool IsToday
+        {
+            get => (bool)GetValue(IsTodayProperty);
+            set => SetValue(IsTodayProperty, value);
+        }
+
         /// <summary>
         /// 构造函数
         /// </summary>
         public DateCard()
         {
             InitializeComponent();
-            //// 注册鼠标左键抬起事件处理程序
+            // 注册鼠标左键抬起事件处理程序
             //this.MouseLeftButtonUp += Border_MouseLeftButtonUp;
         }
 
@@ -70,7 +84,9 @@ namespace TimeController.Views.StrongGoalMonth
             // 更新卡片上显示的文本
             if (d is DateCard card)
             {
-                card.DateText.Text = ((DateTime)e.NewValue).Day.ToString(); // 只显示日期的"日"
+                 var date = (DateTime)e.NewValue;
+                card.DateText.Text = date.Day.ToString();
+                card.IsToday = DateTime.Today == date.Date; // 自动更新IsToday状态
             }
         }
     }
