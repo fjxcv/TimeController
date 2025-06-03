@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace TimeController.Migrations
 {
     /// <inheritdoc />
-    public partial class NewFields : Migration
+    public partial class InitialCreate : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -35,7 +35,6 @@ namespace TimeController.Migrations
                     IsCompleted = table.Column<bool>(type: "INTEGER", nullable: false),
                     IsReminderEnabled = table.Column<bool>(type: "INTEGER", nullable: false),
                     IsEditing = table.Column<bool>(type: "INTEGER", nullable: false),
-                    IsSelected = table.Column<bool>(type: "INTEGER", nullable: false),
                     PostponedCount = table.Column<int>(type: "INTEGER", nullable: false)
                 },
                 constraints: table =>

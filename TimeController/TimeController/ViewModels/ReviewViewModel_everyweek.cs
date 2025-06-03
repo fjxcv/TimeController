@@ -13,6 +13,7 @@ using LiveChartsCore;
 using LiveChartsCore.SkiaSharpView;
 using LiveChartsCore.SkiaSharpView.Painting;
 using SkiaSharp;
+using System.Collections.Specialized;
 
 namespace TimeController.ViewModels
 {
@@ -25,8 +26,11 @@ namespace TimeController.ViewModels
         private ObservableCollection<string> _reviewReasons;
         public bool IsEverydayPage { get; set; } = false;
         public event Action? NavigateToEverydayRequested;
+
+        // 当 SkippedTasks 集合变化时触发
         public bool HasSkippedTasks => SkippedTasks != null && SkippedTasks.Count > 0;
         public ObservableCollection<ReviewCardModel> WeeklyReviewCards { get; set; } = new();
+       
 
         //折线图相关
         public ISeries[] Series { get; set; }
@@ -59,8 +63,19 @@ namespace TimeController.ViewModels
             get => _skippedTasks;
             set
             {
-                _skippedTasks = value;
-                OnPropertyChanged(nameof(SkippedTasks));
+                if (_skippedTasks != value)
+                {
+                    // 取消旧集合订阅
+                    _skippedTasks.CollectionChanged -= SkippedTasks_CollectionChanged;
+
+                    _skippedTasks = value;
+
+                    // 订阅新集合的变化
+                    _skippedTasks.CollectionChanged += SkippedTasks_CollectionChanged;
+
+                    OnPropertyChanged(nameof(SkippedTasks));
+                    OnPropertyChanged(nameof(HasSkippedTasks));
+                }
             }
         }
 
@@ -95,12 +110,6 @@ namespace TimeController.ViewModels
                     OnPropertyChanged(nameof(ReviewReasons));
                 }
             }
-        }
-
-
-        public void ReloadThisWeek()
-        {
-            LoadTasksForWeek(SelectedWeekStart);
         }
 
 
@@ -252,60 +261,46 @@ namespace TimeController.ViewModels
         private void LoadChart(List<TaskModel> weeklyTasks)
         {
             var days = Enumerable.Range(0, 7)
-                .Select(offset => DateTime.Today.StartOfWeek(DayOfWeek.Monday).AddDays(offset))
+                .Select(i => SelectedWeekStart.AddDays(i))
                 .ToArray();
 
             var completedCounts = new List<int>();
-            var pendingCounts = new List<int>();
-            var postponedCounts = new List<int>();
+            var skippedCounts = new List<int>();
 
 
             foreach (var day in days)
             {
+                // 完成数：按Status==Completed&PlannedDate
                 completedCounts.Add(weeklyTasks.Count(t =>
-                    t.PlannedDate.Date == day.Date &&
-                    t.Status == MyTaskStatus.Completed));
+                    t.PlannedDate.Date == day.Date
+                 && t.Status == MyTaskStatus.Completed));
 
-                postponedCounts.Add(weeklyTasks.Count(t =>
-                    t.PlannedDate.Date == day.Date &&
-                    (t.Status == MyTaskStatus.Postponed || t.Status == MyTaskStatus.Abandoned)));
+                // 跳过数：看事件时间戳
+                int skip = weeklyTasks.Count(t =>
+                       (t.PostponedAt.HasValue && t.PostponedAt.Value.Date == day.Date)
+                    || (t.AbandonedAt.HasValue && t.AbandonedAt.Value.Date == day.Date));
+                skippedCounts.Add(skip);
             }
 
             int safeMax(List<int> list) => list.Any() ? list.Max() : 0;//预防无任务记录的情况
+            // 比较已完成和跳过两条线
             int maxValue = Math.Max(
-                Math.Max(safeMax(completedCounts), safeMax(pendingCounts)),
-                safeMax(postponedCounts));
+                safeMax(completedCounts),
+                safeMax(skippedCounts)
+                );
 
             int dynamicMax = Math.Max(5, maxValue + 1); // 任务上限至少是5，再+1防止顶格
 
             Series = new ISeries[]
             {
-                new LineSeries<int>
-                {
-                    Values = completedCounts,
-                    Name = "已完成",
-                    Stroke = new SolidColorPaint(SKColors.Green, 2),
-                    Fill = null
-                },
+            new LineSeries<int> { Values = completedCounts, Name = "已完成", /* … */ },
+            new LineSeries<int> { Values = skippedCounts, Name = "推迟/放弃", /* … */ },
+            };
 
-                new LineSeries<int>
-                {
-                    Values = postponedCounts,
-                    Name = "推迟/放弃",
-                    Stroke = new SolidColorPaint(SKColors.Red, 2),
-                    Fill = null
-                }
-                    };
+            //X轴显示日期
+            XAxes = new[] { new Axis { Labels = days.Select(d => d.ToString("MM/dd")).ToArray() } };
 
-            XAxes = new Axis[]
-                {
-                    new Axis
-                    {
-                        Labels = days.Select(d => d.ToString("MM/dd")).ToArray(),
-                        LabelsRotation = 0
-                    }
-                };
-
+            //Y轴显示数量
             YAxes = new Axis[]
                 {
                     new Axis
@@ -327,6 +322,13 @@ namespace TimeController.ViewModels
             OnPropertyChanged(nameof(YAxes));
             OnPropertyChanged(nameof(TooltipTextPaint));
         }
+
+        //触发HasSkippedTasks通知
+        private void SkippedTasks_CollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
+        {
+            OnPropertyChanged(nameof(HasSkippedTasks));
+        }
+
 
         public event PropertyChangedEventHandler? PropertyChanged;
         protected void OnPropertyChanged(string propertyName) =>

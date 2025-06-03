@@ -47,9 +47,6 @@ namespace TimeController.Migrations
                     b.Property<bool>("IsReminderEnabled")
                         .HasColumnType("INTEGER");
 
-                    b.Property<bool>("IsSelected")
-                        .HasColumnType("INTEGER");
-
                     b.Property<string>("Mode")
                         .IsRequired()
                         .HasColumnType("TEXT");

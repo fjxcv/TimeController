@@ -216,7 +216,7 @@
                                            Foreground="#222"
                                            Margin="0,0,0,15"/>
                                 <TextBlock Text="{Binding Message}"
-                                           FontSize="18"
+                                           FontSize="17"
                                            Foreground="#444"
                                            TextWrapping="Wrap"/>
 

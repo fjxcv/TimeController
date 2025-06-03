@@ -1,18 +1,18 @@
-﻿// 在 TimeController/Converters/BoolToVisibilityConverter.cs 文件中
-using System;
+﻿using System;
+using System.Collections.Generic;
 using System.Globalization;
-using System.Windows;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
 using System.Windows.Data;
 
 namespace TimeController.Converters
 {
-    public class BoolToVisibilityConverter : IValueConverter
+    public class BooleanToAngleConverter : IValueConverter
     {
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
-            if (value is bool b && b)
-                return Visibility.Visible;
-            return Visibility.Collapsed;
+            return (bool)value ? 180 : 0;
         }
 
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
@@ -20,4 +20,5 @@ namespace TimeController.Converters
             throw new NotImplementedException();
         }
     }
+
 }

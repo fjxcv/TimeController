@@ -18,8 +18,12 @@ namespace TimeController.Services
 
         }
 
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
+            modelBuilder.Entity<TaskModel>()
+                .HasKey(t => t.Id);
+
             modelBuilder.Entity<TaskModel>()
                 .Property(t => t.Status)
                 .HasConversion<string>();

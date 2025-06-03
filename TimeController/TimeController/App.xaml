@@ -13,8 +13,12 @@
             </ResourceDictionary.MergedDictionaries>
 
             <converters:BoolToHiddenConverter x:Key="BoolToHiddenConverter" />
+            <converters:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter"/>
+            <converters:BooleanToAngleConverter x:Key="BooleanToAngleConverter" />
             <converters:BoolToVisibilityConverter x:Key="BoolToVisibility" />
-        </ResourceDictionary>
 
+            <!-- 在这里添加你的 ColumnToVisibilityConverter -->
+            <converters:ColumnToVisibilityConverter x:Key="ColumnToVisibilityConverter"/>
+        </ResourceDictionary>
     </Application.Resources>
 </Application>

@@ -11,8 +11,8 @@ using TimeController.Services;
 namespace TimeController.Migrations
 {
     [DbContext(typeof(TaskDbContext))]
-    [Migration("20250522034250_NewFields")]
-    partial class NewFields
+    [Migration("20250522064653_InitialCreate")]
+    partial class InitialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -48,9 +48,6 @@ namespace TimeController.Migrations
                         .HasColumnType("INTEGER");
 
                     b.Property<bool>("IsReminderEnabled")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<bool>("IsSelected")
                         .HasColumnType("INTEGER");
 
                     b.Property<string>("Mode")
