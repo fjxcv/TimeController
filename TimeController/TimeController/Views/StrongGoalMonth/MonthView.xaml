@@ -5,6 +5,7 @@
       xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
       xmlns:local="clr-namespace:TimeController.Views.StrongGoalMonth"
       xmlns:ui="http://schemas.inkore.net/lib/ui/wpf/modern"
+      xmlns:uiControls="clr-namespace:iNKORE.UI.WPF.Modern.Controls;assembly=iNKORE.UI.WPF.Modern"
       xmlns:sys="clr-namespace:System;assembly=mscorlib"
       xmlns:vm="clr-namespace:TimeController.ViewModels"
       mc:Ignorable="d" 
@@ -49,74 +50,65 @@
         </Grid>
 
         <!-- 年月导航栏 -->
-        <StackPanel Grid.Row="1" 
-                   Orientation="Horizontal" 
-                   HorizontalAlignment="Center" 
+        <StackPanel Grid.Row="1"
+                   Orientation="Horizontal"
+                   HorizontalAlignment="Center"
                    Margin="0,30,0,0">
-            
+
             <!-- 上一年按钮 -->
-            <Button Content="&lt;" 
-                   Command="{Binding PrevYearCommand}" 
-                   Width="50" 
-                   Height="40" 
-                   Background="#FFCCCCCC" 
-                   BorderThickness="0" 
-                   FontSize="20" 
-                   Margin="0,0,10,0"/>
-            
+            <Button Command="{Binding PrevYearCommand}"
+                    Width="40"
+                    Height="40"
+                    Margin="0,0,8,0">
+                <uiControls:FontIcon Glyph="&#xE76B;" FontSize="16"/>
+            </Button>
+
             <!-- 当前年份 -->
-            <Border Background="#FFEBEBEB" 
-                   CornerRadius="20" 
-                   Padding="20,0" 
-                   Margin="0,0,10,0">
-                <TextBlock Text="{Binding YearText}" 
-                          FontSize="24" 
-                          FontWeight="Bold" 
-                          VerticalAlignment="Center" 
-                          HorizontalAlignment="Center"/>
+            <Border Background="#FFEBEBEB"
+                   CornerRadius="20"
+                   Padding="20,0"
+                   Margin="0,0,8,0">
+                <TextBlock Text="{Binding YearText}"
+                           FontSize="24"
+                           FontWeight="SemiBold"
+                           VerticalAlignment="Center"
+                           HorizontalAlignment="Center"/>
             </Border>
-            
+
             <!-- 下一年按钮 -->
-            <Button Content="&gt;" 
-                   Command="{Binding NextYearCommand}" 
-                   Width="50" 
-                   Height="40" 
-                   Background="#FFCCCCCC" 
-                   BorderThickness="0" 
-                   FontSize="20" 
-                   Margin="0,0,30,0"/>
-            
-           
+            <Button Command="{Binding NextYearCommand}"
+                    Width="40"
+                    Height="40"
+                    Margin="0,0,24,0">
+                <uiControls:FontIcon Glyph="&#xE76C;" FontSize="16"/>
+            </Button>
+
             <!-- 上一月按钮 -->
-            <Button Content="&lt;" 
-                   Command="{Binding PrevMonthCommand}" 
-                   Width="50" 
-                   Height="40" 
-                   Background="#FFCCCCCC" 
-                   BorderThickness="0" 
-                   FontSize="20" 
-                   Margin="0,0,10,0"/>
-            
+            <Button Command="{Binding PrevMonthCommand}"
+                    Width="40"
+                    Height="40"
+                    Margin="0,0,8,0">
+                <uiControls:FontIcon Glyph="&#xE76B;" FontSize="16"/>
+            </Button>
+
             <!-- 当前月份 -->
-            <Border Background="#FFEBEBEB" 
-                   CornerRadius="20" 
-                   Padding="20,0" 
-                   Margin="0,0,10,0">
-                <TextBlock Text="{Binding MonthText}" 
-                          FontSize="24" 
-                          FontWeight="Bold" 
-                          VerticalAlignment="Center" 
-                          HorizontalAlignment="Center"/>
+            <Border Background="#FFEBEBEB"
+                   CornerRadius="20"
+                   Padding="20,0"
+                   Margin="0,0,8,0">
+                <TextBlock Text="{Binding MonthText}"
+                           FontSize="24"
+                           FontWeight="SemiBold"
+                           VerticalAlignment="Center"
+                           HorizontalAlignment="Center"/>
             </Border>
-            
+
             <!-- 下一月按钮 -->
-            <Button Content="&gt;" 
-                   Command="{Binding NextMonthCommand}" 
-                   Width="50" 
-                   Height="40" 
-                   Background="#FFCCCCCC" 
-                   BorderThickness="0" 
-                   FontSize="20"/>
+            <Button Command="{Binding NextMonthCommand}"
+                    Width="40"
+                    Height="40">
+                <uiControls:FontIcon Glyph="&#xE76C;" FontSize="16"/>
+            </Button>
         </StackPanel>
 
         <!-- 星期栏 -->

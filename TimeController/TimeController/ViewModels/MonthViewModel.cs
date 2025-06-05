@@ -3,6 +3,9 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Windows.Input;
+using Microsoft.Extensions.DependencyInjection;
+using TimeController.Services;
+using TimeController.Helpers;
 using TimeController.Models;
 using TimeController.Views;
 
@@ -150,8 +153,8 @@ namespace TimeController.ViewModels
         /// </summary>
         private void ShowReview()
         {
-            // TODO: 实现跳转复盘
-            System.Windows.MessageBox.Show("跳转复盘页面（待实现）");
+            var nav = App.AppHost.Services.GetRequiredService<INavigationService>();
+            nav.NavigateTo(AppFrame.Instance!, "Everyday");
         }
 
         /// <summary>
