@@ -4,14 +4,47 @@
       xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
       xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
       xmlns:uiControls="clr-namespace:iNKORE.UI.WPF.Modern.Controls;assembly=iNKORE.UI.WPF.Modern"
-      xmlns:local="clr-namespace:TimeController.Views.StrongGoalMonth"
-      xmlns:ui="http://schemas.inkore.net/lib/ui/wpf/modern"
-      xmlns:uiControls="clr-namespace:iNKORE.UI.WPF.Modern.Controls;assembly=iNKORE.UI.WPF.Modern"
-      xmlns:sys="clr-namespace:System;assembly=mscorlib"
-      xmlns:vm="clr-namespace:TimeController.ViewModels"
-      mc:Ignorable="d" 
-      d:DesignHeight="450" d:DesignWidth="800"
-      Title="MonthView">
+    <!-- 本页面资源 -->
+    <ui:Page.Resources>
+        <!-- Fluent 样式的操作按钮 -->
+        <Style x:Key="ReviewButtonStyle" TargetType="Button">
+            <Setter Property="Background" Value="#0A84FF"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="BorderBrush" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Padding" Value="12,6"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="4">
+                            <ContentPresenter HorizontalAlignment="Center"
+                                              VerticalAlignment="Center"
+                                              Margin="{TemplateBinding Padding}"/>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Background" Value="#2C99FF"/>
+                </Trigger>
+                <Trigger Property="IsPressed" Value="True">
+                    <Setter Property="Background" Value="#0065D1"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+    </ui:Page.Resources>
+
+            <Button Content="进入复盘"
+                   Command="{Binding ReviewCommand}"
+                   Width="120"
+                   FontSize="18"
+                   Style="{StaticResource ReviewButtonStyle}"
+                   HorizontalAlignment="Right"
+                   VerticalAlignment="Top"
 
     <!-- 设置页面数据上下文为MonthViewModel -->
     <ui:Page.DataContext>
