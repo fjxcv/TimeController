@@ -6,18 +6,27 @@
              mc:Ignorable="d"
              d:DesignHeight="100" d:DesignWidth="100">
     <Border x:Name="CardBorder"
-            BorderBrush="Gray"
+            BorderBrush="#DDDDDD"
             BorderThickness="1"
             CornerRadius="8"
             Cursor="Hand"
+            Margin="4"
             MouseLeftButtonUp="Border_MouseLeftButtonUp">
         <Border.Style>
             <Style TargetType="Border">
-                <Setter Property="Background" Value="White"/>
+                <Setter Property="Background" Value="#F8F8F8"/>
+                <Setter Property="Effect">
+                    <Setter.Value>
+                        <DropShadowEffect BlurRadius="6" ShadowDepth="0" Opacity="0.1"/>
+                    </Setter.Value>
+                </Setter>
                 <Style.Triggers>
                     <DataTrigger Binding="{Binding IsToday, RelativeSource={RelativeSource AncestorType=UserControl}}" Value="True">
-                        <Setter Property="Background" Value="#FFEBEBEB"/> 
+                        <Setter Property="Background" Value="#CCE4FF"/>
                     </DataTrigger>
+                    <Trigger Property="IsMouseOver" Value="True">
+                        <Setter Property="Background" Value="#E4E4E4"/>
+                    </Trigger>
                 </Style.Triggers>
             </Style>
         </Border.Style>

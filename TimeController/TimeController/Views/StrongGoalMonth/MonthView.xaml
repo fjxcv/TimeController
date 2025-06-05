@@ -152,8 +152,8 @@
                 <ItemsControl.ItemTemplate>
                     <DataTemplate>
                         <!-- 绑定日期和点击命令 -->
-                        <local:DateCard Date="{Binding}" 
-                                       Command="{Binding DataContext.DateClickCommand, 
+                        <local:DateCard Date="{Binding}" Margin="4"
+                                       Command="{Binding DataContext.DateClickCommand,
                                                RelativeSource={RelativeSource AncestorType=ui:Page}}">
                             <!-- 设置样式 -->
                             <local:DateCard.Style>
