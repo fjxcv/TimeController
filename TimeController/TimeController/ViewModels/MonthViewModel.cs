@@ -3,6 +3,9 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Windows.Input;
+using Microsoft.Extensions.DependencyInjection;
+using TimeController.Services;
+using TimeController.Helpers;
 using TimeController.Models;
 using TimeController.Views;
 
@@ -13,9 +16,9 @@ namespace TimeController.ViewModels
     /// </summary>
     public class MonthViewModel : INotifyPropertyChanged
     {
-        // 年份范围为2024-2026
-        private const int MinYear = 2024;
-        private const int MaxYear = 2026;
+        // 年份范围为2010-2030
+        private const int MinYear = 2010;
+        private const int MaxYear = 2030;
 
         // 日历日期集合（包含null用于填充空白）
         public ObservableCollection<DateTime?> CalendarDays { get; } = new();
@@ -150,8 +153,8 @@ namespace TimeController.ViewModels
         /// </summary>
         private void ShowReview()
         {
-            // TODO: 实现跳转复盘
-            System.Windows.MessageBox.Show("跳转复盘页面（待实现）");
+            var nav = App.AppHost.Services.GetRequiredService<INavigationService>();
+            nav.NavigateTo(AppFrame.Instance!, "Everyday");
         }
 
         /// <summary>
