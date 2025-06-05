@@ -5,12 +5,12 @@ using System.Runtime.CompilerServices;
 using System.Windows.Input;
 using System.Windows.Media;
 using TimeController.Models;
-using System.Windows;
-using System.Globalization;
+using Microsoft.Extensions.DependencyInjection;
 using TimeController.Services;
+using TimeController.Helpers;
 using System.Diagnostics;
-using System.Windows.Controls;
 using System.Windows.Data;
+
 
 namespace TimeController.ViewModels
 {
@@ -21,6 +21,7 @@ namespace TimeController.ViewModels
         public IEnumerable<TaskBlock> AllDayTaskBlocks => TaskBlocks.Where(t => t.IsAllDay);
         public IEnumerable<TaskBlock> TimedTaskBlocks => TaskBlocks.Where(t => !t.IsAllDay);
 
+        public ICommand ReviewCommand { get; }
 
         public ObservableCollection<TaskModel> Tasks { get; set; } = new ObservableCollection<TaskModel>();
         public ObservableCollection<TaskBlock> TaskBlocks { get; } = new ObservableCollection<TaskBlock>();
@@ -249,6 +250,7 @@ namespace TimeController.ViewModels
             UpdateMonthText();
             UpdateWeekText();
 
+            ReviewCommand = new RelayCommand(_ => ShowReview());
             PreviousWeekCommand = new RelayCommand(_ => NavigateWeek(-7));
             NextWeekCommand = new RelayCommand(_ => NavigateWeek(7));
             PreviousMonthCommand = new RelayCommand(_ => NavigateMonth(-1));
@@ -318,7 +320,11 @@ namespace TimeController.ViewModels
         }
 
 
-
+        private void ShowReview()
+        {
+            var nav = App.AppHost.Services.GetRequiredService<INavigationService>();
+            nav.NavigateTo(AppFrame.Instance!, "Everyday");
+        }
 
         private void NavigateWeek(int offset)
         {

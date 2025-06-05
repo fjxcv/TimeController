@@ -17,36 +17,76 @@
         <vm:MonthViewModel />
     </ui:Page.DataContext>
 
+    <!-- 本页面资源 --><!--
+    <ui:Page.Resources>
+        --><!-- Fluent 样式的操作按钮 --><!--
+        <Style x:Key="ReviewButtonStyle" TargetType="Button">
+            <Setter Property="Background" Value="#b9d9fe"/>
+            <Setter Property="Foreground" Value="black"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="BorderBrush" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Padding" Value="12,6"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="4">
+                            <ContentPresenter HorizontalAlignment="Center"
+                                              VerticalAlignment="Center"
+                                              Margin="{TemplateBinding Padding}"/>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Background" Value="#7eb9fb"/>
+                </Trigger>
+                <Trigger Property="IsPressed" Value="True">
+                    <Setter Property="Background" Value="#7eb9fb"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+    </ui:Page.Resources>-->
+
     <!-- 主网格布局 -->
     <Grid>
         <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>    <!-- 顶部标题栏 -->
-            <RowDefinition Height="Auto"/>    <!-- 年月导航 -->
-            <RowDefinition Height="Auto"/>    <!-- 星期栏 -->
-            <RowDefinition Height="*"/>       <!-- 日历内容区域（自动填充剩余空间） -->
+            <RowDefinition Height="auto"/>
+            <!-- 顶部标题栏 -->
+            <RowDefinition Height="Auto"/>
+            <!-- 年月导航 -->
+            <RowDefinition Height="Auto"/>
+            <!-- 星期栏 -->
+            <RowDefinition Height="*"/>
+            <!-- 日历内容区域（自动填充剩余空间） -->
         </Grid.RowDefinitions>
-    
+
         <!-- 标题栏 -->
-        <Grid Grid.Row="0" Margin="0,30,0,0">
+        <Grid Grid.Row="0" Margin="0,0,0,0" Height="35.78">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="87*"/>
+                <ColumnDefinition Width="713*"/>
+            </Grid.ColumnDefinitions>
             <!-- 主标题 -->
             <TextBlock Text="强目标模式" 
-                     FontSize="36" 
+                     FontSize="24" 
                      FontWeight="Bold" 
-                     VerticalAlignment="Top" 
+                     VerticalAlignment="Center" 
                      HorizontalAlignment="Left" 
-                     Margin="40,0,0,0"/>
-            
+                     Margin="40,0,0,0" Grid.ColumnSpan="2"/>
+
             <!-- 进入复盘 -->
-            <Button Content="进入复盘" 
-                   Command="{Binding ReviewCommand}" 
-                   Width="120" 
-                   Height="40"
-                   FontSize="18" 
-                   Background="#FFCCCCCC" 
-                   BorderThickness="0"
-                   HorizontalAlignment="Right" 
-                   VerticalAlignment="Top" 
-                   Margin="0,0,40,0"/>
+            <Button Content="进入复盘"
+                   Command="{Binding ReviewCommand}"
+                   Height="35.78"
+                   Padding="16,8"
+                   HorizontalAlignment="Right"
+                   VerticalAlignment="Center"
+                   Margin="0,0,40,0" Grid.Column="1"/>
         </Grid>
 
         <!-- 年月导航栏 -->
@@ -54,7 +94,7 @@
                    Orientation="Horizontal" 
                    HorizontalAlignment="Center" 
                    Margin="0,5,0,0">
-            
+
             <!-- 上一年按钮 -->
             <Button Command="{Binding PrevYearCommand}"
                     Width="40"
@@ -74,7 +114,7 @@
                            VerticalAlignment="Center"
                            HorizontalAlignment="Center"/>
             </Border>
-            
+
             <!-- 下一年按钮 -->
             <Button Command="{Binding NextYearCommand}"
                     Width="40"
@@ -82,8 +122,8 @@
                     Margin="0,0,24,0">
                 <uiControls:FontIcon Glyph="&#xE76C;" FontSize="16"/>
             </Button>
-            
-           
+
+
             <!-- 上一月按钮 -->
             <Button Command="{Binding PrevMonthCommand}"
                     Width="40"
@@ -91,7 +131,7 @@
                     Margin="0,0,8,0">
                 <uiControls:FontIcon Glyph="&#xE76B;" FontSize="16"/>
             </Button>
-            
+
             <!-- 当前月份 -->
             <Border Background="#FFEBEBEB"
                    CornerRadius="20"
@@ -103,7 +143,7 @@
                            VerticalAlignment="Center"
                            HorizontalAlignment="Center"/>
             </Border>
-            
+
             <!-- 下一月按钮 -->
             <Button Command="{Binding NextMonthCommand}"
                     Width="40"
@@ -116,10 +156,15 @@
         <Grid Grid.Row="2" Margin="40,30,40,0">
             <!-- 7列网格布局 -->
             <Grid.ColumnDefinitions>
-                <ColumnDefinition/><ColumnDefinition/><ColumnDefinition/><ColumnDefinition/>
-                <ColumnDefinition/><ColumnDefinition/><ColumnDefinition/>
+                <ColumnDefinition/>
+                <ColumnDefinition/>
+                <ColumnDefinition/>
+                <ColumnDefinition/>
+                <ColumnDefinition/>
+                <ColumnDefinition/>
+                <ColumnDefinition/>
             </Grid.ColumnDefinitions>
-            
+
             <!-- 星期一到星期日 -->
             <TextBlock Text="一" Grid.Column="0" HorizontalAlignment="Center" FontSize="20" FontWeight="Bold"/>
             <TextBlock Text="二" Grid.Column="1" HorizontalAlignment="Center" FontSize="20" FontWeight="Bold"/>
@@ -140,7 +185,7 @@
                         <UniformGrid Columns="7" />
                     </ItemsPanelTemplate>
                 </ItemsControl.ItemsPanel>
-                
+
                 <!-- 每个项目的模板 - 使用DateCard控件 -->
                 <ItemsControl.ItemTemplate>
                     <DataTemplate>

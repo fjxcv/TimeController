@@ -51,6 +51,7 @@
             <!-- 进入复盘按钮 -->
             <Button Grid.Column="3"
                     Content="进入复盘" 
+                    Command="{Binding ReviewCommand}"
                     Padding="16,8"/>
         </Grid>
 
