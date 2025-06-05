@@ -16,9 +16,9 @@ namespace TimeController.ViewModels
     /// </summary>
     public class MonthViewModel : INotifyPropertyChanged
     {
-        // 年份范围为2024-2026
-        private const int MinYear = 2024;
-        private const int MaxYear = 2026;
+        // 年份范围为2010-2030
+        private const int MinYear = 2010;
+        private const int MaxYear = 2030;
 
         // 日历日期集合（包含null用于填充空白）
         public ObservableCollection<DateTime?> CalendarDays { get; } = new();

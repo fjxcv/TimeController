@@ -3,6 +3,7 @@
       xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
       xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
       xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+      xmlns:uiControls="clr-namespace:iNKORE.UI.WPF.Modern.Controls;assembly=iNKORE.UI.WPF.Modern"
       xmlns:local="clr-namespace:TimeController.Views.StrongGoalMonth"
       xmlns:ui="http://schemas.inkore.net/lib/ui/wpf/modern"
       xmlns:uiControls="clr-namespace:iNKORE.UI.WPF.Modern.Controls;assembly=iNKORE.UI.WPF.Modern"
@@ -50,11 +51,12 @@
         </Grid>
 
         <!-- 年月导航栏 -->
-        <StackPanel Grid.Row="1"
-                   Orientation="Horizontal"
-                   HorizontalAlignment="Center"
-                   Margin="0,30,0,0">
 
+        <StackPanel Grid.Row="1" 
+                   Orientation="Horizontal" 
+                   HorizontalAlignment="Center" 
+                   Margin="0,5,0,0">
+            
             <!-- 上一年按钮 -->
             <Button Command="{Binding PrevYearCommand}"
                     Width="40"
@@ -144,7 +146,7 @@
                 <ItemsControl.ItemTemplate>
                     <DataTemplate>
                         <!-- 绑定日期和点击命令 -->
-                        <local:DateCard Date="{Binding}" 
+                        <local:DateCard Date="{Binding}" Margin="2"
                                        Command="{Binding DataContext.DateClickCommand, 
                                                RelativeSource={RelativeSource AncestorType=ui:Page}}">
                             <!-- 设置样式 -->
