@@ -12,6 +12,7 @@
     <Grid x:Name="RootGrid">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
 
@@ -55,8 +56,383 @@
                     Padding="16,8"/>
         </Grid>
 
+        <!-- Date Headers -->
+        <Grid Grid.Row="1" Margin="24,24,24,0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="75"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+
+            <Grid Grid.Column="1">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+                <!-- Date Headers -->
+                <Border x:Name="DateColumn0" Grid.Column="0" Margin="2" Background="#F0F0F0" CornerRadius="4">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <!-- 星期显示 -->
+                            <RowDefinition Height="Auto"/>
+                            <!-- 日期标题 -->
+                            <RowDefinition Height="*"/>
+                            <!-- 全天任务区域 -->
+                        </Grid.RowDefinitions>
+
+                        <!-- 日期标题 -->
+                        <StackPanel Grid.Row="0">
+                            <TextBlock Text="一" HorizontalAlignment="Center"/>
+                            <TextBlock x:Name="DateTextBlock0" HorizontalAlignment="Center" FontSize="16" FontWeight="Bold"/>
+                        </StackPanel>
+
+                        <!-- 全天任务列表 -->
+                        <ItemsControl Grid.Row="1" Margin="2" 
+                                      ItemsSource="{Binding AllDayTaskBlocks}">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <StackPanel Orientation="Vertical"/>
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Border Background="{Binding Brush}" 
+                                            CornerRadius="6" 
+                                            Margin="2"
+                                            Padding="6,2"
+                                            MouseLeftButtonDown="TaskBlock_MouseLeftButtonDown">
+                                        <TextBlock Text="{Binding Name}" 
+                                                   FontWeight="Bold"
+                                                   Foreground="Black"
+                                                   TextTrimming="CharacterEllipsis"
+                                                   ToolTip="{Binding Note}" />
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                            <ItemsControl.ItemContainerStyle>
+                                <Style TargetType="ContentPresenter">
+                                    <Setter Property="Visibility"
+                                            Value="{Binding Column, Converter={StaticResource ColumnToVisibilityConverter}, ConverterParameter=0}"/>
+                                </Style>
+                            </ItemsControl.ItemContainerStyle>
+                        </ItemsControl>
+                    </Grid>
+                </Border>
+
+
+                <Border x:Name="DateColumn1" Grid.Column="1" Margin="1" Background="#F0F0F0" CornerRadius="4">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <!-- 星期显示 -->
+                            <RowDefinition Height="Auto"/>
+                            <!-- 日期标题 -->
+                            <RowDefinition Height="*"/>
+                            <!-- 全天任务区域 -->
+                        </Grid.RowDefinitions>
+
+                        <!-- 日期标题 -->
+                        <StackPanel Grid.Row="0">
+                            <TextBlock Text="二" HorizontalAlignment="Center"/>
+                            <TextBlock x:Name="DateTextBlock1" HorizontalAlignment="Center" FontSize="16" FontWeight="Bold"/>
+                        </StackPanel>
+
+                        <!-- 全天任务列表 -->
+                        <ItemsControl Grid.Row="1" Margin="2" 
+                                      ItemsSource="{Binding AllDayTaskBlocks}">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <StackPanel Orientation="Vertical"/>
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Border Background="{Binding Brush}" 
+                                            CornerRadius="6" 
+                                            Margin="2"
+                                            Padding="6,2"
+                                            MouseLeftButtonDown="TaskBlock_MouseLeftButtonDown">
+                                        <TextBlock Text="{Binding Name}" 
+                                                   FontWeight="Bold"
+                                                   Foreground="Black"
+                                                   TextTrimming="CharacterEllipsis"
+                                                   ToolTip="{Binding Note}" />
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                            <ItemsControl.ItemContainerStyle>
+                                <Style TargetType="ContentPresenter">
+                                    <Setter Property="Visibility"
+                                            Value="{Binding Column, Converter={StaticResource ColumnToVisibilityConverter}, ConverterParameter=1}"/>
+                                </Style>
+                            </ItemsControl.ItemContainerStyle>
+                        </ItemsControl>
+                    </Grid>
+                </Border>
+
+
+                <Border x:Name="DateColumn2" Grid.Column="2" Margin="2" Background="#F0F0F0" CornerRadius="4" Height="100">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <!-- 星期显示 -->
+                            <RowDefinition Height="Auto"/>
+                            <!-- 日期标题 -->
+                            <RowDefinition Height="*"/>
+                            <!-- 全天任务区域 -->
+                        </Grid.RowDefinitions>
+
+                        <!-- 日期标题 -->
+                        <StackPanel Grid.Row="0">
+                            <TextBlock Text="三" HorizontalAlignment="Center"/>
+                            <TextBlock x:Name="DateTextBlock2" HorizontalAlignment="Center" FontSize="16" FontWeight="Bold"/>
+                        </StackPanel>
+
+                        <!-- 全天任务列表 -->
+                        <ItemsControl Grid.Row="1" Margin="2" 
+                                      ItemsSource="{Binding AllDayTaskBlocks}">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <StackPanel Orientation="Vertical"/>
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Border Background="{Binding Brush}" 
+                                            CornerRadius="6" 
+                                            Margin="2"
+                                            Padding="6,2"
+                                            MouseLeftButtonDown="TaskBlock_MouseLeftButtonDown">
+                                        <TextBlock Text="{Binding Name}" 
+                                                   FontWeight="Bold"
+                                                   Foreground="Black"
+                                                   TextTrimming="CharacterEllipsis"
+                                                   ToolTip="{Binding Note}" />
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                            <ItemsControl.ItemContainerStyle>
+                                <Style TargetType="ContentPresenter">
+                                    <Setter Property="Visibility"
+                                            Value="{Binding Column, Converter={StaticResource ColumnToVisibilityConverter}, ConverterParameter=2}"/>
+                                </Style>
+                            </ItemsControl.ItemContainerStyle>
+                        </ItemsControl>
+                    </Grid>
+                </Border>
+
+                <Border x:Name="DateColumn3" Grid.Column="3" Margin="2" Background="#F0F0F0" CornerRadius="4" Height="100">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <!-- 星期显示 -->
+                            <RowDefinition Height="Auto"/>
+                            <!-- 日期标题 -->
+                            <RowDefinition Height="*"/>
+                            <!-- 全天任务区域 -->
+                        </Grid.RowDefinitions>
+
+                        <!-- 日期标题 -->
+                        <StackPanel Grid.Row="0">
+                            <TextBlock Text="四" HorizontalAlignment="Center"/>
+                            <TextBlock x:Name="DateTextBlock3" HorizontalAlignment="Center" FontSize="16" FontWeight="Bold"/>
+                        </StackPanel>
+
+                        <!-- 全天任务列表 -->
+                        <ItemsControl Grid.Row="1" Margin="2" 
+                                      ItemsSource="{Binding AllDayTaskBlocks}">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <StackPanel Orientation="Vertical"/>
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Border Background="{Binding Brush}" 
+                                            CornerRadius="6" 
+                                            Margin="2"
+                                            Padding="6,2"
+                                            MouseLeftButtonDown="TaskBlock_MouseLeftButtonDown">
+                                        <TextBlock Text="{Binding Name}" 
+                                                   FontWeight="Bold"
+                                                   Foreground="Black"
+                                                   TextTrimming="CharacterEllipsis"
+                                                   ToolTip="{Binding Note}" />
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                            <ItemsControl.ItemContainerStyle>
+                                <Style TargetType="ContentPresenter">
+                                    <Setter Property="Visibility"
+                                            Value="{Binding Column, Converter={StaticResource ColumnToVisibilityConverter}, ConverterParameter=3}"/>
+                                </Style>
+                            </ItemsControl.ItemContainerStyle>
+                        </ItemsControl>
+                    </Grid>
+                </Border>
+
+                <Border x:Name="DateColumn4" Grid.Column="4" Margin="2" Background="#F0F0F0" CornerRadius="4" Height="100">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <!-- 星期显示 -->
+                            <RowDefinition Height="Auto"/>
+                            <!-- 日期标题 -->
+                            <RowDefinition Height="*"/>
+                            <!-- 全天任务区域 -->
+                        </Grid.RowDefinitions>
+
+                        <!-- 日期标题 -->
+                        <StackPanel Grid.Row="0">
+                            <TextBlock Text="五" HorizontalAlignment="Center"/>
+                            <TextBlock x:Name="DateTextBlock4" HorizontalAlignment="Center" FontSize="16" FontWeight="Bold"/>
+                        </StackPanel>
+
+                        <!-- 全天任务列表 -->
+                        <ItemsControl Grid.Row="1" Margin="2" 
+                                      ItemsSource="{Binding AllDayTaskBlocks}">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <StackPanel Orientation="Vertical"/>
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Border Background="{Binding Brush}" 
+                                            CornerRadius="6" 
+                                            Margin="2"
+                                            Padding="6,2"
+                                            MouseLeftButtonDown="TaskBlock_MouseLeftButtonDown">
+                                        <TextBlock Text="{Binding Name}" 
+                                                   FontWeight="Bold"
+                                                   Foreground="Black"
+                                                   TextTrimming="CharacterEllipsis"
+                                                   ToolTip="{Binding Note}" />
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                            <ItemsControl.ItemContainerStyle>
+                                <Style TargetType="ContentPresenter">
+                                    <Setter Property="Visibility"
+                                            Value="{Binding Column, Converter={StaticResource ColumnToVisibilityConverter}, ConverterParameter=4}"/>
+                                </Style>
+                            </ItemsControl.ItemContainerStyle>
+                        </ItemsControl>
+                    </Grid>
+                </Border>
+
+                <Border x:Name="DateColumn5" Grid.Column="5" Margin="2" Background="#F0F0F0" CornerRadius="4" Height="100">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <!-- 星期显示 -->
+                            <RowDefinition Height="Auto"/>
+                            <!-- 日期标题 -->
+                            <RowDefinition Height="*"/>
+                            <!-- 全天任务区域 -->
+                        </Grid.RowDefinitions>
+
+                        <!-- 日期标题 -->
+                        <StackPanel Grid.Row="0">
+                            <TextBlock Text="六" HorizontalAlignment="Center"/>
+                            <TextBlock x:Name="DateTextBlock5" HorizontalAlignment="Center" FontSize="16" FontWeight="Bold"/>
+                        </StackPanel>
+
+                        <!-- 全天任务列表 -->
+                        <ItemsControl Grid.Row="1" Margin="2" 
+                                      ItemsSource="{Binding AllDayTaskBlocks}">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <StackPanel Orientation="Vertical"/>
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Border Background="{Binding Brush}" 
+                                            CornerRadius="6" 
+                                            Margin="2"
+                                            Padding="6,2"
+                                            MouseLeftButtonDown="TaskBlock_MouseLeftButtonDown">
+                                        <TextBlock Text="{Binding Name}" 
+                                                   FontWeight="Bold"
+                                                   Foreground="Black"
+                                                   TextTrimming="CharacterEllipsis"
+                                                   ToolTip="{Binding Note}" />
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                            <ItemsControl.ItemContainerStyle>
+                                <Style TargetType="ContentPresenter">
+                                    <Setter Property="Visibility"
+                                            Value="{Binding Column, Converter={StaticResource ColumnToVisibilityConverter}, ConverterParameter=5}"/>
+                                </Style>
+                            </ItemsControl.ItemContainerStyle>
+                        </ItemsControl>
+                    </Grid>
+                </Border>
+
+                <Border x:Name="DateColumn6" Grid.Column="6" Margin="2" Background="#F0F0F0" CornerRadius="4" Height="100">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <!-- 星期显示 -->
+                            <RowDefinition Height="Auto"/>
+                            <!-- 日期标题 -->
+                            <RowDefinition Height="*"/>
+                            <!-- 全天任务区域 -->
+                        </Grid.RowDefinitions>
+
+                        <!-- 日期标题 -->
+                        <StackPanel Grid.Row="0">
+                            <TextBlock Text="日" HorizontalAlignment="Center"/>
+                            <TextBlock x:Name="DateTextBlock6" HorizontalAlignment="Center" FontSize="16" FontWeight="Bold"/>
+                        </StackPanel>
+
+                        <!-- 全天任务列表 -->
+                        <ItemsControl Grid.Row="1" Margin="2" 
+                                      ItemsSource="{Binding AllDayTaskBlocks}">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <StackPanel Orientation="Vertical"/>
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Border Background="{Binding Brush}" 
+                                            CornerRadius="6" 
+                                            Margin="2"
+                                            Padding="6,2"
+                                            MouseLeftButtonDown="TaskBlock_MouseLeftButtonDown">
+                                        <TextBlock Text="{Binding Name}" 
+                                                   FontWeight="Bold"
+                                                   Foreground="Black"
+                                                   TextTrimming="CharacterEllipsis"
+                                                   ToolTip="{Binding Note}" />
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                            <ItemsControl.ItemContainerStyle>
+                                <Style TargetType="ContentPresenter">
+                                    <Setter Property="Visibility"
+                                            Value="{Binding Column, Converter={StaticResource ColumnToVisibilityConverter}, ConverterParameter=6}"/>
+                                </Style>
+                            </ItemsControl.ItemContainerStyle>
+                        </ItemsControl>
+                    </Grid>
+                </Border>
+
+
+            </Grid>
+        </Grid>
+        
+        
         <!-- Content -->
-        <ScrollViewer Grid.Row="1" Margin="24,24,24,0" >
+        <ScrollViewer Grid.Row="2" Margin="24,0,24,0" >
             <Grid x:Name="WeekContentGrid" Background="Transparent" MouseDown="WeekContentGrid_MouseDown" Margin="0" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto"/>
@@ -157,367 +533,9 @@
                         <ColumnDefinition Width="*"/>
                     </Grid.ColumnDefinitions>
 
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="*"/>
-                    </Grid.RowDefinitions>
-
-                    <!-- Date Headers -->
-                    <Border x:Name="DateColumn0" Grid.Column="0" Margin="2" Background="#F0F0F0" CornerRadius="4">
-                        <Grid>
-                            <Grid.RowDefinitions>
-                                <RowDefinition Height="Auto"/>
-                                <!-- 星期显示 -->
-                                <RowDefinition Height="Auto"/>
-                                <!-- 日期标题 -->
-                                <RowDefinition Height="*"/>
-                                <!-- 全天任务区域 -->
-                            </Grid.RowDefinitions>
-
-                            <!-- 日期标题 -->
-                            <StackPanel Grid.Row="0">
-                                <TextBlock Text="一" HorizontalAlignment="Center"/>
-                                <TextBlock x:Name="DateTextBlock0" HorizontalAlignment="Center" FontSize="16" FontWeight="Bold"/>
-                            </StackPanel>
-
-                            <!-- 全天任务列表 -->
-                            <ItemsControl Grid.Row="1" Margin="2" 
-                      ItemsSource="{Binding AllDayTaskBlocks}">
-                                <ItemsControl.ItemsPanel>
-                                    <ItemsPanelTemplate>
-                                        <StackPanel Orientation="Vertical"/>
-                                    </ItemsPanelTemplate>
-                                </ItemsControl.ItemsPanel>
-                                <ItemsControl.ItemTemplate>
-                                    <DataTemplate>
-                                        <Border Background="{Binding Brush}" 
-                            CornerRadius="6" 
-                            Margin="2"
-                            Padding="6,2"
-                            MouseLeftButtonDown="TaskBlock_MouseLeftButtonDown">
-                                            <TextBlock Text="{Binding Name}" 
-                                   FontWeight="Bold"
-                                   Foreground="Black"
-                                   TextTrimming="CharacterEllipsis"
-                                   ToolTip="{Binding Note}" />
-                                        </Border>
-                                    </DataTemplate>
-                                </ItemsControl.ItemTemplate>
-                                <ItemsControl.ItemContainerStyle>
-                                    <Style TargetType="ContentPresenter">
-                                        <Setter Property="Visibility"
-                            Value="{Binding Column, Converter={StaticResource ColumnToVisibilityConverter}, ConverterParameter=0}"/>
-                                    </Style>
-                                </ItemsControl.ItemContainerStyle>
-                            </ItemsControl>
-                        </Grid>
-                    </Border>
-
-
-                    <Border x:Name="DateColumn1" Grid.Column="1" Margin="1" Background="#F0F0F0" CornerRadius="4">
-                        <Grid>
-                            <Grid.RowDefinitions>
-                                <RowDefinition Height="Auto"/>
-                                <!-- 星期显示 -->
-                                <RowDefinition Height="Auto"/>
-                                <!-- 日期标题 -->
-                                <RowDefinition Height="*"/>
-                                <!-- 全天任务区域 -->
-                            </Grid.RowDefinitions>
-
-                            <!-- 日期标题 -->
-                            <StackPanel Grid.Row="0">
-                                <TextBlock Text="二" HorizontalAlignment="Center"/>
-                                <TextBlock x:Name="DateTextBlock1" HorizontalAlignment="Center" FontSize="16" FontWeight="Bold"/>
-                            </StackPanel>
-
-                            <!-- 全天任务列表 -->
-                            <ItemsControl Grid.Row="1" Margin="2" 
-                      ItemsSource="{Binding AllDayTaskBlocks}">
-                                <ItemsControl.ItemsPanel>
-                                    <ItemsPanelTemplate>
-                                        <StackPanel Orientation="Vertical"/>
-                                    </ItemsPanelTemplate>
-                                </ItemsControl.ItemsPanel>
-                                <ItemsControl.ItemTemplate>
-                                    <DataTemplate>
-                                        <Border Background="{Binding Brush}" 
-                            CornerRadius="6" 
-                            Margin="2"
-                            Padding="6,2"
-                            MouseLeftButtonDown="TaskBlock_MouseLeftButtonDown">
-                                            <TextBlock Text="{Binding Name}" 
-                                   FontWeight="Bold"
-                                   Foreground="Black"
-                                   TextTrimming="CharacterEllipsis"
-                                   ToolTip="{Binding Note}" />
-                                        </Border>
-                                    </DataTemplate>
-                                </ItemsControl.ItemTemplate>
-                                <ItemsControl.ItemContainerStyle>
-                                    <Style TargetType="ContentPresenter">
-                                        <Setter Property="Visibility"
-                            Value="{Binding Column, Converter={StaticResource ColumnToVisibilityConverter}, ConverterParameter=1}"/>
-                                    </Style>
-                                </ItemsControl.ItemContainerStyle>
-                            </ItemsControl>
-                        </Grid>
-                    </Border>
-
-
-                    <Border x:Name="DateColumn2" Grid.Column="2" Margin="2" Background="#F0F0F0" CornerRadius="4" Height="100">
-                        <Grid>
-                            <Grid.RowDefinitions>
-                                <RowDefinition Height="Auto"/>
-                                <!-- 星期显示 -->
-                                <RowDefinition Height="Auto"/>
-                                <!-- 日期标题 -->
-                                <RowDefinition Height="*"/>
-                                <!-- 全天任务区域 -->
-                            </Grid.RowDefinitions>
-
-                            <!-- 日期标题 -->
-                            <StackPanel Grid.Row="0">
-                                <TextBlock Text="三" HorizontalAlignment="Center"/>
-                                <TextBlock x:Name="DateTextBlock2" HorizontalAlignment="Center" FontSize="16" FontWeight="Bold"/>
-                            </StackPanel>
-
-                            <!-- 全天任务列表 -->
-                            <ItemsControl Grid.Row="1" Margin="2" 
-                      ItemsSource="{Binding AllDayTaskBlocks}">
-                                <ItemsControl.ItemsPanel>
-                                    <ItemsPanelTemplate>
-                                        <StackPanel Orientation="Vertical"/>
-                                    </ItemsPanelTemplate>
-                                </ItemsControl.ItemsPanel>
-                                <ItemsControl.ItemTemplate>
-                                    <DataTemplate>
-                                        <Border Background="{Binding Brush}" 
-                            CornerRadius="6" 
-                            Margin="2"
-                            Padding="6,2"
-                            MouseLeftButtonDown="TaskBlock_MouseLeftButtonDown">
-                                            <TextBlock Text="{Binding Name}" 
-                                   FontWeight="Bold"
-                                   Foreground="Black"
-                                   TextTrimming="CharacterEllipsis"
-                                   ToolTip="{Binding Note}" />
-                                        </Border>
-                                    </DataTemplate>
-                                </ItemsControl.ItemTemplate>
-                                <ItemsControl.ItemContainerStyle>
-                                    <Style TargetType="ContentPresenter">
-                                        <Setter Property="Visibility"
-                            Value="{Binding Column, Converter={StaticResource ColumnToVisibilityConverter}, ConverterParameter=2}"/>
-                                    </Style>
-                                </ItemsControl.ItemContainerStyle>
-                            </ItemsControl>
-                        </Grid>
-                    </Border>
-
-                    <Border x:Name="DateColumn3" Grid.Column="3" Margin="2" Background="#F0F0F0" CornerRadius="4" Height="100">
-                        <Grid>
-                            <Grid.RowDefinitions>
-                                <RowDefinition Height="Auto"/>
-                                <!-- 星期显示 -->
-                                <RowDefinition Height="Auto"/>
-                                <!-- 日期标题 -->
-                                <RowDefinition Height="*"/>
-                                <!-- 全天任务区域 -->
-                            </Grid.RowDefinitions>
-
-                            <!-- 日期标题 -->
-                            <StackPanel Grid.Row="0">
-                                <TextBlock Text="四" HorizontalAlignment="Center"/>
-                                <TextBlock x:Name="DateTextBlock3" HorizontalAlignment="Center" FontSize="16" FontWeight="Bold"/>
-                            </StackPanel>
-
-                            <!-- 全天任务列表 -->
-                            <ItemsControl Grid.Row="1" Margin="2" 
-                      ItemsSource="{Binding AllDayTaskBlocks}">
-                                <ItemsControl.ItemsPanel>
-                                    <ItemsPanelTemplate>
-                                        <StackPanel Orientation="Vertical"/>
-                                    </ItemsPanelTemplate>
-                                </ItemsControl.ItemsPanel>
-                                <ItemsControl.ItemTemplate>
-                                    <DataTemplate>
-                                        <Border Background="{Binding Brush}" 
-                            CornerRadius="6" 
-                            Margin="2"
-                            Padding="6,2"
-                            MouseLeftButtonDown="TaskBlock_MouseLeftButtonDown">
-                                            <TextBlock Text="{Binding Name}" 
-                                   FontWeight="Bold"
-                                   Foreground="Black"
-                                   TextTrimming="CharacterEllipsis"
-                                   ToolTip="{Binding Note}" />
-                                        </Border>
-                                    </DataTemplate>
-                                </ItemsControl.ItemTemplate>
-                                <ItemsControl.ItemContainerStyle>
-                                    <Style TargetType="ContentPresenter">
-                                        <Setter Property="Visibility"
-                            Value="{Binding Column, Converter={StaticResource ColumnToVisibilityConverter}, ConverterParameter=3}"/>
-                                    </Style>
-                                </ItemsControl.ItemContainerStyle>
-                            </ItemsControl>
-                        </Grid>
-                    </Border>
-
-                    <Border x:Name="DateColumn4" Grid.Column="4" Margin="2" Background="#F0F0F0" CornerRadius="4" Height="100">
-                        <Grid>
-                            <Grid.RowDefinitions>
-                                <RowDefinition Height="Auto"/>
-                                <!-- 星期显示 -->
-                                <RowDefinition Height="Auto"/>
-                                <!-- 日期标题 -->
-                                <RowDefinition Height="*"/>
-                                <!-- 全天任务区域 -->
-                            </Grid.RowDefinitions>
-
-                            <!-- 日期标题 -->
-                            <StackPanel Grid.Row="0">
-                                <TextBlock Text="五" HorizontalAlignment="Center"/>
-                                <TextBlock x:Name="DateTextBlock4" HorizontalAlignment="Center" FontSize="16" FontWeight="Bold"/>
-                            </StackPanel>
-
-                            <!-- 全天任务列表 -->
-                            <ItemsControl Grid.Row="1" Margin="2" 
-                      ItemsSource="{Binding AllDayTaskBlocks}">
-                                <ItemsControl.ItemsPanel>
-                                    <ItemsPanelTemplate>
-                                        <StackPanel Orientation="Vertical"/>
-                                    </ItemsPanelTemplate>
-                                </ItemsControl.ItemsPanel>
-                                <ItemsControl.ItemTemplate>
-                                    <DataTemplate>
-                                        <Border Background="{Binding Brush}" 
-                            CornerRadius="6" 
-                            Margin="2"
-                            Padding="6,2"
-                            MouseLeftButtonDown="TaskBlock_MouseLeftButtonDown">
-                                            <TextBlock Text="{Binding Name}" 
-                                   FontWeight="Bold"
-                                   Foreground="Black"
-                                   TextTrimming="CharacterEllipsis"
-                                   ToolTip="{Binding Note}" />
-                                        </Border>
-                                    </DataTemplate>
-                                </ItemsControl.ItemTemplate>
-                                <ItemsControl.ItemContainerStyle>
-                                    <Style TargetType="ContentPresenter">
-                                        <Setter Property="Visibility"
-                            Value="{Binding Column, Converter={StaticResource ColumnToVisibilityConverter}, ConverterParameter=4}"/>
-                                    </Style>
-                                </ItemsControl.ItemContainerStyle>
-                            </ItemsControl>
-                        </Grid>
-                    </Border>
-
-                    <Border x:Name="DateColumn5" Grid.Column="5" Margin="2" Background="#F0F0F0" CornerRadius="4" Height="100">
-                        <Grid>
-                            <Grid.RowDefinitions>
-                                <RowDefinition Height="Auto"/>
-                                <!-- 星期显示 -->
-                                <RowDefinition Height="Auto"/>
-                                <!-- 日期标题 -->
-                                <RowDefinition Height="*"/>
-                                <!-- 全天任务区域 -->
-                            </Grid.RowDefinitions>
-
-                            <!-- 日期标题 -->
-                            <StackPanel Grid.Row="0">
-                                <TextBlock Text="六" HorizontalAlignment="Center"/>
-                                <TextBlock x:Name="DateTextBlock5" HorizontalAlignment="Center" FontSize="16" FontWeight="Bold"/>
-                            </StackPanel>
-
-                            <!-- 全天任务列表 -->
-                            <ItemsControl Grid.Row="1" Margin="2" 
-                      ItemsSource="{Binding AllDayTaskBlocks}">
-                                <ItemsControl.ItemsPanel>
-                                    <ItemsPanelTemplate>
-                                        <StackPanel Orientation="Vertical"/>
-                                    </ItemsPanelTemplate>
-                                </ItemsControl.ItemsPanel>
-                                <ItemsControl.ItemTemplate>
-                                    <DataTemplate>
-                                        <Border Background="{Binding Brush}" 
-                            CornerRadius="6" 
-                            Margin="2"
-                            Padding="6,2"
-                            MouseLeftButtonDown="TaskBlock_MouseLeftButtonDown">
-                                            <TextBlock Text="{Binding Name}" 
-                                   FontWeight="Bold"
-                                   Foreground="Black"
-                                   TextTrimming="CharacterEllipsis"
-                                   ToolTip="{Binding Note}" />
-                                        </Border>
-                                    </DataTemplate>
-                                </ItemsControl.ItemTemplate>
-                                <ItemsControl.ItemContainerStyle>
-                                    <Style TargetType="ContentPresenter">
-                                        <Setter Property="Visibility"
-                            Value="{Binding Column, Converter={StaticResource ColumnToVisibilityConverter}, ConverterParameter=5}"/>
-                                    </Style>
-                                </ItemsControl.ItemContainerStyle>
-                            </ItemsControl>
-                        </Grid>
-                    </Border>
-
-                    <Border x:Name="DateColumn6" Grid.Column="6" Margin="2" Background="#F0F0F0" CornerRadius="4" Height="100">
-                        <Grid>
-                            <Grid.RowDefinitions>
-                                <RowDefinition Height="Auto"/>
-                                <!-- 星期显示 -->
-                                <RowDefinition Height="Auto"/>
-                                <!-- 日期标题 -->
-                                <RowDefinition Height="*"/>
-                                <!-- 全天任务区域 -->
-                            </Grid.RowDefinitions>
-
-                            <!-- 日期标题 -->
-                            <StackPanel Grid.Row="0">
-                                <TextBlock Text="日" HorizontalAlignment="Center"/>
-                                <TextBlock x:Name="DateTextBlock6" HorizontalAlignment="Center" FontSize="16" FontWeight="Bold"/>
-                            </StackPanel>
-
-                            <!-- 全天任务列表 -->
-                            <ItemsControl Grid.Row="1" Margin="2" 
-                      ItemsSource="{Binding AllDayTaskBlocks}">
-                                <ItemsControl.ItemsPanel>
-                                    <ItemsPanelTemplate>
-                                        <StackPanel Orientation="Vertical"/>
-                                    </ItemsPanelTemplate>
-                                </ItemsControl.ItemsPanel>
-                                <ItemsControl.ItemTemplate>
-                                    <DataTemplate>
-                                        <Border Background="{Binding Brush}" 
-                            CornerRadius="6" 
-                            Margin="2"
-                            Padding="6,2"
-                            MouseLeftButtonDown="TaskBlock_MouseLeftButtonDown">
-                                            <TextBlock Text="{Binding Name}" 
-                                   FontWeight="Bold"
-                                   Foreground="Black"
-                                   TextTrimming="CharacterEllipsis"
-                                   ToolTip="{Binding Note}" />
-                                        </Border>
-                                    </DataTemplate>
-                                </ItemsControl.ItemTemplate>
-                                <ItemsControl.ItemContainerStyle>
-                                    <Style TargetType="ContentPresenter">
-                                        <Setter Property="Visibility"
-                            Value="{Binding Column, Converter={StaticResource ColumnToVisibilityConverter}, ConverterParameter=6}"/>
-                                    </Style>
-                                </ItemsControl.ItemContainerStyle>
-                            </ItemsControl>
-                        </Grid>
-                    </Border>
-
 
                     <!-- Task Grid -->
-                    <Grid  Grid.Row="1" Grid.ColumnSpan="7">
+                    <Grid  Grid.Row="0" Grid.ColumnSpan="7">
 
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="140"/>
@@ -588,13 +606,20 @@
 
 
                         <!-- 背景高亮层 -->
-                        <Border x:Name="TaskColumn0" Grid.Column="0" Grid.Row="0" Grid.RowSpan="25" Background="Transparent"/>
-                        <Border x:Name="TaskColumn1" Grid.Column="1" Grid.Row="0" Grid.RowSpan="25" Background="Transparent"/>
-                        <Border x:Name="TaskColumn2" Grid.Column="2" Grid.Row="0" Grid.RowSpan="25" Background="Transparent"/>
-                        <Border x:Name="TaskColumn3" Grid.Column="3" Grid.Row="0" Grid.RowSpan="25" Background="Transparent"/>
-                        <Border x:Name="TaskColumn4" Grid.Column="4" Grid.Row="0" Grid.RowSpan="25" Background="Transparent"/>
-                        <Border x:Name="TaskColumn5" Grid.Column="5" Grid.Row="0" Grid.RowSpan="25" Background="Transparent"/>
-                        <Border x:Name="TaskColumn6" Grid.Column="6" Grid.Row="0" Grid.RowSpan="25" Background="Transparent"/>
+                        <Border x:Name="TaskColumn0" Grid.Column="0" Grid.Row="0" Grid.RowSpan="25"
+                                Background="Transparent" BorderThickness="0,0,1,0" BorderBrush="#E0E0E0"/>
+                        <Border x:Name="TaskColumn1" Grid.Column="1" Grid.Row="0" Grid.RowSpan="25"
+                                Background="Transparent" BorderThickness="0,0,1,0" BorderBrush="#E0E0E0"/>
+                        <Border x:Name="TaskColumn2" Grid.Column="2" Grid.Row="0" Grid.RowSpan="25"
+                                Background="Transparent" BorderThickness="0,0,1,0" BorderBrush="#E0E0E0"/>
+                        <Border x:Name="TaskColumn3" Grid.Column="3" Grid.Row="0" Grid.RowSpan="25"
+                                Background="Transparent" BorderThickness="0,0,1,0" BorderBrush="#E0E0E0"/>
+                        <Border x:Name="TaskColumn4" Grid.Column="4" Grid.Row="0" Grid.RowSpan="25"
+                                Background="Transparent" BorderThickness="0,0,1,0" BorderBrush="#E0E0E0"/>
+                        <Border x:Name="TaskColumn5" Grid.Column="5" Grid.Row="0" Grid.RowSpan="25"
+                                Background="Transparent" BorderThickness="0,0,1,0" BorderBrush="#E0E0E0"/>
+                        <Border x:Name="TaskColumn6" Grid.Column="6" Grid.Row="0" Grid.RowSpan="25"
+                                Background="Transparent" BorderThickness="0,0,1,0" BorderBrush="#E0E0E0"/>
 
 
 

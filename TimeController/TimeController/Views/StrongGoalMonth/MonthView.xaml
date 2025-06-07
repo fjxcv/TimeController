@@ -13,13 +13,12 @@
       d:DesignHeight="450" d:DesignWidth="800"
       Title="MonthView">
 
-    
+
     <ui:Page.Resources>
-
-        <conv:DateTasksLookupConverter x:Key="DateTasksLookupConverter"/>
-        <conv:DateTasksLookupConverter x:Key="DateTasksMultiConverter" />
-
+        <conv:DateTasksLookupConverter x:Key="DateTasksLookupConverter" />
+        <conv:DateTasksMultiConverter x:Key="DateTasksMultiConverter" />
     </ui:Page.Resources>
+
 
     <!-- 主网格布局 -->
     <Grid>
@@ -145,7 +144,10 @@
         </Grid>
 
         <!-- 日历内容区域（可滚动） -->
-        <ScrollViewer Grid.Row="3" Margin="40,10,40,40">
+        <ScrollViewer x:Name="CalendarScrollViewer"
+                      Grid.Row="3"
+                      Margin="40,10,40,40"
+                      ScrollChanged="CalendarScrollViewer_ScrollChanged">
             <!-- 使用ItemsControl显示日历天数 -->
             <ItemsControl ItemsSource="{Binding CalendarDays}">
                 <!-- 使用7列的UniformGrid作为布局面板 -->

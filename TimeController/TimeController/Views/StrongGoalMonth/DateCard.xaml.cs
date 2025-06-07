@@ -6,6 +6,7 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using TimeController.Models;
+using System.Windows.Controls.Primitives;
 
 namespace TimeController.Views.StrongGoalMonth
 {
@@ -130,10 +131,7 @@ namespace TimeController.Views.StrongGoalMonth
 
         private static void OnExpandedChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
-            if (d is DateCard card)
-            {
-                card.UpdateDisplayedTasks();
-            }
+            // 改成popup了，暂时没删
         }
 
         /// <summary>
@@ -151,7 +149,12 @@ namespace TimeController.Views.StrongGoalMonth
         private void ToggleExpand(object sender, RoutedEventArgs e)
         {
             IsExpanded = !IsExpanded;
-            UpdateDisplayedTasks();
+            TaskPopup.IsOpen = IsExpanded;
+        }
+
+        private void TaskPopup_Closed(object? sender, EventArgs e)
+        {
+            IsExpanded = false;
         }
 
         /// <summary>
@@ -178,10 +181,10 @@ namespace TimeController.Views.StrongGoalMonth
             }
 
             var sorted = new ObservableCollection<TaskModel>(System.Linq.Enumerable.OrderBy(Tasks, t => t.StartTime ?? TimeSpan.Zero));
-            if (IsExpanded || sorted.Count <= 3)
+            if (sorted.Count <= 3)
             {
                 DisplayedTasks = sorted;
-                HasMoreTasks = sorted.Count > 3;
+                HasMoreTasks = false;
             }
             else
             {
