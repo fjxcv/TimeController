@@ -4,6 +4,7 @@ using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Windows.Input;
 using System.Windows.Media;
+using System.Linq;
 using TimeController.Models;
 using Microsoft.Extensions.DependencyInjection;
 using TimeController.Services;
@@ -34,7 +35,26 @@ namespace TimeController.ViewModels
         public WeekViewModel(ITaskService taskService)
         {
             _taskService = taskService;
-            // ... 其他初始化代码
+            _taskService.TaskSaved += OnExternalTaskSaved;
+            ReviewCommand = new RelayCommand(_ => ShowReview());
+            PreviousWeekCommand = new RelayCommand(_ => NavigateWeek(-7));
+            NextWeekCommand = new RelayCommand(_ => NavigateWeek(7));
+            PreviousMonthCommand = new RelayCommand(_ => NavigateMonth(-1));
+            NextMonthCommand = new RelayCommand(_ => NavigateMonth(1));
+            TimedTaskBlocksView = CollectionViewSource.GetDefaultView(TaskBlocks);
+            TimedTaskBlocksView.Filter = obj => obj is TaskBlock block && !block.IsAllDay;
+            TaskBlocks.CollectionChanged += (_, __) =>
+            {
+                OnPropertyChanged(nameof(AllDayTaskBlocks));
+                OnPropertyChanged(nameof(TimedTaskBlocks));
+                TimedTaskBlocksView.Refresh();
+            };
+            SaveRequested += OnTaskSaved;
+            RemoveTaskBlockCommand = new RelayCommand<TaskBlock>(RemoveTaskBlock);
+            _currentDate = DateTime.Today;
+            UpdateMonthText();
+            UpdateWeekText();
+            LoadTasksForCurrentWeek();
         }
 
 
@@ -182,6 +202,28 @@ namespace TimeController.ViewModels
             TimedTaskBlocksView.Refresh(); // 强制刷新视图
         }
 
+        private void OnExternalTaskSaved(TaskModel task)
+        {
+            // 忽略非强管理任务
+            if (task.Mode != TaskMode.Strong)
+                return;
+
+            DateTime monday = CurrentDate.Date;
+            while (monday.DayOfWeek != DayOfWeek.Monday)
+                monday = monday.AddDays(-1);
+            DateTime sunday = monday.AddDays(6);
+
+            if (task.PlannedDate < monday || task.PlannedDate > sunday)
+                return;
+
+            if (Tasks.Any(t => t.Id == task.Id))
+                return;
+
+            Tasks.Add(task);
+            AddTaskToView(task);
+            OnPropertyChanged(nameof(TimedTaskBlocks));
+        }
+
 
         private Brush GetBrushForTaskType(TaskType type)
         {
@@ -246,6 +288,9 @@ namespace TimeController.ViewModels
 
         public WeekViewModel()
         {
+            _taskService = App.AppHost.Services.GetRequiredService<ITaskService>();
+            _taskService.TaskSaved += OnExternalTaskSaved;
+
             _currentDate = DateTime.Today;
             UpdateMonthText();
             UpdateWeekText();
@@ -257,6 +302,13 @@ namespace TimeController.ViewModels
             NextMonthCommand = new RelayCommand(_ => NavigateMonth(1));
             TimedTaskBlocksView = CollectionViewSource.GetDefaultView(TaskBlocks);
             TimedTaskBlocksView.Filter = obj => obj is TaskBlock block && !block.IsAllDay;
+
+            TaskBlocks.CollectionChanged += (_, __) =>
+            {
+                OnPropertyChanged(nameof(AllDayTaskBlocks));
+                OnPropertyChanged(nameof(TimedTaskBlocks));
+                TimedTaskBlocksView.Refresh();
+            };
 
             SaveRequested += OnTaskSaved;
             LoadTasksForCurrentWeek();

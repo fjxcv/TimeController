@@ -78,6 +78,7 @@ namespace TimeController.ViewModels
         public MonthViewModel()
         {
             _taskService = App.AppHost.Services.GetRequiredService<ITaskService>();
+            _taskService.TaskSaved += OnExternalTaskSaved;
 
             // 初始化所有命令
             PrevYearCommand = new RelayCommand(_ => ChangeYear(-1));
@@ -206,6 +207,17 @@ namespace TimeController.ViewModels
             int index = list.TakeWhile(t => (t.StartTime ?? TimeSpan.Zero) <= (task.StartTime ?? TimeSpan.Zero)).Count();
             list.Insert(index, task);
             OnPropertyChanged(nameof(TasksByDate));
+        }
+
+        private void OnExternalTaskSaved(TaskModel task)
+        {
+            if (task.Mode != TaskMode.Strong)
+                return;
+
+            if (task.PlannedDate.Year != Year || task.PlannedDate.Month != Month)
+                return;
+
+            AddTaskToDictionary(task);
         }
 
         // INotifyPropertyChanged 实现

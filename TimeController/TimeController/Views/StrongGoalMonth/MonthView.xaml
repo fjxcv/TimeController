@@ -21,6 +21,7 @@
     <ui:Page.Resources>
 
         <conv:DateTasksLookupConverter x:Key="DateTasksLookupConverter"/>
+        <conv:DateTasksMultiConverter x:Key="DateTasksMultiConverter"/>
 
     </ui:Page.Resources>
 
@@ -165,6 +166,12 @@
                         <local:DateCard Date="{Binding}" Margin="2"
                                        Command="{Binding DataContext.DateClickCommand,
                                                RelativeSource={RelativeSource AncestorType=ui:Page}}">
+                            <local:DateCard.Tasks>
+                                <MultiBinding Converter="{StaticResource DateTasksMultiConverter}">
+                                    <Binding Path="DataContext.TasksByDate" RelativeSource="{RelativeSource AncestorType=ui:Page}"/>
+                                    <Binding />
+                                </MultiBinding>
+                            </local:DateCard.Tasks>
                             
                             
                             <!-- 设置样式 -->

@@ -26,6 +26,8 @@ namespace TimeController.Services
 
         Task DeleteTaskAsync(TaskModel task);
 
+        event Action<TaskModel> TaskSaved;
+
 
     }
 }
