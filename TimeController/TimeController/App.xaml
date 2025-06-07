@@ -12,6 +12,7 @@
                 <ui:XamlControlsResources/>
             </ResourceDictionary.MergedDictionaries>
 
+            <converters:DateTasksMultiConverter x:Key="DateTasksMultiConverter"/>
             <converters:BoolToHiddenConverter x:Key="BoolToHiddenConverter" />
             <converters:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter"/>
             <converters:BooleanToAngleConverter x:Key="BooleanToAngleConverter" />

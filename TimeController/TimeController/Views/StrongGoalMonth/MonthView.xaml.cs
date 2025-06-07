@@ -14,6 +14,7 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 using Page = iNKORE.UI.WPF.Modern.Controls.Page;
+using TimeController.ViewModels;
 
 
 namespace TimeController.Views.StrongGoalMonth
@@ -23,9 +24,12 @@ namespace TimeController.Views.StrongGoalMonth
     /// </summary>
     public partial class MonthView : Page
     {
+        private MonthViewModel _viewModel;
         public MonthView()
         {
             InitializeComponent();
+            _viewModel = new MonthViewModel();
+            DataContext = _viewModel;
         }
     }
 }
