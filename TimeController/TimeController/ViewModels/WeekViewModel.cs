@@ -30,6 +30,7 @@ namespace TimeController.ViewModels
         public event Action<TaskModel>? SaveRequested;
 
         public ICommand RemoveTaskBlockCommand { get; }
+        public ICommand MarkCompletedCommand { get; }
         public ICollectionView TimedTaskBlocksView { get; }
 
         public WeekViewModel(ITaskService taskService)
@@ -51,6 +52,7 @@ namespace TimeController.ViewModels
             };
             SaveRequested += OnTaskSaved;
             RemoveTaskBlockCommand = new RelayCommand<TaskBlock>(RemoveTaskBlock);
+            MarkCompletedCommand = new RelayCommand<TaskBlock>(MarkTaskCompleted);
             _currentDate = DateTime.Today;
             UpdateMonthText();
             UpdateWeekText();
@@ -126,7 +128,8 @@ namespace TimeController.ViewModels
                 Row = task.StartTime.HasValue ? task.StartTime.Value.Hours : 0,
                 RowSpan = (!task.IsAllDay && task.StartTime.HasValue && task.EndTime.HasValue)
                           ? Math.Max(1, (int)(task.EndTime.Value - task.StartTime.Value).TotalHours)+1 : 1,
-                Id = task.Id
+                Id = task.Id,
+                IsCompleted = task.Status == MyTaskStatus.Completed
             };
 
             TaskBlocks.Add(taskBlock);
@@ -252,6 +255,7 @@ namespace TimeController.ViewModels
             public TimeSpan EndTime { get; set; }
             public Brush Brush { get; set; }
             public bool IsAllDay { get; set; }
+            public bool IsCompleted { get; set; }
 
             // 定位属性
             public int Column { get; set; } // 星期几（0=周一，1=周二...）
@@ -312,6 +316,7 @@ namespace TimeController.ViewModels
             SaveRequested += OnTaskSaved;
             LoadTasksForCurrentWeek();
             RemoveTaskBlockCommand = new RelayCommand<TaskBlock>(RemoveTaskBlock);
+            MarkCompletedCommand = new RelayCommand<TaskBlock>(MarkTaskCompleted);
         }
 
 
@@ -333,6 +338,20 @@ namespace TimeController.ViewModels
             }
             OnPropertyChanged(nameof(TimedTaskBlocks));
             TimedTaskBlocksView.Refresh(); // 强制刷新视图
+        }
+
+        private async void MarkTaskCompleted(TaskBlock block)
+        {
+            if (block == null) return;
+            var task = Tasks.FirstOrDefault(t => t.Id == block.Id);
+            if (task != null)
+            {
+                task.Status = MyTaskStatus.Completed;
+                task.IsCompleted = true;
+                if (_taskService != null)
+                    await _taskService.UpdateTaskAsync(task);
+            }
+            LoadTasksForCurrentWeek();
         }
 
 

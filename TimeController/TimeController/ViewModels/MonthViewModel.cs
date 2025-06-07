@@ -191,8 +191,8 @@ namespace TimeController.ViewModels
             if (dialog.ShowDialog() == true && dialog.ResultTask != null)
             {
                 dialog.ResultTask.Mode = TaskMode.Strong;
+                // 保存任务后将通过 TaskSaved 事件自动添加到字典
                 await _taskService.UpdateTaskAsync(dialog.ResultTask);
-                AddTaskToDictionary(dialog.ResultTask);
             }
         }
 

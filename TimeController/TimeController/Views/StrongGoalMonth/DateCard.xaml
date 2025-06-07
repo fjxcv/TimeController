@@ -45,8 +45,8 @@
                       Margin="0,5,0,0"
                       FontSize="20"/>
 
-            <ItemsControl Grid.Row="1"
-                          VerticalAlignment="Center"
+            <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Height="60">
+                <ItemsControl
                           ItemsSource="{Binding DisplayedTasks, RelativeSource={RelativeSource AncestorType=UserControl}}">
                 
                 <ItemsControl.ItemContainerStyle>
@@ -68,7 +68,8 @@
                                    ToolTip="{Binding Name}"/>
                     </DataTemplate>
                 </ItemsControl.ItemTemplate>
-            </ItemsControl>
+                </ItemsControl>
+            </ScrollViewer>
             <Button Grid.Row="2"
                     Margin="0,2,0,2"
                     Background="Transparent"
@@ -96,7 +97,8 @@
            VerticalOffset="8"
            AllowsTransparency="True"
            StaysOpen="False"
-           PopupAnimation="Fade">
+           PopupAnimation="Fade"
+           Closed="TaskPopup_Closed">
                 <Border Background="#CCFFFFFF"
                 CornerRadius="6"
                 Padding="8">

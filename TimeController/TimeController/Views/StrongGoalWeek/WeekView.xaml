@@ -92,8 +92,8 @@
                         </StackPanel>
 
                         <!-- 全天任务列表 -->
-                        <ItemsControl Grid.Row="1" Margin="2" 
-                                      ItemsSource="{Binding AllDayTaskBlocks}">
+                        <ScrollViewer Grid.Row="1" Margin="2" VerticalScrollBarVisibility="Auto" Height="90">
+                            <ItemsControl ItemsSource="{Binding AllDayTaskBlocks}">
                             <ItemsControl.ItemsPanel>
                                 <ItemsPanelTemplate>
                                     <StackPanel Orientation="Vertical"/>
@@ -101,17 +101,29 @@
                             </ItemsControl.ItemsPanel>
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate>
-                                    <Border Background="{Binding Brush}" 
-                                            CornerRadius="6" 
-                                            Margin="2"
-                                            Padding="6,2"
-                                            MouseLeftButtonDown="TaskBlock_MouseLeftButtonDown">
-                                        <TextBlock Text="{Binding Name}" 
-                                                   FontWeight="Bold"
-                                                   Foreground="Black"
-                                                   TextTrimming="CharacterEllipsis"
-                                                   ToolTip="{Binding Note}" />
-                                    </Border>
+                                    <Grid MouseEnter="Grid_MouseEnter" MouseLeave="Grid_MouseLeave" Tag="{Binding}">
+                                        <Border Background="{Binding Brush}"
+                                                CornerRadius="6"
+                                                Margin="2"
+                                                Padding="6,2"
+                                                MouseLeftButtonDown="TaskBlock_MouseLeftButtonDown">
+                                            <Grid>
+                                                <TextBlock Text="{Binding Name}" FontWeight="Bold" Foreground="Black" TextTrimming="CharacterEllipsis" ToolTip="{Binding Note}">
+                                                    <TextBlock.Style>
+                                                        <Style TargetType="TextBlock">
+                                                            <Style.Triggers>
+                                                                <DataTrigger Binding="{Binding IsCompleted}" Value="True">
+                                                                    <Setter Property="TextDecorations" Value="Strikethrough"/>
+                                                                    <Setter Property="Foreground" Value="Gray"/>
+                                                                </DataTrigger>
+                                                            </Style.Triggers>
+                                                        </Style>
+                                                    </TextBlock.Style>
+                                                </TextBlock>
+                                                <Button x:Name="CompleteButton" Content="✔" Width="16" Height="16" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="2,2,22,0" Background="Transparent" BorderThickness="0" Foreground="Green" Visibility="Collapsed" Command="{Binding DataContext.MarkCompletedCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}" CommandParameter="{Binding}"/>
+                                            </Grid>
+                                        </Border>
+                                    </Grid>
                                 </DataTemplate>
                             </ItemsControl.ItemTemplate>
                             <ItemsControl.ItemContainerStyle>
@@ -120,7 +132,8 @@
                                             Value="{Binding Column, Converter={StaticResource ColumnToVisibilityConverter}, ConverterParameter=0}"/>
                                 </Style>
                             </ItemsControl.ItemContainerStyle>
-                        </ItemsControl>
+                            </ItemsControl>
+                        </ScrollViewer>
                     </Grid>
                 </Border>
 
@@ -143,8 +156,8 @@
                         </StackPanel>
 
                         <!-- 全天任务列表 -->
-                        <ItemsControl Grid.Row="1" Margin="2" 
-                                      ItemsSource="{Binding AllDayTaskBlocks}">
+                        <ScrollViewer Grid.Row="1" Margin="2" VerticalScrollBarVisibility="Auto" Height="90">
+                            <ItemsControl ItemsSource="{Binding AllDayTaskBlocks}">
                             <ItemsControl.ItemsPanel>
                                 <ItemsPanelTemplate>
                                     <StackPanel Orientation="Vertical"/>
@@ -152,17 +165,29 @@
                             </ItemsControl.ItemsPanel>
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate>
-                                    <Border Background="{Binding Brush}" 
-                                            CornerRadius="6" 
-                                            Margin="2"
-                                            Padding="6,2"
-                                            MouseLeftButtonDown="TaskBlock_MouseLeftButtonDown">
-                                        <TextBlock Text="{Binding Name}" 
-                                                   FontWeight="Bold"
-                                                   Foreground="Black"
-                                                   TextTrimming="CharacterEllipsis"
-                                                   ToolTip="{Binding Note}" />
-                                    </Border>
+                                    <Grid MouseEnter="Grid_MouseEnter" MouseLeave="Grid_MouseLeave" Tag="{Binding}">
+                                        <Border Background="{Binding Brush}"
+                                                CornerRadius="6"
+                                                Margin="2"
+                                                Padding="6,2"
+                                                MouseLeftButtonDown="TaskBlock_MouseLeftButtonDown">
+                                            <Grid>
+                                                <TextBlock Text="{Binding Name}" FontWeight="Bold" Foreground="Black" TextTrimming="CharacterEllipsis" ToolTip="{Binding Note}">
+                                                    <TextBlock.Style>
+                                                        <Style TargetType="TextBlock">
+                                                            <Style.Triggers>
+                                                                <DataTrigger Binding="{Binding IsCompleted}" Value="True">
+                                                                    <Setter Property="TextDecorations" Value="Strikethrough"/>
+                                                                    <Setter Property="Foreground" Value="Gray"/>
+                                                                </DataTrigger>
+                                                            </Style.Triggers>
+                                                        </Style>
+                                                    </TextBlock.Style>
+                                                </TextBlock>
+                                                <Button x:Name="CompleteButton" Content="✔" Width="16" Height="16" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="2,2,22,0" Background="Transparent" BorderThickness="0" Foreground="Green" Visibility="Collapsed" Command="{Binding DataContext.MarkCompletedCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}" CommandParameter="{Binding}"/>
+                                            </Grid>
+                                        </Border>
+                                    </Grid>
                                 </DataTemplate>
                             </ItemsControl.ItemTemplate>
                             <ItemsControl.ItemContainerStyle>
@@ -171,7 +196,8 @@
                                             Value="{Binding Column, Converter={StaticResource ColumnToVisibilityConverter}, ConverterParameter=1}"/>
                                 </Style>
                             </ItemsControl.ItemContainerStyle>
-                        </ItemsControl>
+                            </ItemsControl>
+                        </ScrollViewer>
                     </Grid>
                 </Border>
 
@@ -194,8 +220,8 @@
                         </StackPanel>
 
                         <!-- 全天任务列表 -->
-                        <ItemsControl Grid.Row="1" Margin="2" 
-                                      ItemsSource="{Binding AllDayTaskBlocks}">
+                        <ScrollViewer Grid.Row="1" Margin="2" VerticalScrollBarVisibility="Auto" Height="90">
+                            <ItemsControl ItemsSource="{Binding AllDayTaskBlocks}">
                             <ItemsControl.ItemsPanel>
                                 <ItemsPanelTemplate>
                                     <StackPanel Orientation="Vertical"/>
@@ -203,17 +229,29 @@
                             </ItemsControl.ItemsPanel>
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate>
-                                    <Border Background="{Binding Brush}" 
-                                            CornerRadius="6" 
-                                            Margin="2"
-                                            Padding="6,2"
-                                            MouseLeftButtonDown="TaskBlock_MouseLeftButtonDown">
-                                        <TextBlock Text="{Binding Name}" 
-                                                   FontWeight="Bold"
-                                                   Foreground="Black"
-                                                   TextTrimming="CharacterEllipsis"
-                                                   ToolTip="{Binding Note}" />
-                                    </Border>
+                                    <Grid MouseEnter="Grid_MouseEnter" MouseLeave="Grid_MouseLeave" Tag="{Binding}">
+                                        <Border Background="{Binding Brush}"
+                                                CornerRadius="6"
+                                                Margin="2"
+                                                Padding="6,2"
+                                                MouseLeftButtonDown="TaskBlock_MouseLeftButtonDown">
+                                            <Grid>
+                                                <TextBlock Text="{Binding Name}" FontWeight="Bold" Foreground="Black" TextTrimming="CharacterEllipsis" ToolTip="{Binding Note}">
+                                                    <TextBlock.Style>
+                                                        <Style TargetType="TextBlock">
+                                                            <Style.Triggers>
+                                                                <DataTrigger Binding="{Binding IsCompleted}" Value="True">
+                                                                    <Setter Property="TextDecorations" Value="Strikethrough"/>
+                                                                    <Setter Property="Foreground" Value="Gray"/>
+                                                                </DataTrigger>
+                                                            </Style.Triggers>
+                                                        </Style>
+                                                    </TextBlock.Style>
+                                                </TextBlock>
+                                                <Button x:Name="CompleteButton" Content="✔" Width="16" Height="16" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="2,2,22,0" Background="Transparent" BorderThickness="0" Foreground="Green" Visibility="Collapsed" Command="{Binding DataContext.MarkCompletedCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}" CommandParameter="{Binding}"/>
+                                            </Grid>
+                                        </Border>
+                                    </Grid>
                                 </DataTemplate>
                             </ItemsControl.ItemTemplate>
                             <ItemsControl.ItemContainerStyle>
@@ -222,7 +260,8 @@
                                             Value="{Binding Column, Converter={StaticResource ColumnToVisibilityConverter}, ConverterParameter=2}"/>
                                 </Style>
                             </ItemsControl.ItemContainerStyle>
-                        </ItemsControl>
+                            </ItemsControl>
+                        </ScrollViewer>
                     </Grid>
                 </Border>
 
@@ -244,8 +283,8 @@
                         </StackPanel>
 
                         <!-- 全天任务列表 -->
-                        <ItemsControl Grid.Row="1" Margin="2" 
-                                      ItemsSource="{Binding AllDayTaskBlocks}">
+                        <ScrollViewer Grid.Row="1" Margin="2" VerticalScrollBarVisibility="Auto" Height="90">
+                            <ItemsControl ItemsSource="{Binding AllDayTaskBlocks}">
                             <ItemsControl.ItemsPanel>
                                 <ItemsPanelTemplate>
                                     <StackPanel Orientation="Vertical"/>
@@ -253,17 +292,29 @@
                             </ItemsControl.ItemsPanel>
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate>
-                                    <Border Background="{Binding Brush}" 
-                                            CornerRadius="6" 
-                                            Margin="2"
-                                            Padding="6,2"
-                                            MouseLeftButtonDown="TaskBlock_MouseLeftButtonDown">
-                                        <TextBlock Text="{Binding Name}" 
-                                                   FontWeight="Bold"
-                                                   Foreground="Black"
-                                                   TextTrimming="CharacterEllipsis"
-                                                   ToolTip="{Binding Note}" />
-                                    </Border>
+                                    <Grid MouseEnter="Grid_MouseEnter" MouseLeave="Grid_MouseLeave" Tag="{Binding}">
+                                        <Border Background="{Binding Brush}"
+                                                CornerRadius="6"
+                                                Margin="2"
+                                                Padding="6,2"
+                                                MouseLeftButtonDown="TaskBlock_MouseLeftButtonDown">
+                                            <Grid>
+                                                <TextBlock Text="{Binding Name}" FontWeight="Bold" Foreground="Black" TextTrimming="CharacterEllipsis" ToolTip="{Binding Note}">
+                                                    <TextBlock.Style>
+                                                        <Style TargetType="TextBlock">
+                                                            <Style.Triggers>
+                                                                <DataTrigger Binding="{Binding IsCompleted}" Value="True">
+                                                                    <Setter Property="TextDecorations" Value="Strikethrough"/>
+                                                                    <Setter Property="Foreground" Value="Gray"/>
+                                                                </DataTrigger>
+                                                            </Style.Triggers>
+                                                        </Style>
+                                                    </TextBlock.Style>
+                                                </TextBlock>
+                                                <Button x:Name="CompleteButton" Content="✔" Width="16" Height="16" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="2,2,22,0" Background="Transparent" BorderThickness="0" Foreground="Green" Visibility="Collapsed" Command="{Binding DataContext.MarkCompletedCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}" CommandParameter="{Binding}"/>
+                                            </Grid>
+                                        </Border>
+                                    </Grid>
                                 </DataTemplate>
                             </ItemsControl.ItemTemplate>
                             <ItemsControl.ItemContainerStyle>
@@ -272,7 +323,8 @@
                                             Value="{Binding Column, Converter={StaticResource ColumnToVisibilityConverter}, ConverterParameter=3}"/>
                                 </Style>
                             </ItemsControl.ItemContainerStyle>
-                        </ItemsControl>
+                            </ItemsControl>
+                        </ScrollViewer>
                     </Grid>
                 </Border>
 
@@ -294,8 +346,8 @@
                         </StackPanel>
 
                         <!-- 全天任务列表 -->
-                        <ItemsControl Grid.Row="1" Margin="2" 
-                                      ItemsSource="{Binding AllDayTaskBlocks}">
+                        <ScrollViewer Grid.Row="1" Margin="2" VerticalScrollBarVisibility="Auto" Height="90">
+                            <ItemsControl ItemsSource="{Binding AllDayTaskBlocks}">
                             <ItemsControl.ItemsPanel>
                                 <ItemsPanelTemplate>
                                     <StackPanel Orientation="Vertical"/>
@@ -303,17 +355,29 @@
                             </ItemsControl.ItemsPanel>
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate>
-                                    <Border Background="{Binding Brush}" 
-                                            CornerRadius="6" 
-                                            Margin="2"
-                                            Padding="6,2"
-                                            MouseLeftButtonDown="TaskBlock_MouseLeftButtonDown">
-                                        <TextBlock Text="{Binding Name}" 
-                                                   FontWeight="Bold"
-                                                   Foreground="Black"
-                                                   TextTrimming="CharacterEllipsis"
-                                                   ToolTip="{Binding Note}" />
-                                    </Border>
+                                    <Grid MouseEnter="Grid_MouseEnter" MouseLeave="Grid_MouseLeave" Tag="{Binding}">
+                                        <Border Background="{Binding Brush}"
+                                                CornerRadius="6"
+                                                Margin="2"
+                                                Padding="6,2"
+                                                MouseLeftButtonDown="TaskBlock_MouseLeftButtonDown">
+                                            <Grid>
+                                                <TextBlock Text="{Binding Name}" FontWeight="Bold" Foreground="Black" TextTrimming="CharacterEllipsis" ToolTip="{Binding Note}">
+                                                    <TextBlock.Style>
+                                                        <Style TargetType="TextBlock">
+                                                            <Style.Triggers>
+                                                                <DataTrigger Binding="{Binding IsCompleted}" Value="True">
+                                                                    <Setter Property="TextDecorations" Value="Strikethrough"/>
+                                                                    <Setter Property="Foreground" Value="Gray"/>
+                                                                </DataTrigger>
+                                                            </Style.Triggers>
+                                                        </Style>
+                                                    </TextBlock.Style>
+                                                </TextBlock>
+                                                <Button x:Name="CompleteButton" Content="✔" Width="16" Height="16" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="2,2,22,0" Background="Transparent" BorderThickness="0" Foreground="Green" Visibility="Collapsed" Command="{Binding DataContext.MarkCompletedCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}" CommandParameter="{Binding}"/>
+                                            </Grid>
+                                        </Border>
+                                    </Grid>
                                 </DataTemplate>
                             </ItemsControl.ItemTemplate>
                             <ItemsControl.ItemContainerStyle>
@@ -322,7 +386,8 @@
                                             Value="{Binding Column, Converter={StaticResource ColumnToVisibilityConverter}, ConverterParameter=4}"/>
                                 </Style>
                             </ItemsControl.ItemContainerStyle>
-                        </ItemsControl>
+                            </ItemsControl>
+                        </ScrollViewer>
                     </Grid>
                 </Border>
 
@@ -344,8 +409,8 @@
                         </StackPanel>
 
                         <!-- 全天任务列表 -->
-                        <ItemsControl Grid.Row="1" Margin="2" 
-                                      ItemsSource="{Binding AllDayTaskBlocks}">
+                        <ScrollViewer Grid.Row="1" Margin="2" VerticalScrollBarVisibility="Auto" Height="90">
+                            <ItemsControl ItemsSource="{Binding AllDayTaskBlocks}">
                             <ItemsControl.ItemsPanel>
                                 <ItemsPanelTemplate>
                                     <StackPanel Orientation="Vertical"/>
@@ -353,17 +418,29 @@
                             </ItemsControl.ItemsPanel>
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate>
-                                    <Border Background="{Binding Brush}" 
-                                            CornerRadius="6" 
-                                            Margin="2"
-                                            Padding="6,2"
-                                            MouseLeftButtonDown="TaskBlock_MouseLeftButtonDown">
-                                        <TextBlock Text="{Binding Name}" 
-                                                   FontWeight="Bold"
-                                                   Foreground="Black"
-                                                   TextTrimming="CharacterEllipsis"
-                                                   ToolTip="{Binding Note}" />
-                                    </Border>
+                                    <Grid MouseEnter="Grid_MouseEnter" MouseLeave="Grid_MouseLeave" Tag="{Binding}">
+                                        <Border Background="{Binding Brush}"
+                                                CornerRadius="6"
+                                                Margin="2"
+                                                Padding="6,2"
+                                                MouseLeftButtonDown="TaskBlock_MouseLeftButtonDown">
+                                            <Grid>
+                                                <TextBlock Text="{Binding Name}" FontWeight="Bold" Foreground="Black" TextTrimming="CharacterEllipsis" ToolTip="{Binding Note}">
+                                                    <TextBlock.Style>
+                                                        <Style TargetType="TextBlock">
+                                                            <Style.Triggers>
+                                                                <DataTrigger Binding="{Binding IsCompleted}" Value="True">
+                                                                    <Setter Property="TextDecorations" Value="Strikethrough"/>
+                                                                    <Setter Property="Foreground" Value="Gray"/>
+                                                                </DataTrigger>
+                                                            </Style.Triggers>
+                                                        </Style>
+                                                    </TextBlock.Style>
+                                                </TextBlock>
+                                                <Button x:Name="CompleteButton" Content="✔" Width="16" Height="16" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="2,2,22,0" Background="Transparent" BorderThickness="0" Foreground="Green" Visibility="Collapsed" Command="{Binding DataContext.MarkCompletedCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}" CommandParameter="{Binding}"/>
+                                            </Grid>
+                                        </Border>
+                                    </Grid>
                                 </DataTemplate>
                             </ItemsControl.ItemTemplate>
                             <ItemsControl.ItemContainerStyle>
@@ -372,7 +449,8 @@
                                             Value="{Binding Column, Converter={StaticResource ColumnToVisibilityConverter}, ConverterParameter=5}"/>
                                 </Style>
                             </ItemsControl.ItemContainerStyle>
-                        </ItemsControl>
+                            </ItemsControl>
+                        </ScrollViewer>
                     </Grid>
                 </Border>
 
@@ -394,8 +472,8 @@
                         </StackPanel>
 
                         <!-- 全天任务列表 -->
-                        <ItemsControl Grid.Row="1" Margin="2" 
-                                      ItemsSource="{Binding AllDayTaskBlocks}">
+                        <ScrollViewer Grid.Row="1" Margin="2" VerticalScrollBarVisibility="Auto" Height="90">
+                            <ItemsControl ItemsSource="{Binding AllDayTaskBlocks}">
                             <ItemsControl.ItemsPanel>
                                 <ItemsPanelTemplate>
                                     <StackPanel Orientation="Vertical"/>
@@ -403,17 +481,29 @@
                             </ItemsControl.ItemsPanel>
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate>
-                                    <Border Background="{Binding Brush}" 
-                                            CornerRadius="6" 
-                                            Margin="2"
-                                            Padding="6,2"
-                                            MouseLeftButtonDown="TaskBlock_MouseLeftButtonDown">
-                                        <TextBlock Text="{Binding Name}" 
-                                                   FontWeight="Bold"
-                                                   Foreground="Black"
-                                                   TextTrimming="CharacterEllipsis"
-                                                   ToolTip="{Binding Note}" />
-                                    </Border>
+                                    <Grid MouseEnter="Grid_MouseEnter" MouseLeave="Grid_MouseLeave" Tag="{Binding}">
+                                        <Border Background="{Binding Brush}"
+                                                CornerRadius="6"
+                                                Margin="2"
+                                                Padding="6,2"
+                                                MouseLeftButtonDown="TaskBlock_MouseLeftButtonDown">
+                                            <Grid>
+                                                <TextBlock Text="{Binding Name}" FontWeight="Bold" Foreground="Black" TextTrimming="CharacterEllipsis" ToolTip="{Binding Note}">
+                                                    <TextBlock.Style>
+                                                        <Style TargetType="TextBlock">
+                                                            <Style.Triggers>
+                                                                <DataTrigger Binding="{Binding IsCompleted}" Value="True">
+                                                                    <Setter Property="TextDecorations" Value="Strikethrough"/>
+                                                                    <Setter Property="Foreground" Value="Gray"/>
+                                                                </DataTrigger>
+                                                            </Style.Triggers>
+                                                        </Style>
+                                                    </TextBlock.Style>
+                                                </TextBlock>
+                                                <Button x:Name="CompleteButton" Content="✔" Width="16" Height="16" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="2,2,22,0" Background="Transparent" BorderThickness="0" Foreground="Green" Visibility="Collapsed" Command="{Binding DataContext.MarkCompletedCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}" CommandParameter="{Binding}"/>
+                                            </Grid>
+                                        </Border>
+                                    </Grid>
                                 </DataTemplate>
                             </ItemsControl.ItemTemplate>
                             <ItemsControl.ItemContainerStyle>
@@ -422,7 +512,8 @@
                                             Value="{Binding Column, Converter={StaticResource ColumnToVisibilityConverter}, ConverterParameter=6}"/>
                                 </Style>
                             </ItemsControl.ItemContainerStyle>
-                        </ItemsControl>
+                            </ItemsControl>
+                        </ScrollViewer>
                     </Grid>
                 </Border>
 
@@ -677,27 +768,27 @@
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate>
                                     <Grid MouseEnter="Grid_MouseEnter" MouseLeave="Grid_MouseLeave" Tag="{Binding}">
-                                        <Border Background="{Binding Brush}" CornerRadius="3" Margin="2"
-                              MouseLeftButtonDown="TaskBlock_MouseLeftButtonDown">
+                                        <Border Background="{Binding Brush}" CornerRadius="3" Margin="2" MouseLeftButtonDown="TaskBlock_MouseLeftButtonDown">
                                             <Grid>
                                                 <!-- 任务内容 -->
-                                                <TextBlock Text="{Binding Name}" Margin="5" TextWrapping="Wrap"/>
+                                                <TextBlock Text="{Binding Name}" Margin="5" TextWrapping="Wrap">
+                                                    <TextBlock.Style>
+                                                        <Style TargetType="TextBlock">
+                                                            <Style.Triggers>
+                                                                <DataTrigger Binding="{Binding IsCompleted}" Value="True">
+                                                                    <Setter Property="TextDecorations" Value="Strikethrough"/>
+                                                                    <Setter Property="Foreground" Value="Gray"/>
+                                                                </DataTrigger>
+                                                            </Style.Triggers>
+                                                        </Style>
+                                                    </TextBlock.Style>
+                                                </TextBlock>
+
+                                                <!-- 完成按钮 -->
+                                                <Button x:Name="CompleteButton" Content="✔" Width="20" Height="20" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="2,2,24,0" Background="Transparent" BorderThickness="0" Foreground="Green" Visibility="Collapsed" Command="{Binding DataContext.MarkCompletedCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}" CommandParameter="{Binding}"/>
 
                                                 <!-- 删除按钮（叉号） -->
-                                                <Button x:Name="DeleteButton"
-                                      Content="✕" 
-                                      Width="20" Height="20" 
-                                      HorizontalAlignment="Right" 
-                                      VerticalAlignment="Top" 
-                                      Margin="2"
-                                      Background="Transparent"
-                                      BorderThickness="0"
-                                      Foreground="Red"
-                                      FontWeight="Bold"
-                                      Visibility="Collapsed"
-                                      Command="{Binding DataContext.RemoveTaskBlockCommand, 
-                                              RelativeSource={RelativeSource AncestorType=ItemsControl}}"
-                                      CommandParameter="{Binding}"/>
+                                                <Button x:Name="DeleteButton" Content="✕" Width="20" Height="20" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="2" Background="Transparent" BorderThickness="0" Foreground="Red" FontWeight="Bold" Visibility="Collapsed" Command="{Binding DataContext.RemoveTaskBlockCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}" CommandParameter="{Binding}"/>
                                             </Grid>
                                         </Border>
                                     </Grid>
