@@ -12,8 +12,9 @@
                 <ui:XamlControlsResources/>
             </ResourceDictionary.MergedDictionaries>
 
-        <converters:BoolToHiddenConverter x:Key="BoolToHiddenConverter" />
-        <converters:BoolToVisibilityConverter x:Key="BoolToVisibility" />
+            <converters:BoolToHiddenConverter x:Key="BoolToHiddenConverter" />
+            <converters:BoolToVisibilityConverter x:Key="BoolToVisibility" />
         </ResourceDictionary>
+
     </Application.Resources>
 </Application>

@@ -17,19 +17,29 @@ namespace TimeController
             base.OnStartup(e);
 
             var taskService = AppHost.Services.GetRequiredService<ITaskService>();
+            var navService = AppHost.Services.GetRequiredService<INavigationService>();
 
             //获取 DbContext 实例，确保数据库使用迁移初始化
             var db = AppHost.Services.GetRequiredService<TaskDbContext>();
             db.Database.Migrate();
 
-            ////重置开发数据
-            //await ((TaskService)taskService).ResetTaskDataAsync();
+            //重置开发数据
+            await ((TaskService)taskService).ResetTaskDataAsync();
 
             // 打开主窗口
             var mainWindow = new MainWindow();
+            mainWindow.Show();
 
+            // 提醒复盘
+            _ = Task.Run(async () =>
+            {
+                await Task.Delay(1000); // 延迟 1 秒
+                await Application.Current.Dispatcher.InvokeAsync(async () =>
+                {
+                    await ReviewReminderService.TryShowReviewReminderAsync(taskService, navService);
+                });
+            });
         }
-
 
         public App()
         {
@@ -42,11 +52,11 @@ namespace TimeController
                     });
 
                     services.AddScoped<ITaskService, TaskService>();
-                    //services.AddSingleton<INavigationService, NavigationService>();
+                    services.AddSingleton<INavigationService, NavigationService>();
 
-                    //// 注册ViewModel
-                    //services.AddScoped<ReviewViewModel_everyday>();
-                    //services.AddScoped<ReviewViewModel_everyweek>();
+                    // 注册ViewModel
+                    services.AddScoped<ReviewViewModel_everyday>();
+                    services.AddScoped<ReviewViewModel_everyweek>();
 
                 })
                 .Build();

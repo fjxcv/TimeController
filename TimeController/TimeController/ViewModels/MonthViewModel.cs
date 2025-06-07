@@ -17,7 +17,7 @@ namespace TimeController.ViewModels
         private const int MinYear = 2024;
         private const int MaxYear = 2026;
 
-        // 日历日期集合（包含null用于填充空白）
+        // 日历日期集合（包含null用于填充空白）?-null
         public ObservableCollection<DateTime?> CalendarDays { get; } = new();
         
         // 所有任务的集合
@@ -27,7 +27,7 @@ namespace TimeController.ViewModels
         private int _year = DateTime.Today.Year;
         public int Year
         {
-            get => _year;
+            get { return _year; }
             set 
             { 
                 _year = value; 
@@ -122,6 +122,7 @@ namespace TimeController.ViewModels
             
             Month = newMonth;
             OnPropertyChanged(nameof(MonthText)); // 通知UI更新月份显示
+            OnPropertyChanged(nameof(YearText)); // 通知UI更新年份显示
         }
 
         /// <summary>

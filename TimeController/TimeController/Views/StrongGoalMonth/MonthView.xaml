@@ -138,38 +138,43 @@
         </Grid>
 
         <!-- 日历内容区域（可滚动） -->
-        <ScrollViewer Grid.Row="3" Margin="40,10,40,40">
-            <!-- 使用ItemsControl显示日历天数 -->
-            <ItemsControl ItemsSource="{Binding CalendarDays}">
-                <!-- 使用7列的UniformGrid作为布局面板 -->
-                <ItemsControl.ItemsPanel>
-                    <ItemsPanelTemplate>
-                        <UniformGrid Columns="7" />
-                    </ItemsPanelTemplate>
-                </ItemsControl.ItemsPanel>
-                
-                <!-- 每个项目的模板 - 使用DateCard控件 -->
-                <ItemsControl.ItemTemplate>
-                    <DataTemplate>
-                        <!-- 绑定日期和点击命令 -->
-                        <local:DateCard Date="{Binding}" 
-                                       Command="{Binding DataContext.DateClickCommand, 
-                                               RelativeSource={RelativeSource AncestorType=ui:Page}}">
-                            <!-- 设置样式 -->
-                            <local:DateCard.Style>
-                                <Style TargetType="local:DateCard">
-                                    <!-- 日期为空则隐藏卡片 -->
-                                    <Style.Triggers>
-                                        <DataTrigger Binding="{Binding}" Value="{x:Null}">
-                                            <Setter Property="Visibility" Value="Collapsed"/>
-                                        </DataTrigger>
-                                    </Style.Triggers>
-                                </Style>
-                            </local:DateCard.Style>
-                        </local:DateCard>
-                    </DataTemplate>
-                </ItemsControl.ItemTemplate>
-            </ItemsControl>
+        <ScrollViewer Grid.Row="3" Margin="40,10,40,40" VerticalScrollBarVisibility="Auto">
+            <Grid MinHeight="900">
+                <!-- 使用ItemsControl显示日历天数 -->
+                <ItemsControl ItemsSource="{Binding CalendarDays}">
+                    <!-- 使用7列的UniformGrid作为布局面板 -->
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <UniformGrid Columns="7" Rows="6"/>
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+
+                    <!-- 每个项目的模板 - 使用DateCard控件 -->
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <!-- 绑定日期和点击命令 -->
+                            <local:DateCard Date="{Binding}"
+                                        Height="150"
+                                        Width="Auto"
+                                        Margin="5"
+                                        Command="{Binding DataContext.DateClickCommand, 
+                                                RelativeSource={RelativeSource AncestorType=ui:Page}}">
+                                <!-- 设置样式 -->
+                                <local:DateCard.Style>
+                                    <Style TargetType="local:DateCard">
+                                        <!-- 日期为空则隐藏卡片 -->
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding}" Value="{x:Null}">
+                                                <Setter Property="Visibility" Value="Collapsed"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </local:DateCard.Style>
+                            </local:DateCard>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </Grid>
         </ScrollViewer>
     </Grid>
 </ui:Page>

@@ -30,6 +30,13 @@ namespace TimeController.Views.StrongGoalMonth
             typeof(DateCard),
             new PropertyMetadata(false));
 
+        // 新增IsExpanded依赖属性
+        public static readonly DependencyProperty IsExpandedProperty = DependencyProperty.Register(
+            "IsExpanded",
+            typeof(bool),
+            typeof(DateCard),
+            new PropertyMetadata(false, OnIsExpandedChanged));
+
         /// <summary>
         /// 获取或设置卡片显示的日期
         /// </summary>
@@ -54,6 +61,12 @@ namespace TimeController.Views.StrongGoalMonth
             set => SetValue(IsTodayProperty, value);
         }
 
+        public bool IsExpanded
+        {
+            get => (bool)GetValue(IsExpandedProperty);
+            set => SetValue(IsExpandedProperty, value);
+        }
+
         /// <summary>
         /// 构造函数
         /// </summary>
@@ -69,6 +82,9 @@ namespace TimeController.Views.StrongGoalMonth
         /// </summary>
         private void Border_MouseLeftButtonUp(object sender, MouseButtonEventArgs e)
         {
+            // 切换展开状态
+            IsExpanded = !IsExpanded;
+
             // 检查命令是否可用，并传递当前日期作为参数
             if (Command?.CanExecute(Date) == true)
             {
@@ -87,6 +103,36 @@ namespace TimeController.Views.StrongGoalMonth
                  var date = (DateTime)e.NewValue;
                 card.DateText.Text = date.Day.ToString();
                 card.IsToday = DateTime.Today == date.Date; // 自动更新IsToday状态
+            }
+        }
+
+        /// <summary>
+        /// 展开状态变更回调方法
+        /// </summary>
+        private static void OnIsExpandedChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        {
+            if (d is DateCard card)
+            {
+                // 触发展开/收缩动画
+                card.UpdateExpandedState();
+            }
+        }
+
+        /// <summary>
+        /// 更新展开状态
+        /// </summary>
+        private void UpdateExpandedState()
+        {
+            // 这里可以添加展开/收缩的动画效果
+            if (IsExpanded)
+            {
+                // 展开状态
+                this.Height = 300; // 展开时的高度
+            }
+            else
+            {
+                // 收缩状态
+                this.Height = 150; // 收缩时的高度
             }
         }
     }

@@ -38,12 +38,18 @@ namespace TimeController.ViewModels
                     "CasualMode" => new CasualModeView(),
                     "MonthView" => new MonthView(),
                     "WeekView" => new WeekView(),
+
                     //"Review" => new ReviewView_everyday(
                     //    new ReviewViewModel_everyday(App.AppHost.Services.GetRequiredService<ITaskService>())
                     //    ),
 
-                    //"settings" => 
-                    //"about" => 
+                    "Review" => new ReviewView_everyday(
+                        new ReviewViewModel_everyday(App.AppHost.Services.GetRequiredService<ITaskService>())
+                        ),
+
+
+                    //"settings" =>
+                    //"about" =>
                     _ => new CasualModeView()
                 };
 

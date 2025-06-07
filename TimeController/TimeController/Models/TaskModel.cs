@@ -1,4 +1,25 @@
-﻿using System;
+﻿
+
+//Id = table.Column<int>(type: "INTEGER", nullable: false)              任务的id
+//Name = table.Column<string>(type: "TEXT", nullable: false),           任务名称
+//Note = table.Column<string>(type: "TEXT", nullable: true),            任务备注（强管理）
+//Type = table.Column<string>(type: "TEXT", nullable: true),            任务类型（强管理）
+//Mode = table.Column<string>(type: "TEXT", nullable: false),           咸鱼or强管理模式
+//PlannedDate = table.Column<DateTime>(type: "TEXT", nullable: false),  任务所在日期（强管理）
+//IsAllDay = table.Column<bool>(type: "INTEGER", nullable: false),      是否为全天任务（强管理）
+//StartTime = table.Column<DateTime>(type: "TEXT", nullable: true),     开始时间（强管理）
+//EndTime = table.Column<DateTime>(type: "TEXT", nullable: true),       结束时间（强管理）
+//Status = table.Column<string>(type: "TEXT", nullable: false),         任务状态（强管理）
+//Reason = table.Column<string>(type: "TEXT", nullable: true),          推迟和放弃原因（强管理）
+//PostponeDate = table.Column<DateTime>(type: "TEXT", nullable: true),  推迟的日期（强管理）
+//Category = table.Column<string>(type: "TEXT", nullable: true),        分类（咸鱼模式）
+//CreatedAt = table.Column<DateTime>(type: "TEXT", nullable: false),    创建时间（咸鱼模式）
+//IsCompleted = table.Column<bool>(type: "INTEGER", nullable: false),   是否完成（咸鱼模式，疑似冗余）
+//IsReminderEnabled = table.Column<bool>(type: "INTEGER", nullable: false),是否提醒（强管理）
+//IsEditing = table.Column<bool>(type: "INTEGER", nullable: false)       是否正在编辑（咸鱼模式，疑似冗余）
+
+
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 
@@ -28,7 +49,9 @@ namespace TimeController.Models
         其它
     }
 
-    public class TaskModel : INotifyPropertyChanged
+
+    public partial class TaskModel : INotifyPropertyChanged
+
     {
         public int Id { get; set; }
 
@@ -64,6 +87,8 @@ namespace TimeController.Models
             set { _isAllDay = value; OnPropertyChanged(nameof(IsAllDay)); }
         }
 
+
+        // 存储时间段（仅含时间，无日期信息）
         public TimeSpan? StartTime { get; set; }
         public TimeSpan? EndTime { get; set; }
 
@@ -89,7 +114,10 @@ namespace TimeController.Models
             set { _postponeDate = value; OnPropertyChanged(nameof(PostponeDate)); }
         }
 
-        public string? Category { get; set; } // 仅咸鱼模式使用
+
+        public string? Category { get; set; }
+
+
         public DateTime CreatedAt { get; set; } = DateTime.Now;
 
         private bool _isCompleted;
@@ -134,9 +162,42 @@ namespace TimeController.Models
                 {
                     _isEditing = value;
                     OnPropertyChanged(nameof(IsEditing));
+
+                    if (_isEditing)
+                        IsSelected = false;
+
                 }
             }
         }
+
+
+        private bool _isSelected;
+        public bool IsSelected
+        {
+            get => _isSelected;
+            set
+            {
+                if (_isSelected != value)
+                {
+                    _isSelected = value;
+                    OnPropertyChanged(nameof(IsSelected));
+                    if (_isSelected && IsEditing)
+                        IsEditing = false;
+                }
+            }
+        }
+
+        public string StatusText => Status switch
+        {
+            MyTaskStatus.Postponed => "已推迟",
+            MyTaskStatus.Abandoned => "已放弃",
+            MyTaskStatus.Completed => "已完成",
+            MyTaskStatus.Pending => "待处理",
+            _ => "未知"
+        };
+
+        public int PostponedCount { get; set; }
+
 
         public bool RequiresSort => true;
 
@@ -147,20 +208,16 @@ namespace TimeController.Models
         /// <summary>
         /// 验证任务字段合法性
         /// </summary>
-        /// <returns>错误信息列表</returns>
+
         public List<string> Validate()
         {
             var errors = new List<string>();
-
             if (string.IsNullOrWhiteSpace(Name))
                 errors.Add("任务名称不能为空");
-
             if (Name?.Length > 10)
                 errors.Add("任务名称不能超过10个字符");
-
             if (Note?.Length > 20)
                 errors.Add("任务备注不能超过20个字符");
-
             if (!IsAllDay && StartTime.HasValue && EndTime.HasValue && StartTime > EndTime)
                 errors.Add("开始时间不能晚于结束时间");
 
