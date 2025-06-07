@@ -28,6 +28,5 @@ namespace TimeController.Services
 
         event Action<TaskModel> TaskSaved;
 
-
     }
 }

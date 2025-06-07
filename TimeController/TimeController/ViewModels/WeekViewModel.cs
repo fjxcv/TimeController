@@ -224,7 +224,6 @@ namespace TimeController.ViewModels
             OnPropertyChanged(nameof(TimedTaskBlocks));
         }
 
-
         private Brush GetBrushForTaskType(TaskType type)
         {
             switch (type)
