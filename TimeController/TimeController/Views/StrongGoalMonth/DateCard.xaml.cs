@@ -2,11 +2,15 @@ using System;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using System.Collections.ObjectModel;
+using System.ComponentModel;
+using System.Runtime.CompilerServices;
+using TimeController.Models;
 
 namespace TimeController.Views.StrongGoalMonth
 {
     
-    public partial class DateCard : UserControl
+    public partial class DateCard : UserControl, INotifyPropertyChanged
     {
         // 定义Date依赖属性，用于绑定日期数据
         public static readonly DependencyProperty DateProperty = DependencyProperty.Register(
@@ -29,6 +33,20 @@ namespace TimeController.Views.StrongGoalMonth
             typeof(bool),
             typeof(DateCard),
             new PropertyMetadata(false));
+
+        // 任务集合
+        public static readonly DependencyProperty TasksProperty = DependencyProperty.Register(
+            "Tasks",
+            typeof(ObservableCollection<TaskModel>),
+            typeof(DateCard),
+            new PropertyMetadata(null, OnTasksChanged));
+
+        // 是否展开显示所有任务
+        public static readonly DependencyProperty IsExpandedProperty = DependencyProperty.Register(
+            "IsExpanded",
+            typeof(bool),
+            typeof(DateCard),
+            new PropertyMetadata(false, OnExpandedChanged));
 
         /// <summary>
         /// 获取或设置卡片显示的日期
@@ -54,6 +72,34 @@ namespace TimeController.Views.StrongGoalMonth
             set => SetValue(IsTodayProperty, value);
         }
 
+        public ObservableCollection<TaskModel>? Tasks
+        {
+            get => (ObservableCollection<TaskModel>?)GetValue(TasksProperty);
+            set => SetValue(TasksProperty, value);
+        }
+
+        public bool IsExpanded
+        {
+            get => (bool)GetValue(IsExpandedProperty);
+            set => SetValue(IsExpandedProperty, value);
+        }
+
+        private ObservableCollection<TaskModel>? _displayedTasks;
+        public ObservableCollection<TaskModel>? DisplayedTasks
+        {
+            get => _displayedTasks;
+            set { _displayedTasks = value; OnPropertyChanged(); }
+        }
+
+        private bool _hasMoreTasks;
+        public bool HasMoreTasks
+        {
+            get => _hasMoreTasks;
+            set { _hasMoreTasks = value; OnPropertyChanged(); }
+        }
+
+
+
         /// <summary>
         /// 构造函数
         /// </summary>
@@ -62,6 +108,22 @@ namespace TimeController.Views.StrongGoalMonth
             InitializeComponent();
             // 注册鼠标左键抬起事件处理程序
             //this.MouseLeftButtonUp += Border_MouseLeftButtonUp;
+        }
+
+        private static void OnTasksChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        {
+            if (d is DateCard card)
+            {
+                card.UpdateDisplayedTasks();
+            }
+        }
+
+        private static void OnExpandedChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        {
+            if (d is DateCard card)
+            {
+                card.UpdateDisplayedTasks();
+            }
         }
 
         /// <summary>
@@ -76,6 +138,12 @@ namespace TimeController.Views.StrongGoalMonth
             }
         }
 
+        private void ToggleExpand(object sender, RoutedEventArgs e)
+        {
+            IsExpanded = !IsExpanded;
+            UpdateDisplayedTasks();
+        }
+
         /// <summary>
         /// 日期属性变更回调方法
         /// </summary>
@@ -88,6 +156,34 @@ namespace TimeController.Views.StrongGoalMonth
                 card.DateText.Text = date.Day.ToString();
                 card.IsToday = DateTime.Today == date.Date; // 自动更新IsToday状态
             }
+        }
+
+        private void UpdateDisplayedTasks()
+        {
+            if (Tasks == null)
+            {
+                DisplayedTasks = null;
+                HasMoreTasks = false;
+                return;
+            }
+
+            var sorted = new ObservableCollection<TaskModel>(System.Linq.Enumerable.OrderBy(Tasks, t => t.StartTime ?? TimeSpan.Zero));
+            if (IsExpanded || sorted.Count <= 3)
+            {
+                DisplayedTasks = sorted;
+                HasMoreTasks = sorted.Count > 3;
+            }
+            else
+            {
+                DisplayedTasks = new ObservableCollection<TaskModel>(System.Linq.Enumerable.Take(sorted, 3));
+                HasMoreTasks = true;
+            }
+        }
+
+        public event PropertyChangedEventHandler? PropertyChanged;
+        private void OnPropertyChanged([CallerMemberName] string? name = null)
+        {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
         }
     }
 }

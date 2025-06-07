@@ -8,49 +8,17 @@
       xmlns:ui="http://schemas.inkore.net/lib/ui/wpf/modern"
       xmlns:sys="clr-namespace:System;assembly=mscorlib"
       xmlns:vm="clr-namespace:TimeController.ViewModels"
+      xmlns:conv="clr-namespace:TimeController.Converters"
       mc:Ignorable="d" 
       d:DesignHeight="450" d:DesignWidth="800"
       Title="MonthView">
 
-    <!-- 设置页面数据上下文为MonthViewModel -->
-    <ui:Page.DataContext>
-        <vm:MonthViewModel />
-    </ui:Page.DataContext>
 
-    <!-- 本页面资源 --><!--
     <ui:Page.Resources>
-        --><!-- Fluent 样式的操作按钮 --><!--
-        <Style x:Key="ReviewButtonStyle" TargetType="Button">
-            <Setter Property="Background" Value="#b9d9fe"/>
-            <Setter Property="Foreground" Value="black"/>
-            <Setter Property="FontWeight" Value="Bold"/>
-            <Setter Property="BorderBrush" Value="Transparent"/>
-            <Setter Property="BorderThickness" Value="0"/>
-            <Setter Property="Padding" Value="12,6"/>
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="Button">
-                        <Border Background="{TemplateBinding Background}"
-                                BorderBrush="{TemplateBinding BorderBrush}"
-                                BorderThickness="{TemplateBinding BorderThickness}"
-                                CornerRadius="4">
-                            <ContentPresenter HorizontalAlignment="Center"
-                                              VerticalAlignment="Center"
-                                              Margin="{TemplateBinding Padding}"/>
-                        </Border>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-            <Style.Triggers>
-                <Trigger Property="IsMouseOver" Value="True">
-                    <Setter Property="Background" Value="#7eb9fb"/>
-                </Trigger>
-                <Trigger Property="IsPressed" Value="True">
-                    <Setter Property="Background" Value="#7eb9fb"/>
-                </Trigger>
-            </Style.Triggers>
-        </Style>
-    </ui:Page.Resources>-->
+
+        <conv:DateTasksLookupConverter x:Key="DateTasksLookupConverter"/>
+
+    </ui:Page.Resources>
 
     <!-- 主网格布局 -->
     <Grid>
@@ -191,8 +159,10 @@
                     <DataTemplate>
                         <!-- 绑定日期和点击命令 -->
                         <local:DateCard Date="{Binding}" Margin="2"
-                                       Command="{Binding DataContext.DateClickCommand, 
+                                       Command="{Binding DataContext.DateClickCommand,
                                                RelativeSource={RelativeSource AncestorType=ui:Page}}">
+                            
+                            
                             <!-- 设置样式 -->
                             <local:DateCard.Style>
                                 <Style TargetType="local:DateCard">

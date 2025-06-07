@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.Extensions.DependencyInjection;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -12,6 +13,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using TimeController.ViewModels;
 using Page = iNKORE.UI.WPF.Modern.Controls.Page;
 
 
@@ -25,6 +27,7 @@ namespace TimeController.Views.StrongGoalMonth
         public MonthView()
         {
             InitializeComponent();
+            DataContext = App.AppHost.Services.GetRequiredService<MonthViewModel>();
         }
     }
 }
