@@ -109,7 +109,9 @@ namespace TimeController.ViewModels
                 if (value.HasValue)
                 {
                     var newStart = value.Value.TimeOfDay;
-                    if (!Task.EndTime.HasValue || Task.EndTime <= newStart)
+                    if (!Task.EndTime.HasValue ||
+                        Task.EndTime <= newStart ||
+                        Task.EndTime - newStart > TimeSpan.FromHours(12))
                     {
                         Task.EndTime = newStart.Add(TimeSpan.FromHours(1));
                         OnPropertyChanged(nameof(EndTimeWrapper));

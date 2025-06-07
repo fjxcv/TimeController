@@ -95,8 +95,9 @@ namespace TimeController.ViewModels
             IsEverydayPage = true;
             _taskService = taskService;
 
-            //调试用
+#if DEBUG
             _ = ResetDataForDevelopment();
+#endif
 
             CompletedTasks = new ObservableCollection<TaskModel>();
             UncompletedTasks = new ObservableCollection<TaskModel>();

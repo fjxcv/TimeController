@@ -4,6 +4,7 @@ using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Windows.Input;
 using System.Windows.Media;
+using System.Linq;
 using TimeController.Models;
 using Microsoft.Extensions.DependencyInjection;
 using TimeController.Services;
@@ -34,7 +35,26 @@ namespace TimeController.ViewModels
         public WeekViewModel(ITaskService taskService)
         {
             _taskService = taskService;
-            // ... 其他初始化代码
+            _taskService.TaskSaved += OnExternalTaskSaved;
+            ReviewCommand = new RelayCommand(_ => ShowReview());
+            PreviousWeekCommand = new RelayCommand(_ => NavigateWeek(-7));
+            NextWeekCommand = new RelayCommand(_ => NavigateWeek(7));
+            PreviousMonthCommand = new RelayCommand(_ => NavigateMonth(-1));
+            NextMonthCommand = new RelayCommand(_ => NavigateMonth(1));
+            TimedTaskBlocksView = CollectionViewSource.GetDefaultView(TaskBlocks);
+            TimedTaskBlocksView.Filter = obj => obj is TaskBlock block && !block.IsAllDay;
+            TaskBlocks.CollectionChanged += (_, __) =>
+            {
+                OnPropertyChanged(nameof(AllDayTaskBlocks));
+                OnPropertyChanged(nameof(TimedTaskBlocks));
+                TimedTaskBlocksView.Refresh();
+            };
+            SaveRequested += OnTaskSaved;
+            RemoveTaskBlockCommand = new RelayCommand<TaskBlock>(RemoveTaskBlock);
+            _currentDate = DateTime.Today;
+            UpdateMonthText();
+            UpdateWeekText();
+            LoadTasksForCurrentWeek();
         }
 
 
@@ -281,6 +301,13 @@ namespace TimeController.ViewModels
             NextMonthCommand = new RelayCommand(_ => NavigateMonth(1));
             TimedTaskBlocksView = CollectionViewSource.GetDefaultView(TaskBlocks);
             TimedTaskBlocksView.Filter = obj => obj is TaskBlock block && !block.IsAllDay;
+
+            TaskBlocks.CollectionChanged += (_, __) =>
+            {
+                OnPropertyChanged(nameof(AllDayTaskBlocks));
+                OnPropertyChanged(nameof(TimedTaskBlocks));
+                TimedTaskBlocksView.Refresh();
+            };
 
             SaveRequested += OnTaskSaved;
             LoadTasksForCurrentWeek();
