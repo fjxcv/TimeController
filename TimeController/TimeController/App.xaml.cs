@@ -60,7 +60,6 @@ namespace TimeController
                     // 注册ViewModel
                     services.AddScoped<ReviewViewModel_everyday>();
                     services.AddScoped<ReviewViewModel_everyweek>();
-                    services.AddScoped<MonthViewModel>();
 
                 })
                 .Build();
