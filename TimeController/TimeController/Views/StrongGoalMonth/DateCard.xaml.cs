@@ -114,8 +114,18 @@ namespace TimeController.Views.StrongGoalMonth
         {
             if (d is DateCard card)
             {
+                if (e.OldValue is ObservableCollection<TaskModel> oldCollection)
+                    oldCollection.CollectionChanged -= card.Tasks_CollectionChanged;
+                if (e.NewValue is ObservableCollection<TaskModel> newCollection)
+                    newCollection.CollectionChanged += card.Tasks_CollectionChanged;
+
                 card.UpdateDisplayedTasks();
             }
+        }
+
+        private void Tasks_CollectionChanged(object? sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
+        {
+            UpdateDisplayedTasks();
         }
 
         private static void OnExpandedChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)

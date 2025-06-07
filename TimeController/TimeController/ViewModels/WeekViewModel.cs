@@ -182,6 +182,27 @@ namespace TimeController.ViewModels
             TimedTaskBlocksView.Refresh(); // 强制刷新视图
         }
 
+        private void OnExternalTaskSaved(TaskModel task)
+        {
+            // 忽略非强管理任务
+            if (task.Mode != TaskMode.Strong)
+                return;
+
+            DateTime monday = CurrentDate.Date;
+            while (monday.DayOfWeek != DayOfWeek.Monday)
+                monday = monday.AddDays(-1);
+            DateTime sunday = monday.AddDays(6);
+
+            if (task.PlannedDate < monday || task.PlannedDate > sunday)
+                return;
+
+            if (Tasks.Any(t => t.Id == task.Id))
+                return;
+
+            Tasks.Add(task);
+            AddTaskToView(task);
+            OnPropertyChanged(nameof(TimedTaskBlocks));
+        }
 
         private Brush GetBrushForTaskType(TaskType type)
         {
@@ -246,6 +267,9 @@ namespace TimeController.ViewModels
 
         public WeekViewModel()
         {
+            _taskService = App.AppHost.Services.GetRequiredService<ITaskService>();
+            _taskService.TaskSaved += OnExternalTaskSaved;
+
             _currentDate = DateTime.Today;
             UpdateMonthText();
             UpdateWeekText();

@@ -293,6 +293,9 @@ namespace TimeController.Views.StrongGoalWeek
                 if (_clickedDate.HasValue)
                     task.PlannedDate = _clickedDate.Value.Date;
 
+                // 强管理模式任务
+                task.Mode = TaskMode.Strong;
+
                 System.Diagnostics.Debug.WriteLine($"新任务日期: {task.PlannedDate}");
 
                 // 直接添加任务，让ViewModel内部处理冲突
