@@ -312,9 +312,12 @@ namespace TimeController.Views.StrongGoalWeek
         {
             if (sender is Grid grid)
             {
-                var button = grid.FindName("DeleteButton") as Button;
-                if (button != null)
-                    button.Visibility = Visibility.Visible;
+                var del = grid.FindName("DeleteButton") as Button;
+                if (del != null)
+                    del.Visibility = Visibility.Visible;
+                var complete = grid.FindName("CompleteButton") as Button;
+                if (complete != null)
+                    complete.Visibility = Visibility.Visible;
             }
         }
 
@@ -323,9 +326,12 @@ namespace TimeController.Views.StrongGoalWeek
         {
             if (sender is Grid grid)
             {
-                var button = grid.FindName("DeleteButton") as Button;
-                if (button != null)
-                    button.Visibility = Visibility.Collapsed;
+                var del = grid.FindName("DeleteButton") as Button;
+                if (del != null)
+                    del.Visibility = Visibility.Collapsed;
+                var complete = grid.FindName("CompleteButton") as Button;
+                if (complete != null)
+                    complete.Visibility = Visibility.Collapsed;
             }
         }
 
