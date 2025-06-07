@@ -14,6 +14,7 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 using Microsoft.Extensions.DependencyInjection;
+using NPOI.SS.Formula.Functions;
 using TimeController.Models;
 using TimeController.Services;
 using TimeController.ViewModels;
@@ -28,6 +29,7 @@ namespace TimeController.Views.StrongGoalWeek
     {
         private readonly WeekViewModel _viewModel;
         private DateTime? _clickedDate;
+        private Popup? _taskDetailPopup;
 
         public WeekView()
         {
@@ -48,15 +50,34 @@ namespace TimeController.Views.StrongGoalWeek
                 }
             };
 
-            // 假设 taskGrid 是你的 Task Grid
-            //taskGrid.RowDefinitions.Clear();
-            //for (int i = 0; i < 25; i++)
-             //   taskGrid.RowDefinitions.Add(new RowDefinition { Height = new GridLength(40) });
-           // taskGrid.ColumnDefinitions.Clear();
-            //for (int i = 0; i < 7; i++)
-              //  taskGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(140) });
+            // 订阅冲突检测事件
+            if (DataContext is WeekViewModel viewModel)
+            {
+                viewModel.ConflictDetected += OnTaskConflictDetected;
+            }
+
+        }
 
 
+        // 处理任务冲突
+        private async void OnTaskConflictDetected(TaskModel newTask, List<WeekViewModel.TaskBlock> conflicts)
+        {
+            // 构建冲突任务列表
+            var conflictNames = string.Join("\n", conflicts.Select(c => c.Name));
+
+            // 弹出确认对话框
+            var result = MessageBox.Show(
+                $"该时间段与以下任务冲突:\n{conflictNames}\n\n是否仍要添加?",
+                "时间冲突",
+                MessageBoxButton.YesNo,
+                MessageBoxImage.Warning);
+
+            // 如果用户选择"是"，则删除冲突任务并添加新任务
+            if (result == MessageBoxResult.Yes)
+            {
+                var viewModel = DataContext as WeekViewModel;
+                await viewModel.HandleConflictAndAddTask(newTask, conflicts);
+            }
         }
 
         private void ImportSchedule_Click(object sender, RoutedEventArgs e)
@@ -71,6 +92,18 @@ namespace TimeController.Views.StrongGoalWeek
 
         private async void WeekContentGrid_MouseDown(object sender, MouseButtonEventArgs e)
         {
+
+            // 如果点击的是任务块（Border 或其子元素），则不显示加号
+            var originalSource = e.OriginalSource as DependencyObject;
+            while (originalSource != null)
+            {
+                if (originalSource is Border border && border.DataContext is TimeController.ViewModels.WeekViewModel.TaskBlock)
+                {
+                    // 点击的是任务块，直接返回，不显示加号
+                    return;
+                }
+                originalSource = VisualTreeHelper.GetParent(originalSource);
+            }
             double timeAxisWidth = 75; // 时间轴宽度
             double dateHeaderHeight = 100; // 日期栏高度
 
@@ -139,6 +172,73 @@ namespace TimeController.Views.StrongGoalWeek
 
         }
 
+        //左击任务块显示详细信息
+        private void TaskBlock_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+        {
+            if (sender is Border border && border.DataContext is TimeController.ViewModels.WeekViewModel.TaskBlock task)
+            {
+                // 关闭已有的Popup
+                if (_taskDetailPopup != null)
+                {
+                    _taskDetailPopup.IsOpen = false;
+                    _taskDetailPopup = null;
+                }
+
+                // 获取当前周的周一日期
+                var vm = DataContext as WeekViewModel;
+                var currentDate = vm?.CurrentDate ?? DateTime.Today;
+                DateTime monday = currentDate.Date;
+                while (monday.DayOfWeek != DayOfWeek.Monday)
+                {
+                    monday = monday.AddDays(-1);
+                }
+
+                // 根据任务的列索引计算对应的日期
+                DateTime taskDate = monday.AddDays(task.Column);
+
+                // 构建详细信息
+                string detail = $"任务备注：{task.Note}\n任务类型：{task.Type}\n";
+                if (task.IsAllDay)
+                {
+                    // 全天任务显示日期
+                    detail += $"任务时间：{taskDate:yyyy年M月d日 (dddd)}";
+                }
+                else if (task.StartTime != TimeSpan.Zero || task.EndTime != TimeSpan.Zero)
+                {
+                    // 分时任务显示时间
+                    detail += $"任务时间：{task.StartTime:hh\\:mm} - {task.EndTime:hh\\:mm}";
+                }
+
+                // 创建Popup内容
+                var popupContent = new Border
+                {
+                    Background = Brushes.LightYellow,
+                    BorderBrush = Brushes.Gray,
+                    BorderThickness = new Thickness(1),
+                    CornerRadius = new CornerRadius(6),
+                    Padding = new Thickness(8),
+                    Child = new TextBlock
+                    {
+                        Text = detail,
+                        Foreground = Brushes.DarkSlateGray,
+                        FontSize = 14,
+                        TextWrapping = TextWrapping.Wrap
+                    }
+                };
+
+                // 创建Popup
+                _taskDetailPopup = new Popup
+                {
+                    Child = popupContent,
+                    PlacementTarget = border,
+                    Placement = PlacementMode.Mouse,
+                    StaysOpen = false, // 点击外部自动关闭
+                    AllowsTransparency = true,
+                    IsOpen = true
+                };
+
+            }
+        }
 
 
         //取消选中的方法
@@ -176,6 +276,8 @@ namespace TimeController.Views.StrongGoalWeek
             var selectedTaskCol = FindName($"TaskColumn{index}") as Border;
             if (selectedTaskCol != null)
                 selectedTaskCol.Background = new SolidColorBrush(Color.FromRgb(230, 230, 230)); // 任务区高亮
+
+
         }
 
 
@@ -191,13 +293,63 @@ namespace TimeController.Views.StrongGoalWeek
                 if (_clickedDate.HasValue)
                     task.PlannedDate = _clickedDate.Value.Date;
 
-                _viewModel.AddTask(task); // 推荐用 AddTask 方法，见前述建议
+                // 强管理模式任务
+                task.Mode = TaskMode.Strong;
+
+                System.Diagnostics.Debug.WriteLine($"新任务日期: {task.PlannedDate}");
+
+                // 直接添加任务，让ViewModel内部处理冲突
+                _viewModel.AddTask(task);
             }
 
             AddTaskButton.Visibility = Visibility.Collapsed;
+            ClearSelection();
         }
 
 
+        //任务删除（鼠标悬停
+        private void Grid_MouseEnter(object sender, MouseEventArgs e)
+        {
+            if (sender is Grid grid)
+            {
+                var del = grid.FindName("DeleteButton") as Button;
+                if (del != null)
+                    del.Visibility = Visibility.Visible;
+                var complete = grid.FindName("CompleteButton") as Button;
+                if (complete != null)
+                    complete.Visibility = Visibility.Visible;
+            }
+        }
+
+        ////任务删除（鼠标离开
+        private void Grid_MouseLeave(object sender, MouseEventArgs e)
+        {
+            if (sender is Grid grid)
+            {
+                var del = grid.FindName("DeleteButton") as Button;
+                if (del != null)
+                    del.Visibility = Visibility.Collapsed;
+                var complete = grid.FindName("CompleteButton") as Button;
+                if (complete != null)
+                    complete.Visibility = Visibility.Collapsed;
+            }
+        }
+
+        //查找子元素
+        private T FindVisualChild<T>(DependencyObject parent, Func<T, bool> condition) where T : DependencyObject
+        {
+            for (int i = 0; i < VisualTreeHelper.GetChildrenCount(parent); i++)
+            {
+                var child = VisualTreeHelper.GetChild(parent, i);
+                if (child is T typedChild && condition(typedChild))
+                    return typedChild;
+
+                var result = FindVisualChild(child, condition);
+                if (result != null)
+                    return result;
+            }
+            return null;
+        }
 
         /// <summary>
         /// 根据当前日期更新上方 7 天的显示（DateTextBlock0 ~ 6）
@@ -209,15 +361,42 @@ namespace TimeController.Views.StrongGoalWeek
             while (monday.DayOfWeek != DayOfWeek.Monday)
                 monday = monday.AddDays(-1);
 
+            // 当前选择的月份（参考日期所在月份）
+            int currentMonth = referenceDate.Month;
+
             for (int i = 0; i < 7; i++)
             {
                 DateTime currentDay = monday.AddDays(i);
                 if (FindName($"DateTextBlock{i}") is TextBlock textBlock)
                 {
-                    textBlock.Text = currentDay.Day.ToString();
+                    // 检查当前日期是否属于参考月份
+                    if (currentDay.Month != currentMonth)
+                    {
+                        // 不是当前月份，添加月份前缀
+                        textBlock.Text = $"{currentDay.Month}月{currentDay.Day}";
+                    }
+                    else
+                    {
+                        // 是当前月份，只显示日期
+                        textBlock.Text = currentDay.Day.ToString();
+                    }
+
+                    // 可选：为非本月日期应用不同样式
+                    if (currentDay.Month != currentMonth)
+                    {
+                        textBlock.Foreground = new SolidColorBrush(Colors.Gray); // 不同月份的日期显示灰色
+                        textBlock.FontWeight = FontWeights.Bold; // 加粗
+                    }
+                    else
+                    {
+                        textBlock.Foreground = new SolidColorBrush(Colors.Black); // 当前月份日期显示黑色
+                        textBlock.FontWeight = FontWeights.Bold; // 加粗
+                    }
                 }
             }
         }
+
+
     }
 
 }

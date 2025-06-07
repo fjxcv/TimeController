@@ -87,6 +87,4 @@ namespace TimeController.Views
             base.OnClosing(e);
         }
     }
-
 }
-

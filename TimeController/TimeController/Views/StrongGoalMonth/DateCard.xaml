@@ -3,36 +3,24 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:uiControls="clr-namespace:iNKORE.UI.WPF.Modern.Controls;assembly=iNKORE.UI.WPF.Modern"
              mc:Ignorable="d"
-             d:DesignHeight="150" d:DesignWidth="100">
-    <UserControl.Resources>
-        <Storyboard x:Key="ExpandAnimation">
-            <DoubleAnimation 
-                Storyboard.TargetProperty="Height"
-                From="150" To="300"
-                Duration="0:0:0.2"/>
-        </Storyboard>
-        <Storyboard x:Key="CollapseAnimation">
-            <DoubleAnimation 
-                Storyboard.TargetProperty="Height"
-                From="300" To="150"
-                Duration="0:0:0.2"/>
-        </Storyboard>
-    </UserControl.Resources>
-    
     <Border x:Name="CardBorder"
-            BorderBrush="Gray"
             BorderThickness="1"
             CornerRadius="8"
+            Margin="4"
             Cursor="Hand"
             MouseLeftButtonUp="Border_MouseLeftButtonUp">
         <Border.Style>
             <Style TargetType="Border">
-                <Setter Property="Background" Value="White"/>
                 <Style.Triggers>
                     <DataTrigger Binding="{Binding IsToday, RelativeSource={RelativeSource AncestorType=UserControl}}" Value="True">
-                        <Setter Property="Background" Value="#FFEBEBEB"/> 
                     </DataTrigger>
+
+                    <Trigger Property="IsMouseOver" Value="True">
+                        <Setter Property="Background" Value="#E4E4E4"/>
+                    </Trigger>
+                    
                 </Style.Triggers>
             </Style>
         </Border.Style>
@@ -40,37 +28,33 @@
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
             </Grid.RowDefinitions>
             
-            <!-- 日期显示区域 -->
+            <!-- ������ʾ���� -->
             <TextBlock x:Name="DateText"
                       Grid.Row="0"
                       HorizontalAlignment="Center"
                       VerticalAlignment="Top"
                       Margin="0,5,0,0"
                       FontSize="20"/>
-            
-            <!-- 展开内容区域 -->
-            <Grid Grid.Row="1" Margin="5">
-                <Grid.Style>
-                    <Style TargetType="Grid">
-                        <Setter Property="Visibility" Value="Collapsed"/>
+
                         <Style.Triggers>
                             <DataTrigger Binding="{Binding IsExpanded, RelativeSource={RelativeSource AncestorType=UserControl}}" Value="True">
-                                <Setter Property="Visibility" Value="Visible"/>
                             </DataTrigger>
                         </Style.Triggers>
                     </Style>
-                </Grid.Style>
-                
-                <!-- 这里可以添加展开后显示的内容 -->
+
+                <!-- ����������չ������ʾ������ -->
                 <StackPanel>
-                    <TextBlock Text="任务列表" 
+                    <TextBlock Text="�����б�" 
                              FontWeight="Bold" 
                              Margin="0,10,0,5"/>
-                    <!-- 可以在这里添加任务列表或其他内容 -->
+                    <!-- ������������������б���������� -->
                 </StackPanel>
             </Grid>
         </Grid>
     </Border>
+    
+    
 </UserControl>

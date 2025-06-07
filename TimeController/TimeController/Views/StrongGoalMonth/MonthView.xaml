@@ -3,130 +3,136 @@
       xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
       xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
       xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+      xmlns:uiControls="clr-namespace:iNKORE.UI.WPF.Modern.Controls;assembly=iNKORE.UI.WPF.Modern"
       xmlns:local="clr-namespace:TimeController.Views.StrongGoalMonth"
       xmlns:ui="http://schemas.inkore.net/lib/ui/wpf/modern"
       xmlns:sys="clr-namespace:System;assembly=mscorlib"
       xmlns:vm="clr-namespace:TimeController.ViewModels"
+      xmlns:conv="clr-namespace:TimeController.Converters"
       mc:Ignorable="d" 
       d:DesignHeight="450" d:DesignWidth="800"
       Title="MonthView">
 
-    <!-- 设置页面数据上下文为MonthViewModel -->
-    <ui:Page.DataContext>
-        <vm:MonthViewModel />
-    </ui:Page.DataContext>
+
+    <ui:Page.Resources>
+        <conv:DateTasksLookupConverter x:Key="DateTasksLookupConverter" />
+        <conv:DateTasksMultiConverter x:Key="DateTasksMultiConverter" />
+    </ui:Page.Resources>
+
 
     <!-- 主网格布局 -->
     <Grid>
         <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>    <!-- 顶部标题栏 -->
-            <RowDefinition Height="Auto"/>    <!-- 年月导航 -->
-            <RowDefinition Height="Auto"/>    <!-- 星期栏 -->
-            <RowDefinition Height="*"/>       <!-- 日历内容区域（自动填充剩余空间） -->
+            <RowDefinition Height="auto"/>
+            <!-- 顶部标题栏 -->
+            <RowDefinition Height="Auto"/>
+            <!-- 年月导航 -->
+            <RowDefinition Height="Auto"/>
+            <!-- 星期栏 -->
+            <RowDefinition Height="*"/>
+            <!-- 日历内容区域（自动填充剩余空间） -->
         </Grid.RowDefinitions>
-    
+
         <!-- 标题栏 -->
-        <Grid Grid.Row="0" Margin="0,30,0,0">
+        <Grid Grid.Row="0" Margin="0,0,0,0" Height="35.78">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="87*"/>
+                <ColumnDefinition Width="713*"/>
+            </Grid.ColumnDefinitions>
             <!-- 主标题 -->
             <TextBlock Text="强目标模式" 
-                     FontSize="36" 
+                     FontSize="24" 
                      FontWeight="Bold" 
-                     VerticalAlignment="Top" 
+                     VerticalAlignment="Center" 
                      HorizontalAlignment="Left" 
-                     Margin="40,0,0,0"/>
-            
+                     Margin="40,0,0,0" Grid.ColumnSpan="2"/>
+
             <!-- 进入复盘 -->
-            <Button Content="进入复盘" 
-                   Command="{Binding ReviewCommand}" 
-                   Width="120" 
-                   Height="40"
-                   FontSize="18" 
-                   Background="#FFCCCCCC" 
-                   BorderThickness="0"
-                   HorizontalAlignment="Right" 
-                   VerticalAlignment="Top" 
-                   Margin="0,0,40,0"/>
+            <Button Content="进入复盘"
+                   Command="{Binding ReviewCommand}"
+                   Height="35.78"
+                   Padding="16,8"
+                   HorizontalAlignment="Right"
+                   VerticalAlignment="Center"
+                   Margin="0,0,40,0" Grid.Column="1"/>
         </Grid>
 
         <!-- 年月导航栏 -->
         <StackPanel Grid.Row="1" 
                    Orientation="Horizontal" 
                    HorizontalAlignment="Center" 
-                   Margin="0,30,0,0">
-            
+                   Margin="0,5,0,0">
+
             <!-- 上一年按钮 -->
-            <Button Content="&lt;" 
-                   Command="{Binding PrevYearCommand}" 
-                   Width="50" 
-                   Height="40" 
-                   Background="#FFCCCCCC" 
-                   BorderThickness="0" 
-                   FontSize="20" 
-                   Margin="0,0,10,0"/>
-            
+            <Button Command="{Binding PrevYearCommand}"
+                    Width="40"
+                    Height="40"
+                    Margin="0,0,8,0">
+                <uiControls:FontIcon Glyph="&#xE76B;" FontSize="16"/>
+            </Button>
+
             <!-- 当前年份 -->
-            <Border Background="#FFEBEBEB" 
-                   CornerRadius="20" 
-                   Padding="20,0" 
-                   Margin="0,0,10,0">
-                <TextBlock Text="{Binding YearText}" 
-                          FontSize="24" 
-                          FontWeight="Bold" 
-                          VerticalAlignment="Center" 
-                          HorizontalAlignment="Center"/>
+            <Border Background="#FFEBEBEB"
+                   CornerRadius="20"
+                   Padding="20,0"
+                   Margin="0,0,8,0">
+                <TextBlock Text="{Binding YearText}"
+                           FontSize="24"
+                           FontWeight="SemiBold"
+                           VerticalAlignment="Center"
+                           HorizontalAlignment="Center"/>
             </Border>
-            
+
             <!-- 下一年按钮 -->
-            <Button Content="&gt;" 
-                   Command="{Binding NextYearCommand}" 
-                   Width="50" 
-                   Height="40" 
-                   Background="#FFCCCCCC" 
-                   BorderThickness="0" 
-                   FontSize="20" 
-                   Margin="0,0,30,0"/>
-            
-           
+            <Button Command="{Binding NextYearCommand}"
+                    Width="40"
+                    Height="40"
+                    Margin="0,0,24,0">
+                <uiControls:FontIcon Glyph="&#xE76C;" FontSize="16"/>
+            </Button>
+
+
             <!-- 上一月按钮 -->
-            <Button Content="&lt;" 
-                   Command="{Binding PrevMonthCommand}" 
-                   Width="50" 
-                   Height="40" 
-                   Background="#FFCCCCCC" 
-                   BorderThickness="0" 
-                   FontSize="20" 
-                   Margin="0,0,10,0"/>
-            
+            <Button Command="{Binding PrevMonthCommand}"
+                    Width="40"
+                    Height="40"
+                    Margin="0,0,8,0">
+                <uiControls:FontIcon Glyph="&#xE76B;" FontSize="16"/>
+            </Button>
+
             <!-- 当前月份 -->
-            <Border Background="#FFEBEBEB" 
-                   CornerRadius="20" 
-                   Padding="20,0" 
-                   Margin="0,0,10,0">
-                <TextBlock Text="{Binding MonthText}" 
-                          FontSize="24" 
-                          FontWeight="Bold" 
-                          VerticalAlignment="Center" 
-                          HorizontalAlignment="Center"/>
+            <Border Background="#FFEBEBEB"
+                   CornerRadius="20"
+                   Padding="20,0"
+                   Margin="0,0,8,0">
+                <TextBlock Text="{Binding MonthText}"
+                           FontSize="24"
+                           FontWeight="SemiBold"
+                           VerticalAlignment="Center"
+                           HorizontalAlignment="Center"/>
             </Border>
-            
+
             <!-- 下一月按钮 -->
-            <Button Content="&gt;" 
-                   Command="{Binding NextMonthCommand}" 
-                   Width="50" 
-                   Height="40" 
-                   Background="#FFCCCCCC" 
-                   BorderThickness="0" 
-                   FontSize="20"/>
+            <Button Command="{Binding NextMonthCommand}"
+                    Width="40"
+                    Height="40">
+                <uiControls:FontIcon Glyph="&#xE76C;" FontSize="16"/>
+            </Button>
         </StackPanel>
 
         <!-- 星期栏 -->
         <Grid Grid.Row="2" Margin="40,30,40,0">
             <!-- 7列网格布局 -->
             <Grid.ColumnDefinitions>
-                <ColumnDefinition/><ColumnDefinition/><ColumnDefinition/><ColumnDefinition/>
-                <ColumnDefinition/><ColumnDefinition/><ColumnDefinition/>
+                <ColumnDefinition/>
+                <ColumnDefinition/>
+                <ColumnDefinition/>
+                <ColumnDefinition/>
+                <ColumnDefinition/>
+                <ColumnDefinition/>
+                <ColumnDefinition/>
             </Grid.ColumnDefinitions>
-            
+
             <!-- 星期一到星期日 -->
             <TextBlock Text="一" Grid.Column="0" HorizontalAlignment="Center" FontSize="20" FontWeight="Bold"/>
             <TextBlock Text="二" Grid.Column="1" HorizontalAlignment="Center" FontSize="20" FontWeight="Bold"/>
@@ -138,43 +144,49 @@
         </Grid>
 
         <!-- 日历内容区域（可滚动） -->
-        <ScrollViewer Grid.Row="3" Margin="40,10,40,40" VerticalScrollBarVisibility="Auto">
-            <Grid MinHeight="900">
-                <!-- 使用ItemsControl显示日历天数 -->
-                <ItemsControl ItemsSource="{Binding CalendarDays}">
-                    <!-- 使用7列的UniformGrid作为布局面板 -->
-                    <ItemsControl.ItemsPanel>
-                        <ItemsPanelTemplate>
-                            <UniformGrid Columns="7" Rows="6"/>
-                        </ItemsPanelTemplate>
-                    </ItemsControl.ItemsPanel>
+        <ScrollViewer x:Name="CalendarScrollViewer"
+                      Grid.Row="3"
+                      Margin="40,10,40,40"
+                      ScrollChanged="CalendarScrollViewer_ScrollChanged">
+            <!-- 使用ItemsControl显示日历天数 -->
+            <ItemsControl ItemsSource="{Binding CalendarDays}">
+                <!-- 使用7列的UniformGrid作为布局面板 -->
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <UniformGrid Columns="7" />
+                    </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
 
-                    <!-- 每个项目的模板 - 使用DateCard控件 -->
-                    <ItemsControl.ItemTemplate>
-                        <DataTemplate>
-                            <!-- 绑定日期和点击命令 -->
-                            <local:DateCard Date="{Binding}"
-                                        Height="150"
-                                        Width="Auto"
-                                        Margin="5"
-                                        Command="{Binding DataContext.DateClickCommand, 
-                                                RelativeSource={RelativeSource AncestorType=ui:Page}}">
-                                <!-- 设置样式 -->
-                                <local:DateCard.Style>
-                                    <Style TargetType="local:DateCard">
-                                        <!-- 日期为空则隐藏卡片 -->
-                                        <Style.Triggers>
-                                            <DataTrigger Binding="{Binding}" Value="{x:Null}">
-                                                <Setter Property="Visibility" Value="Collapsed"/>
-                                            </DataTrigger>
-                                        </Style.Triggers>
-                                    </Style>
-                                </local:DateCard.Style>
-                            </local:DateCard>
-                        </DataTemplate>
-                    </ItemsControl.ItemTemplate>
-                </ItemsControl>
-            </Grid>
+                <!-- 每个项目的模板 - 使用DateCard控件 -->
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <!-- 绑定日期和点击命令 -->
+                        <local:DateCard Date="{Binding}" Margin="2"
+                                       Command="{Binding DataContext.DateClickCommand,
+                                               RelativeSource={RelativeSource AncestorType=ui:Page}}">
+                            <local:DateCard.Tasks>
+                                <MultiBinding Converter="{StaticResource DateTasksMultiConverter}">
+                                    <Binding Path="DataContext.TasksByDate" RelativeSource="{RelativeSource AncestorType=ui:Page}"/>
+                                    <Binding />
+                                </MultiBinding>
+                            </local:DateCard.Tasks>
+                            
+                            
+                            <!-- 设置样式 -->
+                            <local:DateCard.Style>
+                                <Style TargetType="local:DateCard">
+                                    <!-- 日期为空则隐藏卡片 -->
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding}" Value="{x:Null}">
+                                            <Setter Property="Visibility" Value="Collapsed"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </local:DateCard.Style>
+                        </local:DateCard>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
         </ScrollViewer>
     </Grid>
 </ui:Page>

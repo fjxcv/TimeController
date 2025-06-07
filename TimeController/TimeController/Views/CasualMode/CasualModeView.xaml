@@ -7,12 +7,13 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:local="clr-namespace:TimeController.Views.CasualMode"
         xmlns:local1="clr-namespace:TimeController.ViewModels"
-        xmlns:input="clr-namespace:System.Windows.Input;assembly=PresentationCore"
-        mc:Ignorable="d"
+        xmlns:input="clr-namespace:System.Windows.Input;assembly=PresentationCore" d:DataContext="{d:DesignInstance Type=local1:CasualModeViewModel}"
+         mc:Ignorable="d"
         Title="" d:DesignHeight="800" d:DesignWidth="1104"
         MinHeight="600" MinWidth="800">
 
     <ui:Page.Resources>
+        <!--布尔值转可见性转换器-->
         <BooleanToVisibilityConverter x:Key="BoolToVisibility"/>
         <!-- 按钮样式 -->
         <Style x:Key="IconButtonStyle" TargetType="Button">
@@ -33,6 +34,7 @@
                     </ControlTemplate>
                 </Setter.Value>
             </Setter>
+            <!-- 鼠标悬停时改变背景 -->
             <Style.Triggers>
                 <Trigger Property="IsMouseOver" Value="True">
                     <Setter Property="Background" Value="#20000000"/>
@@ -85,36 +87,39 @@
         </Grid.ColumnDefinitions>
 
         <!-- 左侧主板块 -->
-        <StackPanel Grid.Column="0" Margin="30,20,20,20">
+        <Grid Grid.Column="0" Margin="30,20,20,20">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+
             <!-- 顶部进度条区域 -->
-            <Grid>
+            <Grid Grid.Row="0">
                 <StackPanel Orientation="Horizontal" VerticalAlignment="Top" Margin="0,10,0,20">
                     <TextBlock Text="奖励进度" FontSize="20" FontWeight="Bold" VerticalAlignment="Center"/>
                     <ProgressBar Style="{StaticResource CustomProgressBar}"
                                  Width="Auto" MinWidth="450" Margin="16,0,8,0"
-                                 VerticalAlignment="Center" Value="{Binding Progress}" Maximum="4"/>
+                                 VerticalAlignment="Center" Value="{Binding Progress}" Maximum="{Binding RewardThreshold}"/>
                     <Button x:Name="RewardButton" Width="36" Height="28" Margin="0,0,0,0"
                             Style="{StaticResource IconButtonStyle}"
                             Command="{Binding ToggleRewardPopupCommand}">
-                        <uiControls:FontIcon Glyph="&#xE735;" FontSize="20" Foreground="#FFD700"/>
+                        <uiControls:FontIcon Glyph="&#xE735;" FontSize="30" Foreground="#333333"/>
                     </Button>
                 </StackPanel>
                 <Popup x:Name="RewardPopup"
                        Style="{StaticResource RewardPopupStyle}"
                        IsOpen="{Binding IsRewardPopupOpen, Mode=TwoWay}"
                        StaysOpen="False"
-                       Focusable="True"
+                       Focusable="True"            
                        FocusManager.IsFocusScope="True"
-                       FocusManager.FocusedElement="{Binding ElementName=RewardTaskInput}">
+                       FocusManager.FocusedElement="{Binding ElementName=RewardTaskInput}"
+                       Opened="RewardPopup_Opened">
                     <Border Background="White" 
                             BorderBrush="#E0E0E0" 
                             BorderThickness="1" 
                             CornerRadius="8"
                             Width="300"
                             Height="250">
-                        <Border.Effect>
-                            <DropShadowEffect BlurRadius="10" ShadowDepth="1" Color="#20000000"/>
-                        </Border.Effect>
                         <Grid>
                             <Grid.RowDefinitions>
                                 <RowDefinition Height="Auto"/>
@@ -123,7 +128,7 @@
                             </Grid.RowDefinitions>
 
                             <!-- 标题栏 -->
-                            <Border Background="#FFD700" CornerRadius="8,8,0,0" Padding="10,8">
+                            <Border Background="#555555" CornerRadius="8,8,0,0" Padding="10,8">
                                 <TextBlock Text="奖励任务" Foreground="White" FontWeight="Bold"/>
                             </Border>
 
@@ -177,26 +182,20 @@
                                 <TextBox x:Name="RewardTaskInput"
                                  Text="{Binding NewRewardTaskText, UpdateSourceTrigger=PropertyChanged}"
                                  Width="200" Height="28"
-                                 Focusable="True" IsTabStop="True">
+                                 Focusable="True">
                                     <TextBox.InputBindings>
                                         <KeyBinding Key="Enter"
                                          Command="{Binding AddRewardTaskCommand}"/>
                                     </TextBox.InputBindings>
                                 </TextBox>
                             </Grid>
-
-                            <!-- 小箭头 -->
-                            <Path Grid.Row="0" Grid.RowSpan="3"
-                                      Data="M 0,0 L 10,10 L 0,20 Z"
-                                      Fill="White" Stroke="#E0E0E0" StrokeThickness="1"
-                                      HorizontalAlignment="Left" Margin="-10,50,0,0"/>
                         </Grid>
                     </Border>
                 </Popup>
             </Grid>
 
             <!-- 四个模块 2x2 -->
-            <Grid Margin="0,0,0,0" Height="637">
+            <Grid Grid.Row="1" Margin="0,0,0,0">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="*" MinHeight="150"/>
                     <RowDefinition Height="*" MinHeight="150"/>
@@ -207,7 +206,7 @@
                 </Grid.ColumnDefinitions>
 
                 <!-- 自我滋养 -->
-                <Border Grid.Row="0" Grid.Column="0" Background="#D6F3ED" Margin="8">
+                <Border Grid.Row="0" Grid.Column="0" Background="#EEEEEE" Margin="8">
                     <Border.InputBindings>
                         <MouseBinding MouseAction="LeftClick"
                                       Command="{Binding ToggleInputVisibilityCommand}"
@@ -283,6 +282,7 @@
                                     </Grid>
                                 </DataTemplate>
                             </ListView.ItemTemplate>
+                            <!--阻止选中高亮：ItemContainerStyle-->
                             <ListView.ItemContainerStyle>
                                 <Style TargetType="ListViewItem">
                                     <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
@@ -327,7 +327,7 @@
                 </Border>
 
                 <!-- 创造表达 -->
-                <Border Grid.Row="0" Grid.Column="1" Background="#D6F3ED" Margin="8">
+                <Border Grid.Row="0" Grid.Column="1" Background="#EEEEEE" Margin="8">
                     <Border.InputBindings>
                         <MouseBinding MouseAction="LeftClick"
                                       Command="{Binding ToggleInputVisibilityCommand}"
@@ -447,7 +447,7 @@
                 </Border>
 
                 <!-- 生活杂务 -->
-                <Border Grid.Row="1" Grid.Column="0" Background="#D6F3ED" Margin="8">
+                <Border Grid.Row="1" Grid.Column="0" Background="#EEEEEE" Margin="8">
                     <Border.InputBindings>
                         <MouseBinding MouseAction="LeftClick"
                                       Command="{Binding ToggleInputVisibilityCommand}"
@@ -539,7 +539,7 @@
                 </Border>
 
                 <!-- 人际连接 -->
-                <Border Grid.Row="1" Grid.Column="1" Background="#D6F3ED" Margin="8">
+                <Border Grid.Row="1" Grid.Column="1" Background="#EEEEEE" Margin="8">
                     <Border.InputBindings>
                         <MouseBinding MouseAction="LeftClick"
                                       Command="{Binding ToggleInputVisibilityCommand}"
@@ -630,11 +630,17 @@
                     </Grid>
                 </Border>
             </Grid>
-        </StackPanel>
+        </Grid>
 
-        <!-- 右侧板块（长期备忘） -->
-        <StackPanel Grid.Column="1" Margin="0,20,30,20">
-            <Border Background="#D6F3ED" Padding="16" MinHeight="200" Margin="0,0,0,16" Height="369">
+        <!-- 右侧板块（长期备忘和本周复盘） -->
+        <Grid Grid.Column="1" Margin="0,20,30,20">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="83*" MinHeight="200"/>
+                <RowDefinition Height="69*" MinHeight="200"/>
+            </Grid.RowDefinitions>
+
+            <!-- 长期备忘 -->
+            <Border Grid.Row="0" Background="#EEEEEE" Padding="16" Margin="0,0,0,16">
                 <Border.InputBindings>
                     <MouseBinding MouseAction="LeftClick"
                                   Command="{Binding ToggleInputVisibilityCommand}"
@@ -731,10 +737,11 @@
                     </Grid>
                 </Grid>
             </Border>
+
             <!-- 本周复盘 -->
-            <Border Background="#D6F3ED" Padding="16" MinHeight="200" Height="301">
-                <TextBlock FontSize="20" FontWeight="Bold" Height="255" Text="&#x9;     本周复盘" />
+            <Border Grid.Row="1" Background="#EEEEEE" Padding="16">
+                <TextBlock FontSize="20" FontWeight="Bold" Text="&#x9;     本周复盘" />
             </Border>
-        </StackPanel>
+        </Grid>
     </Grid>
 </ui:Page>

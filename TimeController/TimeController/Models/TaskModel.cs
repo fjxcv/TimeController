@@ -12,15 +12,22 @@
 //Status = table.Column<string>(type: "TEXT", nullable: false),         任务状态（强管理）
 //Reason = table.Column<string>(type: "TEXT", nullable: true),          推迟和放弃原因（强管理）
 //PostponeDate = table.Column<DateTime>(type: "TEXT", nullable: true),  推迟的日期（强管理）
+//PostponedAt = table.Column<DateTime>(type: "TEXT", nullable: true),   每次推迟的时间（强管理）
+//AbandonedAt = table.Column<DateTime>(type: "TEXT", nullable: true),   放弃的时间（强管理）
 //Category = table.Column<string>(type: "TEXT", nullable: true),        分类（咸鱼模式）
 //CreatedAt = table.Column<DateTime>(type: "TEXT", nullable: false),    创建时间（咸鱼模式）
 //IsCompleted = table.Column<bool>(type: "INTEGER", nullable: false),   是否完成（咸鱼模式，疑似冗余）
 //IsReminderEnabled = table.Column<bool>(type: "INTEGER", nullable: false),是否提醒（强管理）
-//IsEditing = table.Column<bool>(type: "INTEGER", nullable: false)       是否正在编辑（咸鱼模式，疑似冗余）
+//IsEditing = table.Column<bool>(type: "INTEGER", nullable: false)         是否正在编辑（咸鱼模式，疑似冗余）
+//IsSelected = table.Column<bool>(type: "INTEGER", nullable: false),        是否选中（咸鱼模式，疑似冗余）
+//PostponedCount = table.Column<int>(type: "INTEGER", nullable: false)      推迟次数（强管理）
+
+
+
 
 
 using System;
-using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.ComponentModel;
 
 namespace TimeController.Models
@@ -49,9 +56,7 @@ namespace TimeController.Models
         其它
     }
 
-
     public partial class TaskModel : INotifyPropertyChanged
-
     {
         public int Id { get; set; }
 
@@ -87,8 +92,6 @@ namespace TimeController.Models
             set { _isAllDay = value; OnPropertyChanged(nameof(IsAllDay)); }
         }
 
-
-        // 存储时间段（仅含时间，无日期信息）
         public TimeSpan? StartTime { get; set; }
         public TimeSpan? EndTime { get; set; }
 
@@ -114,9 +117,40 @@ namespace TimeController.Models
             set { _postponeDate = value; OnPropertyChanged(nameof(PostponeDate)); }
         }
 
+        //为了周复盘的需要，记录推迟和放弃的时间
+        public DateTime? PostponedAt { get; set; }    // 记录最后一次推迟的时间
+        public DateTime? AbandonedAt { get; set; }    // 记录放弃的时间
+
+
+        // 这个属性不映射到数据库
+        [NotMapped]
+        public string StatusShownText
+        {
+            get
+            {
+                // 推迟过=》已推迟，放弃=》已放弃
+                if (AbandonedAt.HasValue) return "已放弃";
+                if (PostponedAt.HasValue && !AbandonedAt.HasValue) return "已推迟";
+                return "待处理";
+            }
+        }
+
+
+        public void MarkPostponed(DateTime when)
+        {
+            PostponedAt = when;
+            OnPropertyChanged(nameof(PostponedAt));
+            OnPropertyChanged(nameof(StatusShownText));
+        }
+
+        public void MarkAbandoned(DateTime when)
+        {
+            AbandonedAt = when;
+            OnPropertyChanged(nameof(AbandonedAt));
+            OnPropertyChanged(nameof(StatusShownText));
+        }
 
         public string? Category { get; set; }
-
 
         public DateTime CreatedAt { get; set; } = DateTime.Now;
 
@@ -162,27 +196,6 @@ namespace TimeController.Models
                 {
                     _isEditing = value;
                     OnPropertyChanged(nameof(IsEditing));
-
-                    if (_isEditing)
-                        IsSelected = false;
-
-                }
-            }
-        }
-
-
-        private bool _isSelected;
-        public bool IsSelected
-        {
-            get => _isSelected;
-            set
-            {
-                if (_isSelected != value)
-                {
-                    _isSelected = value;
-                    OnPropertyChanged(nameof(IsSelected));
-                    if (_isSelected && IsEditing)
-                        IsEditing = false;
                 }
             }
         }
@@ -196,9 +209,8 @@ namespace TimeController.Models
             _ => "未知"
         };
 
-        public int PostponedCount { get; set; }
 
-
+        public int PostponedCount { get; set; } // 非数据库字段，用于复盘卡片
         public bool RequiresSort => true;
 
         public event PropertyChangedEventHandler? PropertyChanged;
@@ -208,16 +220,20 @@ namespace TimeController.Models
         /// <summary>
         /// 验证任务字段合法性
         /// </summary>
-
+        /// <returns>错误信息列表</returns>
         public List<string> Validate()
         {
             var errors = new List<string>();
+
             if (string.IsNullOrWhiteSpace(Name))
                 errors.Add("任务名称不能为空");
+
             if (Name?.Length > 10)
                 errors.Add("任务名称不能超过10个字符");
+
             if (Note?.Length > 20)
                 errors.Add("任务备注不能超过20个字符");
+
             if (!IsAllDay && StartTime.HasValue && EndTime.HasValue && StartTime > EndTime)
                 errors.Add("开始时间不能晚于结束时间");
 

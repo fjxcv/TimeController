@@ -26,9 +26,10 @@ namespace TimeController
             //重置开发数据
             await ((TaskService)taskService).ResetTaskDataAsync();
 
+
             // 打开主窗口
             var mainWindow = new MainWindow();
-            mainWindow.Show();
+
 
             // 提醒复盘
             _ = Task.Run(async () =>
@@ -39,7 +40,9 @@ namespace TimeController
                     await ReviewReminderService.TryShowReviewReminderAsync(taskService, navService);
                 });
             });
+
         }
+
 
         public App()
         {
@@ -48,7 +51,7 @@ namespace TimeController
                 {
                     services.AddDbContext<TaskDbContext>(options =>
                     {
-                        options.UseSqlite("Data Source=tasks.db");
+                        options.UseSqlite("Data Source=task.db");
                     });
 
                     services.AddScoped<ITaskService, TaskService>();
