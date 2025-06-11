@@ -190,9 +190,14 @@ namespace TimeController.ViewModels
             var dialog = new AddTaskDialog(date);
             if (dialog.ShowDialog() == true && dialog.ResultTask != null)
             {
-                dialog.ResultTask.Mode = TaskMode.Strong;
-                // 保存任务后将通过 TaskSaved 事件自动添加到字典
-                await _taskService.UpdateTaskAsync(dialog.ResultTask);
+                var task = dialog.ResultTask!;
+                task.Mode = TaskMode.Strong;
+                task.Status = MyTaskStatus.Pending;  //设成待处理
+                task.IsCompleted = false;                 //设成未完成
+
+                // 持久化到数据库
+                await _taskService.UpdateTaskAsync(task);
+
             }
         }
 

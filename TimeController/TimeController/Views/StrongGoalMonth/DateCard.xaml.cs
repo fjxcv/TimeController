@@ -40,14 +40,14 @@ namespace TimeController.Views.StrongGoalMonth
             "Tasks",
             typeof(ObservableCollection<TaskModel>),
             typeof(DateCard),
-            new PropertyMetadata(null, OnTasksChanged));
+            new PropertyMetadata(new ObservableCollection<TaskModel>(), OnTasksChanged));
 
         // 是否展开显示所有任务
         public static readonly DependencyProperty IsExpandedProperty = DependencyProperty.Register(
             "IsExpanded",
             typeof(bool),
             typeof(DateCard),
-            new PropertyMetadata(false, OnExpandedChanged));
+            new PropertyMetadata(false));
 
         /// <summary>
         /// 获取或设置卡片显示的日期
@@ -129,10 +129,6 @@ namespace TimeController.Views.StrongGoalMonth
             UpdateDisplayedTasks();
         }
 
-        private static void OnExpandedChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
-        {
-            // 改成popup了，暂时没删
-        }
 
         /// <summary>
         /// 鼠标左键抬起事件处理
@@ -148,8 +144,12 @@ namespace TimeController.Views.StrongGoalMonth
 
         private void ToggleExpand(object sender, RoutedEventArgs e)
         {
-            IsExpanded = !IsExpanded;
-            TaskPopup.IsOpen = IsExpanded;
+            // 只有当 Tasks 非空且至少有一条任务时才展开
+            if (Tasks?.Any() == true)
+            {
+                IsExpanded = !IsExpanded;
+                TaskPopup.IsOpen = IsExpanded;
+            }
         }
 
         private void TaskPopup_Closed(object? sender, EventArgs e)

@@ -92,12 +92,13 @@
             <!-- Popup showing additional task details -->
             <Popup x:Name="TaskPopup"
            PlacementTarget="{Binding ElementName=CardBorder}"
-           Placement="Bottom"
+           Placement="AbsolutePoint"
            HorizontalOffset="0"
            VerticalOffset="8"
            AllowsTransparency="True"
            StaysOpen="False"
            PopupAnimation="Fade"
+           DataContext="{Binding RelativeSource={RelativeSource AncestorType=UserControl}}"
            Closed="TaskPopup_Closed">
                 <Border Background="#CCFFFFFF"
                 CornerRadius="6"
