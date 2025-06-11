@@ -5,11 +5,22 @@ using System.Windows;
 using Microsoft.EntityFrameworkCore;
 using TimeController.Services;
 using TimeController.ViewModels;
+using TimeController.Models;
 
 namespace TimeController
 {
     public partial class App : Application
     {
+        /// <summary>
+        /// 任务新增/更新后通知
+        /// </summary>
+        public static event Action<TaskModel>? TaskChanged;
+
+
+        /// <summary>
+        /// 外部调用此方法来触发刷新
+        /// </summary>
+        public static void NotifyTaskChanged(TaskModel task) => TaskChanged?.Invoke(task);
         public static IHost AppHost { get; private set; }
 
         protected override async void OnStartup(StartupEventArgs e)

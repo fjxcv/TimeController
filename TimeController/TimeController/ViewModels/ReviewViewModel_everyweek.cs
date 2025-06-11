@@ -257,6 +257,16 @@ namespace TimeController.ViewModels
             SelectedWeekStart = SelectedWeekStart.AddDays(7);
         }
 
+        private void OnTaskSaved(TaskModel task)
+        {
+            var weekStart = SelectedWeekStart;
+            var weekEnd = weekStart.AddDays(7);
+            if (task.PlannedDate >= weekStart && task.PlannedDate < weekEnd)
+            {
+                LoadTasksForWeek(weekStart);
+            }
+        }
+
         //折线图赋值
         private void LoadChart(List<TaskModel> weeklyTasks)
         {

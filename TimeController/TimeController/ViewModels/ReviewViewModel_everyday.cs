@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows;
 using System.ComponentModel;
 using System.Collections.ObjectModel;
 using System.Windows.Input;
@@ -95,9 +96,9 @@ namespace TimeController.ViewModels
             IsEverydayPage = true;
             _taskService = taskService;
 
-#if DEBUG
-            _ = ResetDataForDevelopment();
-#endif
+//#if DEBUG
+//            _ = ResetDataForDevelopment();
+//#endif
 
             CompletedTasks = new ObservableCollection<TaskModel>();
             UncompletedTasks = new ObservableCollection<TaskModel>();
@@ -121,10 +122,20 @@ namespace TimeController.ViewModels
                 "不明确"
             };
 
+            // 订阅带参事件
+            App.TaskChanged += newTask =>
+            {
+                // 刷新：用新任务的 PlannedDate
+                var dateToLoad = newTask.PlannedDate.Date;
+                System.Windows.Application.Current.Dispatcher.Invoke(() =>
+                {
+                    Debug.WriteLine($"{dateToLoad:yyyy-MM-dd} 刷新复盘");
+                    LoadTasksForDate(dateToLoad);
+                });
+            };
 
+            // 初始化待办任务
             SelectedDate = DateTime.Today;
-
-            LoadTasksForDate(DateTime.Today);
 
         }
 
@@ -273,6 +284,14 @@ namespace TimeController.ViewModels
             LoadTasksForDate(SelectedDate ?? DateTime.Today);
         }
 
+        private void OnTaskSaved(TaskModel task)
+        {
+            var current = SelectedDate ?? DateTime.Today;
+            if (task.PlannedDate.Date == current.Date)
+            {
+                LoadTasksForDate(current);
+            }
+        }
 
         public event PropertyChangedEventHandler? PropertyChanged;
         protected void OnPropertyChanged(string propertyName) =>

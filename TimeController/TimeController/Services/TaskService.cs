@@ -24,17 +24,32 @@ namespace TimeController.Services
 
         public async Task<List<TaskModel>> GetTasksForDate(DateTime date)
         {
+
             // 取出当天零点到次日零点之间的所有任务
             var start = date.Date;
             var end = start.AddDays(1);
 
-            return await _context.Task
-                .Where(t =>
-                    t.PlannedDate >= start &&
-                    t.PlannedDate < end
-                )
-                .ToListAsync();
+            Debug.WriteLine($"[GetTasksForDate] Date range = {start:yyyy-MM-dd HH:mm:ss} ～ {end:yyyy-MM-dd HH:mm:ss}");
+           
+            // 3. 构造查询
+            var query = _context.Task
+                .Where(t => t.PlannedDate >= start && t.PlannedDate < end);
+
+            // 4. 打印 EF 要执行的 SQL
+            Debug.WriteLine("[GetTasksForDate] SQL =\n" + query.ToQueryString());
+
+            // 5. 真正执行
+            var list = await query.ToListAsync();
+
+            // 6. 再打印一下结果明细
+            Debug.WriteLine($"[GetTasksForDate] Fetched {list.Count} items:");
+            foreach (var t in list)
+                Debug.WriteLine($"    - {t.Name} | {t.Status} | {t.PlannedDate:yyyy-MM-dd HH:mm:ss}");
+
+            return list;
+
         }
+
 
         public async Task DeleteTaskAsync(TaskModel task)
         {
@@ -57,9 +72,11 @@ namespace TimeController.Services
                 Debug.WriteLine($"任务状态: {task.Name} - {task.Status}");
             }
 
-            return await _context.Task
-                .Where(t => t.PlannedDate.Date >= startDate.Date && t.PlannedDate.Date <= endDate.Date)
-                .ToListAsync();
+            //return await _context.Task
+            //    .Where(t => t.PlannedDate.Date >= startDate.Date && t.PlannedDate.Date <= endDate.Date)
+            //    .ToListAsync();
+
+            return tasks;
         }
 
         public Task<List<TaskModel>> GetAllTasksAsync()
@@ -70,10 +87,24 @@ namespace TimeController.Services
         //更新任务状态
         public async Task UpdateTaskAsync(TaskModel task)
         {
-            _context.Task.Update(task);
+            var conn = _context.Database.GetDbConnection();
+            Debug.WriteLine($"[DB File] {conn.DataSource}");
+
+            Debug.WriteLine($"🔨 Enter UpdateTaskAsync for {task.Name}, Id={task.Id}");
+            if (task.Id == 0)
+            {
+                await _context.Task.AddAsync(task);
+            }
+            else
+            {
+                _context.Task.Update(task);
+            }
+
             await _context.SaveChangesAsync();
 
             TaskSaved?.Invoke(task);
+
+            Debug.WriteLine("🛎️ TaskSaved.Invoke 已调用完毕");
 
             //调试输出
             Debug.WriteLine($"[更新任务] {task.Name}, 状态={task.Status}, 计划时间={task.PlannedDate:yyyy-MM-dd}");

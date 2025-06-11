@@ -10,6 +10,8 @@ using TimeController.Models;
 using TimeController.Views;
 using System.Collections.Generic;
 using System.Linq;
+using System.Diagnostics;
+using static SkiaSharp.HarfBuzz.SKShaper;
 
 namespace TimeController.ViewModels
 {
@@ -187,7 +189,9 @@ namespace TimeController.ViewModels
         /// </summary>
         private async void ShowAddTaskDialog(DateTime date)
         {
+
             var dialog = new AddTaskDialog(date);
+
             if (dialog.ShowDialog() == true && dialog.ResultTask != null)
             {
                 var task = dialog.ResultTask!;
@@ -198,7 +202,11 @@ namespace TimeController.ViewModels
                 // 持久化到数据库
                 await _taskService.UpdateTaskAsync(task);
 
+                // 触发复盘自动刷新
+                App.NotifyTaskChanged(task);
+                Debug.WriteLine($"🛎️ App.NotifyTaskChanged({task.Name}) 已调用完毕");
             }
+
         }
 
         private void AddTaskToDictionary(TaskModel task)
