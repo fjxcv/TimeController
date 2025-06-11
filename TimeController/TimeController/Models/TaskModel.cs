@@ -82,6 +82,7 @@ namespace TimeController.Models
         }
 
         private bool _isAllDay;
+        
         public bool IsAllDay
         {
             get => _isAllDay;
@@ -133,6 +134,12 @@ namespace TimeController.Models
                 }
             }
         }
+
+        // 是否为课程任务（标记固定周期任务）
+        public bool IsCourseTask { get; set; }
+
+        // 星期几 (0=周一, 1=周二, ...)
+        public int WeekDay { get; set; }
 
         private bool _isReminderEnabled;
         public bool IsReminderEnabled

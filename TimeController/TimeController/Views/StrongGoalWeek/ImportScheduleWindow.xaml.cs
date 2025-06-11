@@ -2,15 +2,38 @@ using System.Windows;
 using System.Diagnostics;
 using TimeController.ViewModels;
 using System.Windows.Controls;
+using TimeController.Models;
+using TimeController.ViewModels;
+using TimeController.Views.StrongGoalWeek;
 
 namespace TimeController.Views.StrongGoalWeek
 {
     public partial class ImportScheduleWindow : Window
     {
+        private readonly ImportScheduleViewModel _viewModel;
+
         public ImportScheduleWindow()
         {
             InitializeComponent();
-            DataContext = new ImportScheduleViewModel(); // 绑定 ViewModel
+            _viewModel = new ImportScheduleViewModel();
+            DataContext = _viewModel;
+
+            // 找到 XAML 定义的 DatePicker 控件
+            if (this.FindName("StartDatePicker") is DatePicker datePicker)
+            {
+                // 设置日期范围
+                datePicker.DisplayDateStart = DateTime.Today.AddYears(-1);
+                datePicker.DisplayDateEnd = DateTime.Today.AddYears(1);
+            }
+            // 订阅课程导入成功事件
+            _viewModel.CoursesImported += (sender, count) => {
+                // 短暂延迟后关闭窗口，让用户看到成功消息
+                Task.Delay(1500).ContinueWith(_ => {
+                    Dispatcher.Invoke(() => {
+                        this.Close();
+                    });
+                });
+            };
         }
 
         // 通过链接导入

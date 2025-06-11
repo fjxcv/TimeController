@@ -19,6 +19,31 @@ namespace TimeController.Services
             _context = context;
         }
 
+        public async Task<List<TaskModel>> GetAllCourseTasksAsync()
+        {
+            // 从数据库中获取所有 IsCourseTask = true 的任务
+            return await _context.Tasks
+                .Where(t => t.IsCourseTask)
+                .ToListAsync();
+        }
+
+
+        // 按周获取课程
+        public async Task<List<TaskModel>> GetCourseTasksForWeekAsync(DateTime referenceDate)
+        {
+            // 计算参考日期所在周的周一
+            DateTime monday = referenceDate.Date;
+            while (monday.DayOfWeek != DayOfWeek.Monday)
+                monday = monday.AddDays(-1);
+
+            DateTime sunday = monday.AddDays(6);
+
+            // 返回该周的课程任务
+            return await _context.Tasks
+                .Where(t => t.IsCourseTask && t.PlannedDate >= monday && t.PlannedDate <= sunday)
+                .ToListAsync();
+        }
+
 
         public async Task<List<TaskModel>> GetTasksForDate(DateTime date)
         {

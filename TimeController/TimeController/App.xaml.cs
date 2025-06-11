@@ -11,24 +11,28 @@ namespace TimeController
     public partial class App : Application
     {
         public static IHost AppHost { get; private set; }
+        public static IServiceProvider Services { get; private set; }
 
         protected override async void OnStartup(StartupEventArgs e)
         {
             base.OnStartup(e);
 
-            var taskService = AppHost.Services.GetRequiredService<ITaskService>();
-            var navService = AppHost.Services.GetRequiredService<INavigationService>();
+            // 直接使用 AppHost.Services
+            Services = AppHost.Services;
+
+            var taskService = Services.GetRequiredService<ITaskService>();
+            var navService = Services.GetRequiredService<INavigationService>();
 
             //获取 DbContext 实例，确保数据库使用迁移初始化
-            //var db = AppHost.Services.GetRequiredService<TaskDbContext>();
-            //db.Database.Migrate();
+            var db = Services.GetRequiredService<TaskDbContext>();
+            db.Database.Migrate();
 
             //重置开发数据
             await ((TaskService)taskService).ResetTaskDataAsync();
 
             // 打开主窗口
             var mainWindow = new MainWindow();
-
+            mainWindow.Show();
 
             // 提醒复盘
             _ = Task.Run(async () =>
@@ -39,9 +43,7 @@ namespace TimeController
                     await ReviewReminderService.TryShowReviewReminderAsync(taskService, navService);
                 });
             });
-
         }
-
 
         public App()
         {
@@ -50,9 +52,10 @@ namespace TimeController
                 {
                     services.AddDbContext<TaskDbContext>(options =>
                     {
-                        options.UseSqlite("Data Source=tasks.db");
+                        options.UseSqlite("Data Source=task.db");
                     });
 
+                    services.AddTransient<WeekViewModel>();
                     services.AddScoped<ITaskService, TaskService>();
                     services.AddSingleton<INavigationService, NavigationService>();
 

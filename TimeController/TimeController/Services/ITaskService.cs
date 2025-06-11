@@ -26,6 +26,13 @@ namespace TimeController.Services
 
         Task DeleteTaskAsync(TaskModel task);
 
+        // 获取所有课程任务（不限日期范围）
+        Task<List<TaskModel>> GetAllCourseTasksAsync();
+
+        //根据日期范围获取课程任务
+        Task<List<TaskModel>> GetCourseTasksForWeekAsync(DateTime referenceDate);
+
+
 
     }
 }

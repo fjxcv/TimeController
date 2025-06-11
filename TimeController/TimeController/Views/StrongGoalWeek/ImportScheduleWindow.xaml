@@ -4,16 +4,95 @@
         xmlns:ui="http://schemas.inkore.net/lib/ui/wpf/modern" 
         ui:WindowHelper.UseModernWindowStyle="True"
         ui:WindowHelper.SystemBackdropType="Mica"
-        Title="导入课表" Height="200" Width="350" WindowStartupLocation="CenterOwner">
-    <StackPanel Margin="20">
+        Title="导入课表" Height="350" Width="380" WindowStartupLocation="CenterOwner">
 
-        <!-- 导入面板 -->
-        <StackPanel x:Name="ImportPanel">
-            <TextBlock Text="请选择导入方式" Margin="0,20,0,30" HorizontalAlignment="Center"  FontSize="16"/>
-            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                <Button Content="教务导入" Command="{Binding ImportFromUrlCommand}" Width="100" Margin="0,0,10,0"/>
-                <Button Content="文件导入" Command="{Binding ImportFromFileCommand}" Width="100"/>
-            </StackPanel>
+    <Grid Margin="20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- 标题 -->
+        <TextBlock Grid.Row="0" Text="选择导入课表的方式" 
+                   FontSize="18" FontWeight="SemiBold" 
+                   Margin="0,0,0,10" HorizontalAlignment="Center"/>
+
+        <!-- 日期选择 -->
+        <Grid Grid.Row="1" Margin="0,0,0,15">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+
+            <TextBlock Grid.Column="0" Text="开学日期:" 
+                       VerticalAlignment="Center" 
+                       FontWeight="SemiBold" Margin="0,0,10,0"/>
+
+            <DatePicker Grid.Column="1" Name="StartDatePicker" 
+                        SelectedDate="{Binding SemesterStartDate}" 
+                        FirstDayOfWeek="Monday"/>
+        </Grid>
+
+        <!-- 导入选项 -->
+        <StackPanel Grid.Row="2" VerticalAlignment="Center" >
+            <!-- 文件导入 -->
+            <Button Command="{Binding ImportFromFileCommand}" 
+                    HorizontalAlignment="Stretch" Height="40" Margin="0,5,0,5">
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock Text="📁" FontSize="16" Margin="0,0,10,0"/>
+                    <TextBlock Text="从Excel或CSV文件导入" VerticalAlignment="Center"/>
+                </StackPanel>
+            </Button>
+
+            <!-- 在线导入 -->
+            <Button Command="{Binding ImportFromUrlCommand}" 
+                    HorizontalAlignment="Stretch" Height="40" Margin="0,5,0,5">
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock Text="🌐" FontSize="16" Margin="0,0,10,0"/>
+                    <TextBlock Text="从教务系统链接导入" VerticalAlignment="Center"/>
+                </StackPanel>
+            </Button>
+
+            <!-- 下载模板 -->
+            <Button Command="{Binding DownloadTemplateCommand}" 
+                    HorizontalAlignment="Stretch" Height="40" Margin="0,5,0,5">
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock Text="⬇️" FontSize="16" Margin="0,0,10,0"/>
+                    <TextBlock Text="下载导入模板" VerticalAlignment="Center"/>
+                </StackPanel>
+            </Button>
         </StackPanel>
-    </StackPanel>
+
+        <!-- 状态栏 -->
+        <Grid Grid.Row="3" Margin="0,15,0,0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+
+            <TextBlock Text="{Binding ImportStatus}" 
+                       VerticalAlignment="Center" 
+                       Foreground="{DynamicResource SystemAccentBrush}"/>
+
+            <Button Grid.Column="1" Content="帮助" 
+                    Command="{Binding OpenHelpCommand}" 
+                    Padding="12,4"/>
+        </Grid>
+
+        <!-- 导入中遮罩 -->
+        <Grid Grid.RowSpan="4" 
+              Background="#80000000" 
+              Visibility="{Binding IsImporting, Converter={StaticResource BoolToVisibility}}">
+            <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
+                <ui:ProgressRing IsActive="True" 
+                                Width="40" Height="40" 
+                                Margin="0,0,0,10"/>
+                <TextBlock Text="正在导入，请稍候..." 
+                           Foreground="White" 
+                           HorizontalAlignment="Center"/>
+            </StackPanel>
+        </Grid>
+    </Grid>
 </Window>

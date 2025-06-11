@@ -1,102 +1,4 @@
-﻿/* using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using TimeController.Models;
-using System.Collections.Generic;
-using System.IO;
-using System.Formats.Asn1;
-using System.Globalization;
-using OfficeOpenXml;
-using CsvHelper;
-using System.Net.Http;
-using Newtonsoft.Json;
-using NPOI.SS.UserModel;
-using NPOI.HSSF.UserModel; // 用于 .xls
-using NPOI.XSSF.UserModel; // 用于 .xlsx
-
-namespace TimeController.Services
-{
-    public static class ScheduleParser
-    {
-
-        public static List<Course> ParseExcel(string filePath)
-        {
-            var courses = new List<Course>();
-            IWorkbook workbook;
-
-            // 根据扩展名选择解析引擎
-            using (var stream = new FileStream(filePath, FileMode.Open, FileAccess.Read))
-            {
-                if (Path.GetExtension(filePath).ToLower() == ".xls")
-                {
-                    workbook = new HSSFWorkbook(stream); // 旧版 Excel
-                }
-                else
-                {
-                    workbook = new XSSFWorkbook(stream); // 新版 Excel
-                }
-            }
-
-            ISheet sheet = workbook.GetSheetAt(0);
-            for (int row = 1; row <= sheet.LastRowNum; row++)
-            {
-                IRow currentRow = sheet.GetRow(row);
-                if (currentRow == null) continue;
-
-                var course = new Course
-                {
-                    Name = currentRow.GetCell(0)?.ToString() ?? "",
-                    DayOfWeek = currentRow.GetCell(1)?.ToString() ?? "",
-                    StartTime = TimeSpan.Parse(currentRow.GetCell(2)?.ToString()),
-                    EndTime = TimeSpan.Parse(currentRow.GetCell(3)?.ToString()),
-                    Location = currentRow.GetCell(4)?.ToString() ?? "",
-                    Teacher = currentRow.GetCell(5)?.ToString() ?? ""
-                };
-                courses.Add(course);
-            }
-
-            return courses;
-        }
-
-        public static List<Course> ParseCsv(string filePath)
-        {
-            try
-            {
-                using (var reader = new StreamReader(filePath))
-                using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
-                {
-                    return csv.GetRecords<Course>().ToList(); // 直接返回解析结果
-                }
-            }
-            catch (Exception ex)
-            {
-                throw new InvalidOperationException("CSV 解析失败", ex);
-            }
-        }
-
-        public static List<Course> ParseFromUrl(string url)
-        {
-            try
-            {
-                using (var httpClient = new HttpClient())
-                {
-                    var response = httpClient.GetAsync(url).Result;
-                    response.EnsureSuccessStatusCode();
-                    string content = response.Content.ReadAsStringAsync().Result;
-                    return JsonConvert.DeserializeObject<List<Course>>(content);
-                }
-            }
-            catch (Exception ex)
-            {
-                throw new InvalidOperationException("URL 解析失败", ex);
-            }
-        }
-    }
-}
-*/
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Globalization;
@@ -108,6 +10,8 @@ using NPOI.SS.UserModel;
 using NPOI.HSSF.UserModel; // .xls
 using NPOI.XSSF.UserModel; // .xlsx
 using TimeController.Models;
+using NPOI.POIFS.FileSystem;
+using System.Net.Sockets;
 
 namespace TimeController.Services
 {
@@ -120,16 +24,45 @@ namespace TimeController.Services
 
             try
             {
+                var ext = Path.GetExtension(filePath).ToLower();
+
+                // 尝试先读取前几个字节判断文件格式
+                byte[] header = new byte[8];
+                using (var fs = new FileStream(filePath, FileMode.Open, FileAccess.Read))
+                {
+                    fs.Read(header, 0, Math.Min(8, (int)fs.Length));
+                }
+
+                // 检查文件是否可能是 XML 格式（常见 HTML 或 XML 文件头）
+                string headerStr = System.Text.Encoding.ASCII.GetString(header);
+                if (headerStr.StartsWith("<?xml") || headerStr.StartsWith("<!DOCTY") || headerStr.StartsWith("<html>"))
+                {
+                    throw new InvalidOperationException("文件似乎是XML或HTML格式，无法作为Excel文件打开");
+                }
+
                 using (var stream = new FileStream(filePath, FileMode.Open, FileAccess.Read))
                 {
-                    var ext = Path.GetExtension(filePath).ToLower();
                     if (ext == ".xls")
                     {
-                        workbook = new HSSFWorkbook(stream);
+                        try
+                        {
+                            workbook = new HSSFWorkbook(stream);
+                        }
+                        catch (NotOLE2FileException)
+                        {
+                            throw new InvalidOperationException("此文件不是有效的 Excel .xls 格式，请确认文件格式正确");
+                        }
                     }
                     else if (ext == ".xlsx")
                     {
-                        workbook = new XSSFWorkbook(stream);
+                        try
+                        {
+                            workbook = new XSSFWorkbook(stream);
+                        }
+                        catch
+                        {
+                            throw new InvalidOperationException("此文件不是有效的 Excel .xlsx 格式，请确认文件格式正确");
+                        }
                     }
                     else
                     {
@@ -139,7 +72,7 @@ namespace TimeController.Services
             }
             catch (Exception ex)
             {
-                throw new InvalidOperationException("Excel 文件打开失败", ex);
+                throw new InvalidOperationException($"Excel 文件打开失败: {ex.Message}", ex);
             }
 
             ISheet sheet = workbook.GetSheetAt(0);
@@ -160,10 +93,13 @@ namespace TimeController.Services
                         Teacher = currentRow.GetCell(5)?.ToString() ?? ""
                     };
                     courses.Add(course);
+                    Console.WriteLine($"成功解析课程: {course.Name}, 星期{course.DayOfWeek}, {course.StartTime}-{course.EndTime}");
                 }
-                catch
+                catch(Exception ex)
                 {
-                    // 这里可以选择记录日志或者忽略格式错误的行
+                    // 记录具体错误信息
+                    Console.WriteLine($"解析第 {row} 行失败: {ex.Message}");
+                    // 可以考虑向用户提供更友好的错误信息
                 }
             }
 
@@ -189,16 +125,71 @@ namespace TimeController.Services
             try
             {
                 using var httpClient = new HttpClient();
+                // 设置超时和更友好的请求头
+                httpClient.Timeout = TimeSpan.FromSeconds(15);
+                httpClient.DefaultRequestHeaders.Add("User-Agent", "TimeController/1.0");
+
+                // 添加更详细的诊断信息
+                Console.WriteLine($"正在请求URL: {url}");
+
                 var response = httpClient.GetAsync(url).Result;
                 response.EnsureSuccessStatusCode();
                 string content = response.Content.ReadAsStringAsync().Result;
-                return JsonConvert.DeserializeObject<List<Course>>(content);
+
+                if (string.IsNullOrWhiteSpace(content))
+                {
+                    throw new InvalidOperationException("服务器返回了空内容");
+                }
+
+                Console.WriteLine($"获取到响应内容，长度: {content.Length}");
+
+                return JsonConvert.DeserializeObject<List<Course>>(content)
+                    ?? throw new InvalidOperationException("无法将JSON反序列化为课程列表");
+            }
+            catch (HttpRequestException ex)
+            {
+                throw new InvalidOperationException($"HTTP请求失败: {ex.Message}", ex);
+            }
+            catch (TaskCanceledException ex)
+            {
+                throw new InvalidOperationException("请求超时，请检查网络连接或URL是否正确", ex);
+            }
+            catch (JsonException ex)
+            {
+                throw new InvalidOperationException("返回内容不是有效的JSON格式", ex);
+            }
+            catch (SocketException ex)
+            {
+                throw new InvalidOperationException($"网络连接错误: {ex.Message}", ex);
+            }
+            catch (Exception ex)
+            {
+                throw new InvalidOperationException($"URL 解析失败: {ex.GetType().Name}: {ex.Message}", ex);
+            }
+        }
+
+        public static async Task<List<Course>> ParseFromUrlAsync(string url)
+        {
+            try
+            {
+                using var httpClient = new HttpClient();
+                httpClient.Timeout = TimeSpan.FromSeconds(15);
+                httpClient.DefaultRequestHeaders.Add("User-Agent", "TimeController/1.0");
+
+                var response = await httpClient.GetAsync(url);
+                response.EnsureSuccessStatusCode();
+                string content = await response.Content.ReadAsStringAsync();
+
+                return JsonConvert.DeserializeObject<List<Course>>(content)
+                    ?? new List<Course>();
             }
             catch (Exception ex)
             {
                 throw new InvalidOperationException("URL 解析失败", ex);
             }
         }
+
+
     }
 }
 
