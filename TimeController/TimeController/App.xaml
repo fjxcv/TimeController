@@ -14,12 +14,18 @@
 
             <converters:DateTasksMultiConverter x:Key="DateTasksMultiConverter"/>
             <converters:BoolToHiddenConverter x:Key="BoolToHiddenConverter" />
-            <converters:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter"/>
             <converters:BooleanToAngleConverter x:Key="BooleanToAngleConverter" />
             <converters:BoolToVisibilityConverter x:Key="BoolToVisibility" />
-
-            <!-- 在这里添加你的 ColumnToVisibilityConverter -->
+            <converters:ItemIndexConverter x:Key="IndexConverter"/>
+            <converters:BoolToStringConverter x:Key="BoolToStringConverter"/>
             <converters:ColumnToVisibilityConverter x:Key="ColumnToVisibilityConverter"/>
+            <converters:BoolToColorConverter x:Key="BoolToColorConverter"/>
+            <converters:StringToVisibilityConverter x:Key="StringToVisibilityConverter"/>
+            <converters:NoteToTeacherConverter x:Key="NoteToTeacherConverter"/>
+            <converters:NoteToLocationConverter x:Key="NoteToLocationConverter"/>
+            <converters:ExpandedToSymbolConverter x:Key="ExpandedToSymbolConverter"/>
+            <converters:TimeSpanToStringConverter x:Key="TimeSpanToStringConverter"/>
+
         </ResourceDictionary>
     </Application.Resources>
 </Application>

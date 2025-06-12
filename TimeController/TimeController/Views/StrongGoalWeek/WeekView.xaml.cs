@@ -34,13 +34,39 @@ namespace TimeController.Views.StrongGoalWeek
         public WeekView()
         {
             InitializeComponent();
+            try
+            {
+                // 从服务容器获取 TaskService
+                _viewModel = App.Services.GetRequiredService<WeekViewModel>();
 
-            _viewModel = new WeekViewModel();
-            DataContext = _viewModel;
+                // 使用有参构造函数创建 ViewModel
+                //_viewModel = new WeekViewModel(taskService);
 
-            // 初次加载时更新页面日期块
-            UpdateDateDisplay(_viewModel.CurrentDate);
+                DataContext = _viewModel;
 
+                // 初始化视图模型和事件处理
+                InitializeViewModel();
+                InitializeEvents();
+
+                // 初次加载时更新页面日期块
+                UpdateDateDisplay(_viewModel.CurrentDate);
+
+                // 强制初始加载
+                _viewModel.LoadTasksForCurrentWeek();
+
+            }
+            catch(Exception ex)
+            {
+                MessageBox.Show($"初始化错误：{ex.Message}\n\n应用程序可能无法正常工作。",
+                       "初始化错误", MessageBoxButton.OK, MessageBoxImage.Error);
+                Console.WriteLine($"初始化错误：{ex.Message}\n{ex.StackTrace}");
+
+            }
+
+        }
+
+        private void InitializeEvents()
+        {
             // 当 CurrentDate 改变时更新日期块
             _viewModel.PropertyChanged += (_, e) =>
             {
@@ -51,13 +77,24 @@ namespace TimeController.Views.StrongGoalWeek
             };
 
             // 订阅冲突检测事件
-            if (DataContext is WeekViewModel viewModel)
-            {
-                viewModel.ConflictDetected += OnTaskConflictDetected;
-            }
-
+            _viewModel.ConflictDetected += OnTaskConflictDetected;
         }
 
+        // 初始化视图模型的事件处理
+        private void InitializeViewModel()
+        {
+            // 添加删除确认事件处理
+            _viewModel.DeleteConfirmationRequested += async (block) =>
+            {
+                var result = MessageBox.Show(
+                     $"确定要删除任务 \"{block.Name}\" 吗？",
+                     "确认删除",
+                    MessageBoxButton.YesNo,
+                    MessageBoxImage.Warning);
+
+                return result == MessageBoxResult.Yes;
+            };
+        }
 
         // 处理任务冲突
         private async void OnTaskConflictDetected(TaskModel newTask, List<WeekViewModel.TaskBlock> conflicts)
@@ -80,19 +117,92 @@ namespace TimeController.Views.StrongGoalWeek
             }
         }
 
+        //导入改1
         private void ImportSchedule_Click(object sender, RoutedEventArgs e)
         {
             var importWindow = new ImportScheduleWindow
             {
                 Owner = Window.GetWindow(this)
             };
+
+            // 保存导入窗口的视图模型引用
+            var importVM = importWindow.DataContext as ImportScheduleViewModel;
+
+            if (importVM != null)
+            {
+                // 订阅开学日期事件
+
+                importVM.CoursesSavedWithStartDate += (startDate) =>
+                {
+                    Console.WriteLine($"收到课程保存事件，开学日期: {startDate:yyyy-MM-dd}");
+                    // 设置学期开始日期但不改变当前日期
+                    _viewModel.SemesterStartDate = startDate;
+                };
+            }
+            // 添加关闭事件
+            importWindow.Closed += (s, args) =>
+            {
+                Console.WriteLine("导入窗口已关闭，重新加载周视图数据");
+                if (importVM != null && importVM.HasImportedCourses)
+                {
+                    // 获取所选的开学日期，并跳转到那一周
+                    //_viewModel.CurrentDate = importVM.SemesterStartDate;
+                    _viewModel.LoadTasksForCurrentWeek();
+                }
+            };
+
             importWindow.ShowDialog();
         }
 
+        //手动添加课表
+        private async void AddCourse_Click(object sender, RoutedEventArgs e)
+        {
+            // 获取当前周视图的开学日期，如果未设置则使用当天日期
+            DateTime semesterStartDate = _viewModel.SemesterStartDate ?? DateTime.Today;
 
+            // 正确创建添加课程窗口，提供必要的参数
+            var addCourseWindow = new AddCourseWindow(semesterStartDate)
+            {
+                Owner = Window.GetWindow(this)
+            };
+
+            // 显示窗口并处理结果
+            if (addCourseWindow.ShowDialog() == true && addCourseWindow.ResultCourse != null)
+            {
+                // 获取添加的课程
+                var newCourse = addCourseWindow.ResultCourse;
+
+                try
+                {
+                    // 需要在 WeekViewModel 中先添加 AddAndSaveCourse 方法
+                    // 如果尚未实现该方法，将在下面提供实现
+                    await _viewModel.AddAndSaveCourse(newCourse);
+
+                    // 显示成功消息
+                    //MessageBox.Show($"成功添加课程：{newCourse.Name}", "添加成功", MessageBoxButton.OK, MessageBoxImage.Information);
+                }
+                catch (Exception ex)
+                {
+                    //MessageBox.Show($"添加课程失败：{ex.Message}", "错误", MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+            }
+        }
+
+        // 供 DateColumnControl 调用的方法
+        public void OnTaskBlockClicked(object sender, MouseButtonEventArgs e)
+        {
+            TaskBlock_MouseLeftButtonDown(sender, e);
+        }
+
+        public void OnDeleteAllDayButtonClicked(object sender, RoutedEventArgs e)
+        {
+            DeleteAllDayButton_Click(sender, e);
+        }
+
+        // 供 WeekContentGrid 调用的方法
+        // 修改WeekContentGrid_MouseDown方法，调整点击位置计算
         private async void WeekContentGrid_MouseDown(object sender, MouseButtonEventArgs e)
         {
-
             // 如果点击的是任务块（Border 或其子元素），则不显示加号
             var originalSource = e.OriginalSource as DependencyObject;
             while (originalSource != null)
@@ -104,12 +214,10 @@ namespace TimeController.Views.StrongGoalWeek
                 }
                 originalSource = VisualTreeHelper.GetParent(originalSource);
             }
+
             double timeAxisWidth = 75; // 时间轴宽度
-            double dateHeaderHeight = 100; // 日期栏高度
 
             Point pos = e.GetPosition(WeekContentGrid);
-
-            if (pos.Y < dateHeaderHeight) return;
 
             double contentX = pos.X - timeAxisWidth;
             if (contentX < 0) return;
@@ -117,7 +225,7 @@ namespace TimeController.Views.StrongGoalWeek
             double colWidth = (WeekContentGrid.ActualWidth - timeAxisWidth) / 7;
             int colIndex = (int)(contentX / colWidth);
 
-            // 1. 获取当前周的周一
+            // 获取当前周的周一
             var vm = DataContext as WeekViewModel;
             var currentDate = vm?.CurrentDate ?? DateTime.Today;
 
@@ -127,8 +235,8 @@ namespace TimeController.Views.StrongGoalWeek
                 monday = monday.AddDays(-1);
             }
 
-            // 2. 推算当前点击的是哪一天
-            DateTime clickedDate = monday.AddDays(colIndex); // 保存到字段中以便打开任务窗口时使用
+            // 推算当前点击的是哪一天
+            DateTime clickedDate = monday.AddDays(colIndex);
 
             //如果再次点击已选中的列，取消
             if (_clickedDate.HasValue && _clickedDate.Value.Date == clickedDate.Date)
@@ -137,12 +245,13 @@ namespace TimeController.Views.StrongGoalWeek
                 return;
             }
 
-
             _clickedDate = clickedDate;
             HighlightColumn(colIndex);
 
-            // 3. 把加号移动到点击点附近
-            Point canvasPoint = WeekContentGrid.TranslatePoint(pos, RootCanvas);
+            // 在按钮宽高方面调整点击位置
+            Point screenPoint = WeekContentGrid.PointToScreen(pos);
+            Point canvasPoint = RootCanvas.PointFromScreen(screenPoint);
+
             Canvas.SetLeft(AddTaskButton, canvasPoint.X - AddTaskButton.Width / 2);
             Canvas.SetTop(AddTaskButton, canvasPoint.Y - AddTaskButton.Height / 2);
 
@@ -161,22 +270,26 @@ namespace TimeController.Views.StrongGoalWeek
                 IsOpen = true
             };
 
-
             // 设置 ToolTip 到按钮
             AddTaskButton.ToolTip = toolTip;
 
             //自动关闭提示
             await Task.Delay(1000);
             toolTip.IsOpen = false;
-
-
         }
+
 
         //左击任务块显示详细信息
         private void TaskBlock_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
-            if (sender is Border border && border.DataContext is TimeController.ViewModels.WeekViewModel.TaskBlock task)
+            try // 添加异常处理
             {
+                // 确保sender是Border
+                if (!(sender is Border border)) return;
+
+                // 确保DataContext是TaskBlock
+                if (!(border.DataContext is TimeController.ViewModels.WeekViewModel.TaskBlock task)) return;
+
                 // 关闭已有的Popup
                 if (_taskDetailPopup != null)
                 {
@@ -186,7 +299,19 @@ namespace TimeController.Views.StrongGoalWeek
 
                 // 获取当前周的周一日期
                 var vm = DataContext as WeekViewModel;
-                var currentDate = vm?.CurrentDate ?? DateTime.Today;
+                if (vm == null) return;
+
+                // 检查是否为课程任务 - 简化判断逻辑
+                bool isCourse = vm.CourseTaskBlocks.Contains(task);
+
+                // 如果是课程，不显示任何信息
+                if (isCourse)
+                {
+                    e.Handled = true; // 标记事件已处理
+                    return; // 直接返回，不显示任何弹出信息
+                }
+
+                var currentDate = vm.CurrentDate;
                 DateTime monday = currentDate.Date;
                 while (monday.DayOfWeek != DayOfWeek.Monday)
                 {
@@ -196,17 +321,17 @@ namespace TimeController.Views.StrongGoalWeek
                 // 根据任务的列索引计算对应的日期
                 DateTime taskDate = monday.AddDays(task.Column);
 
-                // 构建详细信息
-                string detail = $"任务备注：{task.Note}\n任务类型：{task.Type}\n";
+                // 构建详细信息（仅针对非课程任务）
+                string detail = $"备注：{task.Note ?? ""}\n类型：{task.Type}\n";
                 if (task.IsAllDay)
                 {
                     // 全天任务显示日期
-                    detail += $"任务时间：{taskDate:yyyy年M月d日 (dddd)}";
+                    detail += $"时间：{taskDate:yyyy年M月d日 (dddd)}";
                 }
                 else if (task.StartTime != TimeSpan.Zero || task.EndTime != TimeSpan.Zero)
                 {
                     // 分时任务显示时间
-                    detail += $"任务时间：{task.StartTime:hh\\:mm} - {task.EndTime:hh\\:mm}";
+                    detail += $"时间：{task.StartTime:hh\\:mm} - {task.EndTime:hh\\:mm}";
                 }
 
                 // 创建Popup内容
@@ -237,9 +362,15 @@ namespace TimeController.Views.StrongGoalWeek
                     IsOpen = true
                 };
 
+                e.Handled = true; // 标记事件已处理
+            }
+            catch (Exception ex)
+            {
+                // 记录异常，但不中断应用程序
+                Console.WriteLine($"显示任务详情时发生异常: {ex.Message}");
+                MessageBox.Show($"显示任务详情时发生错误: {ex.Message}", "错误", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
-
 
         //取消选中的方法
         private void ClearSelection()
@@ -280,8 +411,7 @@ namespace TimeController.Views.StrongGoalWeek
 
         }
 
-
-        private void AddTaskButton_Click(object sender, RoutedEventArgs e)
+        private async void AddTaskButton_Click(object sender, RoutedEventArgs e)
         {
             var dialog = new AddTaskDialog(_clickedDate);
 
@@ -298,13 +428,36 @@ namespace TimeController.Views.StrongGoalWeek
 
                 System.Diagnostics.Debug.WriteLine($"新任务日期: {task.PlannedDate}");
 
-                // 直接添加任务，让ViewModel内部处理冲突
-                _viewModel.AddTask(task);
+                try
+                {
+                    // 直接使用 TaskService 保存任务
+                    var taskService = App.Services.GetRequiredService<ITaskService>();
+                    await taskService.UpdateTaskAsync(task);
+
+                    // 任务已保存到数据库，现在添加到视图模型
+                    _viewModel.AddTask(task, true); // 使用 forceAdd 参数，避免重复保存到数据库
+
+                    // 添加消息提示任务已保存
+                    MessageBox.Show($"任务「{task.Name}」已成功保存！", "提示", MessageBoxButton.OK, MessageBoxImage.Information);
+
+                    // 添加强制刷新
+                    if (dialog.ResultTask.IsAllDay)
+                    {
+                        // 强制更新 UI
+                        WeekContentGrid.UpdateLayout();
+                    }
+                }
+                catch (Exception ex)
+                {
+                    // 显示错误信息
+                    MessageBox.Show($"保存任务失败: {ex.Message}", "错误", MessageBoxButton.OK, MessageBoxImage.Error);
+                }
             }
 
             AddTaskButton.Visibility = Visibility.Collapsed;
             ClearSelection();
         }
+
 
 
         //任务删除（鼠标悬停
@@ -321,7 +474,7 @@ namespace TimeController.Views.StrongGoalWeek
             }
         }
 
-        ////任务删除（鼠标离开
+        //任务删除（鼠标离开
         private void Grid_MouseLeave(object sender, MouseEventArgs e)
         {
             if (sender is Grid grid)
@@ -334,6 +487,44 @@ namespace TimeController.Views.StrongGoalWeek
                     complete.Visibility = Visibility.Collapsed;
             }
         }
+
+        // 全天任务鼠标进入事件
+        private void AllDayGrid_MouseEnter(object sender, MouseEventArgs e)
+        {
+            if (sender is Grid grid)
+            {
+                var button = FindVisualChild<Button>(grid, b => b.Name == "DeleteButton");
+                if (button != null)
+                    button.Visibility = Visibility.Visible;
+            }
+        }
+
+        // 全天任务鼠标离开事件
+        private void AllDayGrid_MouseLeave(object sender, MouseEventArgs e)
+        {
+            if (sender is Grid grid)
+            {
+                var button = FindVisualChild<Button>(grid, b => b.Name == "DeleteButton");
+                if (button != null)
+                    button.Visibility = Visibility.Collapsed;
+            }
+        }
+
+        private void DeleteAllDayButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (sender is Button btn && btn.Tag is WeekViewModel.TaskBlock task)
+            {
+                var vm = DataContext as WeekViewModel;
+                if (vm?.RemoveTaskBlockCommand.CanExecute(task) == true)
+                {
+                    vm.RemoveTaskBlockCommand.Execute(task);
+                }
+            }
+            e.Handled = true;
+        }
+
+
+
 
         //查找子元素
         private T FindVisualChild<T>(DependencyObject parent, Func<T, bool> condition) where T : DependencyObject

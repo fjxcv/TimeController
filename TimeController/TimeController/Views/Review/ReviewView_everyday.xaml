@@ -17,6 +17,8 @@
         <local:AbandonEnabledConverter x:Key="AbandonEnabledConverter"/>
         <local:BoolToTimeTextConverter x:Key="BoolToTimeTextConverter"/>
         <local:CountToVisibilityConverter x:Key="CountToVisibilityConverter"/>
+        <local:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter"/>
+
 
         <!-- 卡片样式 -->
         <Style x:Key="ReviewCardStyle" TargetType="Border">

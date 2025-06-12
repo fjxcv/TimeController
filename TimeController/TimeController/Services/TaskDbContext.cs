@@ -36,6 +36,8 @@ namespace TimeController.Services
                 .Property(t => t.Type)
                 .HasConversion<string>();
 
+   
+
             base.OnModelCreating(modelBuilder);
         }
     }
