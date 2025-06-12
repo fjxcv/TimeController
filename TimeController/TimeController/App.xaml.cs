@@ -47,6 +47,7 @@ namespace TimeController
                     // Services
                     services.AddScoped<ITaskService, TaskService>();
                     services.AddSingleton<INavigationService, NavigationService>();
+                    services.AddScoped<IRewardService, RewardService>();
 
                     // ViewModels
                     services.AddTransient<WeekViewModel>();
@@ -75,7 +76,7 @@ namespace TimeController
 
             // 重置开发数据（仅示例，生产环境可移除）
             var taskService = AppHost.Services.GetRequiredService<ITaskService>();
-            _ = ((TaskService)taskService).ResetTaskDataAsync();
+            //_ = ((TaskService)taskService).ResetTaskDataAsync();
 
             // 打开主窗口
             var mainWindow = AppHost.Services.GetRequiredService<MainWindow>();

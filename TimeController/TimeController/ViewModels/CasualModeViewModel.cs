@@ -12,12 +12,15 @@ using System.Xml.Linq;
 using TimeController.Models;
 using TimeController.Services;
 using System.Threading.Tasks;
+using System.Text;
 
 namespace TimeController.ViewModels
 {
     public class CasualModeViewModel : INotifyPropertyChanged
     {
         private readonly ITaskService _taskService;
+        private readonly IRewardService _rewardService;
+
 
         // 记录上次重置时的年和周（默认 0，表示还没重置过）
         private int _lastResetYear = 0;
@@ -101,13 +104,17 @@ namespace TimeController.ViewModels
         // 结束编辑任务的Command
         public ICommand EndEditTaskCommand { get; }
 
-        public CasualModeViewModel() : this(App.Services.GetRequiredService<ITaskService>())
+        public CasualModeViewModel() : this(
+            App.Services.GetRequiredService<ITaskService>(),
+            App.Services.GetRequiredService<IRewardService>())
         {
         }
 
-        public CasualModeViewModel(ITaskService taskService)
+        public CasualModeViewModel(ITaskService taskService, IRewardService rewardService)
         {
             _taskService = taskService;
+            _rewardService = rewardService;
+
             // 初始化模块
             Modules.Add(new ModuleViewModel { Name = "自我滋养", MaxTasks = 5 });
             Modules.Add(new ModuleViewModel { Name = "创造表达", MaxTasks = 5 });
@@ -118,6 +125,7 @@ namespace TimeController.ViewModels
 
             // 从数据库加载任务
             _ = LoadTasksFromDatabaseAsync();
+            _ = LoadRewardsAsync();
 
             // 普通任务命令
             ToggleTaskCommand = new RelayCommand<TaskModel>(ToggleTask);
@@ -228,7 +236,7 @@ namespace TimeController.ViewModels
             //奖励弹窗相关
 
             // 删除奖励任务命令
-            DeleteRewardTaskCommand = new RelayCommand<TaskModel>(DeleteRewardTask);
+            DeleteRewardTaskCommand = new RelayCommand<RewardModel>(DeleteRewardTask);
             // 奖励弹窗命令
             ToggleRewardPopupCommand = new RelayCommand<object>(_ =>
             {
@@ -392,8 +400,8 @@ namespace TimeController.ViewModels
         }
 
         // —— 奖励任务列表 —— 
-        private ObservableCollection<TaskModel> _rewardTasks = new();
-        public ObservableCollection<TaskModel> RewardTasks
+        private ObservableCollection<RewardModel> _rewardTasks = new();
+        public ObservableCollection<RewardModel> RewardTasks
         {
             get => _rewardTasks;
             set
@@ -416,6 +424,34 @@ namespace TimeController.ViewModels
                 {
                     _newRewardTaskText = value;
                     OnPropertyChanged(nameof(NewRewardTaskText));
+                }
+            }
+        }
+
+        private string _weeklyReviewText = string.Empty;
+        public string WeeklyReviewText
+        {
+            get => _weeklyReviewText;
+            set
+            {
+                if (_weeklyReviewText != value)
+                {
+                    _weeklyReviewText = value;
+                    OnPropertyChanged(nameof(WeeklyReviewText));
+                }
+            }
+        }
+
+        private string _rewardHint = string.Empty;
+        public string RewardHint
+        {
+            get => _rewardHint;
+            set
+            {
+                if (_rewardHint != value)
+                {
+                    _rewardHint = value;
+                    OnPropertyChanged(nameof(RewardHint));
                 }
             }
         }
@@ -468,18 +504,23 @@ namespace TimeController.ViewModels
                 UpdateProgress(); // 直接触发更新
             }
         }
-       
+
         // 删除奖励任务
-        public void DeleteRewardTask(TaskModel task) =>
+        public void DeleteRewardTask(RewardModel task)
+        {
+            _ = _rewardService.DeleteRewardAsync(task);
             RewardTasks.Remove(task);
+        }
 
         // 添加奖励任务
         public void AddRewardTask(string taskName)
         {
             if (!string.IsNullOrWhiteSpace(taskName))
             {
-                RewardTasks.Add(new TaskModel { Name = taskName });
+                var reward = new RewardModel { Title = taskName };
+                RewardTasks.Add(reward);
                 NewRewardTaskText = string.Empty;
+                _ = _rewardService.AddRewardAsync(reward);
             }
         }
 
@@ -526,6 +567,9 @@ namespace TimeController.ViewModels
 
             // 2. 统计前四个模块里当前已完成任务的总数
             int totalCompleted = Modules.Take(4).Sum(m => m.Tasks.Count(t => t.IsCompleted));
+            RewardHint = totalCompleted >= RewardThreshold
+                ? "🎉 去领取本周奖励吧！"
+                : "再接再厉，冲刺你的奖励进度吧！";
 
             // 3. 如果之前已经发过奖励，但现在“完成数”被撤销导致少于阈值，就把 HasRewarded 置回 false
             if (HasRewarded && totalCompleted < RewardThreshold)
@@ -556,6 +600,8 @@ namespace TimeController.ViewModels
                 }
                 OnPropertyChanged(nameof(Progress));
             }
+
+            UpdateWeeklyReviewText();
         }
 
         private async Task LoadTasksFromDatabaseAsync()
@@ -571,6 +617,70 @@ namespace TimeController.ViewModels
             }
 
             UpdateProgress();
+        }
+
+        private async Task LoadRewardsAsync()
+        {
+            var rewards = await _rewardService.GetRewardsAsync();
+            foreach (var r in rewards)
+                RewardTasks.Add(r);
+        }
+
+        private void UpdateWeeklyReviewText()
+        {
+            // 1. 计算本周完成总数
+            int total = Modules.Take(4).Sum(m => m.Tasks.Count(t => t.IsCompleted));
+
+            // 2. 找到最勤奋的模块
+            var modules4 = Modules.Take(4).ToList();
+            string top = modules4
+                .OrderByDescending(m => m.Tasks.Count(t => t.IsCompleted))
+                .FirstOrDefault()?.Name
+                ?? string.Empty;
+
+            // 3. 找到本周未开启的模块列表（只取第一个演示）
+            var zero = modules4
+                .Where(m => m.Tasks.Count(t => t.IsCompleted) == 0)
+                .Select(m => m.Name)
+                .ToList();
+
+            // 4. 四个模块各自对应的“勤奋”文案
+            var topPhrases = new Dictionary<string, string>
+            {
+                ["自我滋养"] = "坚持了好习惯，身心都在成长！",
+                ["创造表达"] = "创意爆发，让世界听到你的声音！",
+                ["生活杂物"] = "家务达人上线，生活井井有条！",
+                ["人际连接"] = "社交达人，友谊更紧密~"
+            };
+
+            // 5. 四个模块各自对应的“未开启”鼓励文案
+            var zeroPhrases = new Dictionary<string, string>
+            {
+                ["自我滋养"] = "记得给自己留点休息时间哦～",
+                ["创造表达"] = "多动动笔，多激发灵感吧！",
+                ["生活杂物"] = "整理能让心情更舒畅，试试吧！",
+                ["人际连接"] = "和朋友聊聊天，也是一种充电方式~"
+            };
+
+            // 6. 拼第一个部分：完成数 + 最勤奋
+            var sb = new StringBuilder();
+            sb.Append($"本周你完成了{total}个任务，");
+            if (topPhrases.TryGetValue(top, out var topText))
+                sb.Append($"其中【{top}】最勤奋——{topText}  ");
+            else
+                sb.Append($"其中【{top}】最勤奋~  ");
+
+            // 7. 拼第二个部分：未开启
+            if (zero.Any() && zeroPhrases.TryGetValue(zero[0], out var zeroText))
+            {
+                sb.Append($"【{zero[0]}】区本周未开启——{zeroText}  ");
+            }
+
+            // 8. 奖励提示
+            sb.Append("去领取本周奖励吧！");
+
+            WeeklyReviewText = sb.ToString();
+            OnPropertyChanged(nameof(WeeklyReviewText));
         }
 
 
