@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows;
 using System.ComponentModel;
 using System.Collections.ObjectModel;
 using System.Windows.Input;
@@ -45,16 +46,14 @@ namespace TimeController.ViewModels
             get => _selectedDate;
             set
             {
-                if (_selectedDate != value)
-                {
-                    _selectedDate = value;
-                    OnPropertyChanged(nameof(SelectedDate));
-                    LoadTasksForDate(value ?? DateTime.Today);
-                }
+                _selectedDate = value;
+                OnPropertyChanged(nameof(SelectedDate));
+                LoadTasksForDate(value ?? DateTime.Today); //无条件刷新
             }
         }
 
-        
+
+
         public ObservableCollection<TaskModel> CompletedTasks { get; set; }
         public ObservableCollection<TaskModel> UncompletedTasks { get; set; }
         public ObservableCollection<TaskModel> TodayPendingTasks
@@ -97,8 +96,9 @@ namespace TimeController.ViewModels
             IsEverydayPage = true;
             _taskService = taskService;
 
-            //调试用
-            _ = ResetDataForDevelopment();
+//#if DEBUG
+//            _ = ResetDataForDevelopment();
+//#endif
 
             CompletedTasks = new ObservableCollection<TaskModel>();
             UncompletedTasks = new ObservableCollection<TaskModel>();
@@ -112,11 +112,6 @@ namespace TimeController.ViewModels
             NavigateToEverydayCommand = new RelayCommand(_ => { }); // 当前页，不跳转
             NavigateToEveryweekCommand = new RelayCommand(_ => NavigateToEveryweekRequested?.Invoke());
 
-            PostponeTaskCommand = new RelayCommand<TaskModel>(PostponeTask);
-            AbandonTaskCommand = new RelayCommand<TaskModel>(AbandonTask);
-            BatchProcessCommand = new RelayCommand<object>(BatchProcess);
-
-
             ReviewReasons = new ObservableCollection<string>
             {
                 "时间安排问题",
@@ -127,10 +122,20 @@ namespace TimeController.ViewModels
                 "不明确"
             };
 
+            // 订阅带参事件
+            App.TaskChanged += newTask =>
+            {
+                // 刷新：用新任务的 PlannedDate
+                var dateToLoad = newTask.PlannedDate.Date;
+                System.Windows.Application.Current.Dispatcher.Invoke(() =>
+                {
+                    Debug.WriteLine($"{dateToLoad:yyyy-MM-dd} 刷新复盘");
+                    LoadTasksForDate(dateToLoad);
+                });
+            };
 
+            // 初始化待办任务
             SelectedDate = DateTime.Today;
-
-            LoadTasksForDate(DateTime.Today);
 
         }
 
@@ -151,17 +156,11 @@ namespace TimeController.ViewModels
 
             //调试！！！！
             System.Diagnostics.Debug.WriteLine($"任务加载数: {tasks.Count}");
-            Debug.WriteLine($"[LoadTasksForDate] Loading tasks for date: {date:yyyy-MM-dd HH:mm:ss}");
-            try
+            Debug.WriteLine($"▶▶ LoadTasksForDate for {date:yyyy-MM-dd}, total fetched: {tasks.Count}");
+            foreach (var t in tasks)
             {
-                var taskss = await _taskService.GetTasksForDate(date);
-                Debug.WriteLine($"[LoadTasksForDate] 加载任务成功: {taskss.Count}");
+                Debug.WriteLine($"任务: {t.Name} 状态: {t.Status} 日期: {t.PlannedDate:yyyy-MM-dd}");
             }
-            catch (Exception ex)
-            {
-                Debug.WriteLine($"[LoadTasksForDate] 加载任务失败: {ex.Message}");
-            }
-
 
             // 分类任务
             foreach (var task in tasks)
@@ -181,7 +180,7 @@ namespace TimeController.ViewModels
             TodayPendingTasks = new ObservableCollection<TaskModel>(
                 tasks.Where(t =>
                     (t.Status == MyTaskStatus.Pending || t.Status == MyTaskStatus.Postponed) &&
-                    t.PlannedDate.Date == date));       //只要PlannedDate == date，就显示
+                    t.PlannedDate.Date == date.Date));       //只要PlannedDate == date，就显示
 
 
             // 获取所有 pending 任务
@@ -191,6 +190,7 @@ namespace TimeController.ViewModels
                 allPending.Where(t => t.Status == MyTaskStatus.Pending && t.PlannedDate.Date < today));
 
             OnPropertyChanged(nameof(PendingTasksCount));
+
         }
 
         private void ShowAbandonReasonMenu(Button button)
@@ -222,10 +222,11 @@ namespace TimeController.ViewModels
             var (task, reason) = param;
             task.Reason = reason;
             task.Status = MyTaskStatus.Abandoned;
+            task.MarkAbandoned(DateTime.Now);
 
             await _taskService.UpdateTaskAsync(task);
-
             LoadTasksForDate(SelectedDate ?? DateTime.Today);
+
         }
 
 
@@ -259,38 +260,37 @@ namespace TimeController.ViewModels
             task.Reason = reason;
 
             var dialog = new PostponeDateDialog();
-            bool? result = dialog.ShowDialog();
-
-            if (result == true && dialog.SelectedDate.HasValue)
-            {
-                task.PostponeDate = dialog.SelectedDate;
-                task.Status = MyTaskStatus.Postponed;
-
-                await _taskService.UpdateTaskAsync(task);
-
-                LoadTasksForDate(SelectedDate ?? DateTime.Today);
-            }
-            else
+            if (dialog.ShowDialog() != true || !dialog.SelectedDate.HasValue)
             {
                 task.Reason = null;
+                return;
             }
+
+            var newDate = dialog.SelectedDate.Value;
+
+            // 记录推迟历史戳
+            task.PostponedAt = DateTime.Now;
+
+            task.PostponedCount += 1;
+
+            // 更新到新日期
+            task.PostponeDate = newDate;
+            task.PlannedDate = newDate;
+            // —— 关键：第一次推迟也把状态设为 Pending，这样它就会被 TodayPendingTasks 包括进来 —— 
+            task.Status = MyTaskStatus.Pending;
+
+            await _taskService.UpdateTaskAsync(task);
+
+            LoadTasksForDate(SelectedDate ?? DateTime.Today);
         }
 
-
-
-        private void PostponeTask(TaskModel task)
+        private void OnTaskSaved(TaskModel task)
         {
-            // TODO: 实现推迟任务的逻辑
-        }
-
-        private void AbandonTask(TaskModel task)
-        {
-            // TODO: 实现放弃任务的逻辑
-        }
-
-        private void BatchProcess(object parameter)
-        {
-            // TODO: 实现批量处理任务的逻辑
+            var current = SelectedDate ?? DateTime.Today;
+            if (task.PlannedDate.Date == current.Date)
+            {
+                LoadTasksForDate(current);
+            }
         }
 
         public event PropertyChangedEventHandler? PropertyChanged;

@@ -3,8 +3,15 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Windows.Input;
+using Microsoft.Extensions.DependencyInjection;
+using TimeController.Services;
+using TimeController.Helpers;
 using TimeController.Models;
 using TimeController.Views;
+using System.Collections.Generic;
+using System.Linq;
+using System.Diagnostics;
+using static SkiaSharp.HarfBuzz.SKShaper;
 
 namespace TimeController.ViewModels
 {
@@ -13,15 +20,17 @@ namespace TimeController.ViewModels
     /// </summary>
     public class MonthViewModel : INotifyPropertyChanged
     {
-        // 年份范围为2024-2026
-        private const int MinYear = 2024;
-        private const int MaxYear = 2026;
+        // 年份范围为2010-2030
+        private const int MinYear = 2010;
+        private const int MaxYear = 2030;
 
         // 日历日期集合（包含null用于填充空白）
         public ObservableCollection<DateTime?> CalendarDays { get; } = new();
-        
-        // 所有任务的集合
-        public ObservableCollection<TaskModel> AllTasks { get; } = new();
+
+        private readonly ITaskService _taskService;
+
+        // 按日期组织的任务集合
+        public Dictionary<DateTime, ObservableCollection<TaskModel>> TasksByDate { get; } = new();
 
         // 当前年份
         private int _year = DateTime.Today.Year;
@@ -29,10 +38,11 @@ namespace TimeController.ViewModels
         {
             get => _year;
             set 
-            { 
-                _year = value; 
-                OnPropertyChanged(); 
+            {
+                _year = value;
+                OnPropertyChanged();
                 UpdateCalendar(); // 年份变化时更新日历
+                LoadTasksForCurrentMonth();
             }
         }
 
@@ -42,10 +52,11 @@ namespace TimeController.ViewModels
         {
             get => _month;
             set 
-            { 
-                _month = value; 
-                OnPropertyChanged(); 
+            {
+                _month = value;
+                OnPropertyChanged();
                 UpdateCalendar(); // 月份变化时更新日历
+                LoadTasksForCurrentMonth();
             }
         }
 
@@ -68,6 +79,9 @@ namespace TimeController.ViewModels
         /// </summary>
         public MonthViewModel()
         {
+            _taskService = App.AppHost.Services.GetRequiredService<ITaskService>();
+            _taskService.TaskSaved += OnExternalTaskSaved;
+
             // 初始化所有命令
             PrevYearCommand = new RelayCommand(_ => ChangeYear(-1));
             NextYearCommand = new RelayCommand(_ => ChangeYear(1));
@@ -78,6 +92,7 @@ namespace TimeController.ViewModels
 
             // 初始化日历
             UpdateCalendar();
+            LoadTasksForCurrentMonth();
         }
 
         /// <summary>
@@ -144,27 +159,78 @@ namespace TimeController.ViewModels
             for (int day = 1; day <= daysInMonth; day++)
                 CalendarDays.Add(new DateTime(Year, Month, day));
         }
+        private async void LoadTasksForCurrentMonth()
+        {
+            TasksByDate.Clear();
+
+            var start = new DateTime(Year, Month, 1);
+            var end = start.AddMonths(1).AddDays(-1);
+            var tasks = await _taskService.GetTasksForDateRange(start, end);
+            foreach (var group in tasks.Where(t => t.Mode == TaskMode.Strong).GroupBy(t => t.PlannedDate.Date))
+            {
+                var sorted = group.OrderBy(t => t.StartTime ?? TimeSpan.Zero);
+                TasksByDate[group.Key] = new ObservableCollection<TaskModel>(sorted);
+            }
+
+            OnPropertyChanged(nameof(TasksByDate));
+        }
 
         /// <summary>
         /// 显示复盘页面
         /// </summary>
         private void ShowReview()
         {
-            // TODO: 实现跳转复盘
-            System.Windows.MessageBox.Show("跳转复盘页面（待实现）");
+            var nav = App.AppHost.Services.GetRequiredService<INavigationService>();
+            nav.NavigateTo(AppFrame.Instance!, "Everyday");
         }
 
         /// <summary>
         /// 显示添加任务表单
         /// </summary>
-        private void ShowAddTaskDialog(DateTime date)
+        private async void ShowAddTaskDialog(DateTime date)
         {
+
             var dialog = new AddTaskDialog(date);
+
             if (dialog.ShowDialog() == true && dialog.ResultTask != null)
             {
-                // 添加新任务到集合
-                AllTasks.Add(dialog.ResultTask);
+                var task = dialog.ResultTask!;
+                task.Mode = TaskMode.Strong;
+                task.Status = MyTaskStatus.Pending;  //设成待处理
+                task.IsCompleted = false;                 //设成未完成
+
+                // 持久化到数据库
+                await _taskService.UpdateTaskAsync(task);
+
+                // 触发复盘自动刷新
+                App.NotifyTaskChanged(task);
+                Debug.WriteLine($"🛎️ App.NotifyTaskChanged({task.Name}) 已调用完毕");
             }
+
+        }
+
+        private void AddTaskToDictionary(TaskModel task)
+        {
+            var key = task.PlannedDate.Date;
+            if (!TasksByDate.TryGetValue(key, out var list))
+            {
+                list = new ObservableCollection<TaskModel>();
+                TasksByDate[key] = list;
+            }
+            int index = list.TakeWhile(t => (t.StartTime ?? TimeSpan.Zero) <= (task.StartTime ?? TimeSpan.Zero)).Count();
+            list.Insert(index, task);
+            OnPropertyChanged(nameof(TasksByDate));
+        }
+
+        private void OnExternalTaskSaved(TaskModel task)
+        {
+            if (task.Mode != TaskMode.Strong)
+                return;
+
+            if (task.PlannedDate.Year != Year || task.PlannedDate.Month != Month)
+                return;
+
+            AddTaskToDictionary(task);
         }
 
         // INotifyPropertyChanged 实现

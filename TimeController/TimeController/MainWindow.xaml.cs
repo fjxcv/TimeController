@@ -8,6 +8,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using TimeController.ViewModels;
 
 namespace TimeController
 {
@@ -19,6 +20,12 @@ namespace TimeController
         public MainWindow()
         {
             InitializeComponent();
+            DataContext = new ImportScheduleViewModel();
+        }
+
+        private void ShellView_Loaded(object sender, RoutedEventArgs e)
+        {
+
         }
     }
 }

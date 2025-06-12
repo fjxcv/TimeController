@@ -1,4 +1,4 @@
-
+ï»¿
 
 using System;
 using System.Windows.Controls;
@@ -37,9 +37,6 @@ namespace TimeController.Services
                             var nav = App.AppHost.Services.GetRequiredService<INavigationService>();
                             nav.NavigateTo(AppFrame.Instance!, "Everyday");
                         };
-
-                        //ÊÖ¶¯Ë¢ÐÂÊý¾Ý
-                        vm.ReloadThisWeek();
 
                         var page = new ReviewView_everyweek(vm);
                         frame.Navigate(page);

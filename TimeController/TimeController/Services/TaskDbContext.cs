@@ -10,7 +10,7 @@ namespace TimeController.Services
 {
     public class TaskDbContext : DbContext
     {
-        public DbSet<TaskModel> Tasks { get; set; }
+        public DbSet<TaskModel> Task { get; set; }
 
         public TaskDbContext(DbContextOptions<TaskDbContext> options)
             : base(options)
@@ -18,8 +18,12 @@ namespace TimeController.Services
 
         }
 
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
+            modelBuilder.Entity<TaskModel>()
+                .HasKey(t => t.Id);
+
             modelBuilder.Entity<TaskModel>()
                 .Property(t => t.Status)
                 .HasConversion<string>();
@@ -31,6 +35,8 @@ namespace TimeController.Services
             modelBuilder.Entity<TaskModel>()
                 .Property(t => t.Type)
                 .HasConversion<string>();
+
+   
 
             base.OnModelCreating(modelBuilder);
         }

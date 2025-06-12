@@ -11,14 +11,17 @@
     <Grid x:Name="RootGrid">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
 
         <!-- Header -->
         <Grid Grid.Row="0" Margin="24,0,24,0">
+            <!-- 原有的头部内容保持不变 -->
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="Auto"/>
                 <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
                 <ColumnDefinition Width="Auto"/>
                 <ColumnDefinition Width="Auto"/>
             </Grid.ColumnDefinitions>
@@ -38,112 +41,65 @@
                 <Button Content="&lt;" Margin="24,0,8,0" Padding="8,4" Command="{Binding PreviousWeekCommand}"/>
                 <TextBlock x:Name="WeekText" Text="{Binding WeekText}" VerticalAlignment="Center" Margin="8,0"/>
                 <Button Content="&gt;" Margin="8,0" Padding="8,4" Command="{Binding NextWeekCommand}"/>
+
+                <TextBlock Text="{Binding SemesterWeekText}" 
+                    VerticalAlignment="Center" 
+                    Margin="24,0,8,0"
+                    Foreground="#0078D4"
+                    FontWeight="SemiBold"
+                    Visibility="{Binding SemesterWeekText, Converter={StaticResource StringToVisibilityConverter}}"/>
             </StackPanel>
 
-            <!-- 导入课表按钮 -->
             <Button Grid.Column="2"
+                Content="添加课表" 
+                Margin="0,0,16,0"
+                Padding="16,8"
+                Click="AddCourse_Click"/>
+
+            <Button Grid.Column="3"
                     Content="导入课表" 
                     Margin="0,0,16,0"
                     Padding="16,8"
                     Click="ImportSchedule_Click"/>
 
-            <!-- 进入复盘按钮 -->
-            <Button Grid.Column="3"
+            <Button Grid.Column="4"
                     Content="进入复盘" 
+                    Command="{Binding ReviewCommand}"
                     Padding="16,8"/>
         </Grid>
 
-        <!-- Content -->
-        <ScrollViewer Grid.Row="1" Margin="24,24,24,0" >
-            <Grid x:Name="WeekContentGrid" Background="Transparent" MouseDown="WeekContentGrid_MouseDown" Margin="0" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+        <!-- 内容区 - 采用新布局 -->
+        <Grid Grid.Row="2" Margin="24,24,24,0">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <!-- 日期行 -->
+                <RowDefinition Height="Auto"/> 
+                <!-- 全天任务行（固定区域） -->
+                <RowDefinition Height="*"/>
+                <!-- 时间任务区（可滚动区域） -->
+            </Grid.RowDefinitions>
+
+            <!-- 日期行 -->
+            <Grid Grid.Row="0">
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="75"/>
+                    <!-- 左侧时间轴区域 -->
                     <ColumnDefinition Width="*"/>
+                    <!-- 日期显示区域 -->
                 </Grid.ColumnDefinitions>
 
+                <!-- 左上角区域显示"全天任务" -->
+                <Border Grid.Column="0" Background="Transparent">
+                    <TextBlock Text="全天任务" 
+               VerticalAlignment="Center" 
+               HorizontalAlignment="Center"
+               
+               FontSize="14"
+               Foreground="#333333"/>
+                </Border>
 
-                <!-- Time Axis -->
-                <Grid Grid.Column="0" Width="75">
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="100"/>
-                        <!-- 全天任务 -->
-                        <RowDefinition Height="40"/>
-                        <!-- 0:00 -->
-                        <RowDefinition Height="40"/>
-                        <!-- 1:00 -->
-                        <RowDefinition Height="40"/>
-                        <!-- 2:00 -->
-                        <RowDefinition Height="40"/>
-                        <!-- 3:00 -->
-                        <RowDefinition Height="40"/>
-                        <!-- 4:00 -->
-                        <RowDefinition Height="40"/>
-                        <!-- 5:00 -->
-                        <RowDefinition Height="40"/>
-                        <!-- 6:00 -->
-                        <RowDefinition Height="40"/>
-                        <!-- 7:00 -->
-                        <RowDefinition Height="40"/>
-                        <!-- 8:00 -->
-                        <RowDefinition Height="40"/>
-                        <!-- 9:00 -->
-                        <RowDefinition Height="40"/>
-                        <!-- 10:00 -->
-                        <RowDefinition Height="40"/>
-                        <!-- 11:00 -->
-                        <RowDefinition Height="40"/>
-                        <!-- 12:00 -->
-                        <RowDefinition Height="40"/>
-                        <!-- 13:00 -->
-                        <RowDefinition Height="40"/>
-                        <!-- 14:00 -->
-                        <RowDefinition Height="40"/>
-                        <!-- 15:00 -->
-                        <RowDefinition Height="40"/>
-                        <!-- 16:00 -->
-                        <RowDefinition Height="40"/>
-                        <!-- 17:00 -->
-                        <RowDefinition Height="40"/>
-                        <!-- 18:00 -->
-                        <RowDefinition Height="40"/>
-                        <!-- 19:00 -->
-                        <RowDefinition Height="40"/>
-                        <!-- 20:00 -->
-                        <RowDefinition Height="40"/>
-                        <!-- 21:00 -->
-                        <RowDefinition Height="40"/>
-                        <!-- 22:00 -->
-                        <RowDefinition Height="40"/>
-                        <!-- 23:00 -->
-                    </Grid.RowDefinitions>
-                    <TextBlock Text="全天任务" Grid.Row="0" VerticalAlignment="Center" HorizontalAlignment="Left"/>
-                    <TextBlock Text="0:00" Grid.Row="1" VerticalAlignment="Center" HorizontalAlignment="Left"/>
-                    <TextBlock Text="1:00" Grid.Row="2" VerticalAlignment="Center" HorizontalAlignment="Left"/>
-                    <TextBlock Text="2:00" Grid.Row="3" VerticalAlignment="Center" HorizontalAlignment="Left"/>
-                    <TextBlock Text="3:00" Grid.Row="4" VerticalAlignment="Center" HorizontalAlignment="Left"/>
-                    <TextBlock Text="4:00" Grid.Row="5" VerticalAlignment="Center" HorizontalAlignment="Left"/>
-                    <TextBlock Text="5:00" Grid.Row="6" VerticalAlignment="Center" HorizontalAlignment="Left"/>
-                    <TextBlock Text="6:00" Grid.Row="7" VerticalAlignment="Center" HorizontalAlignment="Left"/>
-                    <TextBlock Text="7:00" Grid.Row="8" VerticalAlignment="Center" HorizontalAlignment="Left"/>
-                    <TextBlock Text="8:00" Grid.Row="9" VerticalAlignment="Center" HorizontalAlignment="Left"/>
-                    <TextBlock Text="9:00" Grid.Row="10" VerticalAlignment="Center" HorizontalAlignment="Left"/>
-                    <TextBlock Text="10:00" Grid.Row="11" VerticalAlignment="Center" HorizontalAlignment="Left"/>
-                    <TextBlock Text="11:00" Grid.Row="12" VerticalAlignment="Center" HorizontalAlignment="Left"/>
-                    <TextBlock Text="12:00" Grid.Row="13" VerticalAlignment="Center" HorizontalAlignment="Left"/>
-                    <TextBlock Text="13:00" Grid.Row="14" VerticalAlignment="Center" HorizontalAlignment="Left"/>
-                    <TextBlock Text="14:00" Grid.Row="15" VerticalAlignment="Center" HorizontalAlignment="Left"/>
-                    <TextBlock Text="15:00" Grid.Row="16" VerticalAlignment="Center" HorizontalAlignment="Left"/>
-                    <TextBlock Text="16:00" Grid.Row="17" VerticalAlignment="Center" HorizontalAlignment="Left"/>
-                    <TextBlock Text="17:00" Grid.Row="18" VerticalAlignment="Center" HorizontalAlignment="Left"/>
-                    <TextBlock Text="18:00" Grid.Row="19" VerticalAlignment="Center" HorizontalAlignment="Left"/>
-                    <TextBlock Text="19:00" Grid.Row="20" VerticalAlignment="Center" HorizontalAlignment="Left"/>
-                    <TextBlock Text="20:00" Grid.Row="21" VerticalAlignment="Center" HorizontalAlignment="Left"/>
-                    <TextBlock Text="21:00" Grid.Row="22" VerticalAlignment="Center" HorizontalAlignment="Left"/>
-                    <TextBlock Text="22:00" Grid.Row="23" VerticalAlignment="Center" HorizontalAlignment="Left"/>
-                    <TextBlock Text="23:00" Grid.Row="24" VerticalAlignment="Center" HorizontalAlignment="Left"/>
-                </Grid>
 
-                <!-- Week Grid -->
+                <!-- 日期列标题 -->
                 <Grid Grid.Column="1">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*"/>
@@ -155,80 +111,30 @@
                         <ColumnDefinition Width="*"/>
                     </Grid.ColumnDefinitions>
 
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="*"/>
-                    </Grid.RowDefinitions>
+                    <!-- 使用自定义控件显示日期 -->
+                    <local:DateColumnControl Grid.Column="0" DataContext="{Binding DateColumns[0]}"/>
+                    <local:DateColumnControl Grid.Column="1" DataContext="{Binding DateColumns[1]}"/>
+                    <local:DateColumnControl Grid.Column="2" DataContext="{Binding DateColumns[2]}"/>
+                    <local:DateColumnControl Grid.Column="3" DataContext="{Binding DateColumns[3]}"/>
+                    <local:DateColumnControl Grid.Column="4" DataContext="{Binding DateColumns[4]}"/>
+                    <local:DateColumnControl Grid.Column="5" DataContext="{Binding DateColumns[5]}"/>
+                    <local:DateColumnControl Grid.Column="6" DataContext="{Binding DateColumns[6]}"/>
+                </Grid>
+            </Grid>
 
-                    <!-- Date Headers -->
-                    <Border x:Name="DateColumn0" Grid.Column="0" Margin="1" Background="#F0F0F0" CornerRadius="4" Height="100">
-                        <StackPanel>
-                            <TextBlock Text="一" HorizontalAlignment="Center"/>
-                            <TextBlock x:Name="DateTextBlock0" HorizontalAlignment="Center" FontSize="16" FontWeight="Bold"/>
-                        </StackPanel>
-                    </Border>
+            <!-- 时间任务区（可滚动区域） -->
+            <ScrollViewer Grid.Row="2" x:Name="TimeTasksScrollViewer" VerticalScrollBarVisibility="Auto">
+                <Grid x:Name="WeekContentGrid" Background="Transparent" MouseDown="WeekContentGrid_MouseDown">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="75"/>
+                        <!-- 左侧时间轴区域 -->
+                        <ColumnDefinition Width="*"/>
+                        <!-- 时间任务区域 -->
+                    </Grid.ColumnDefinitions>
 
-                    <Border x:Name="DateColumn1" Grid.Column="1" Margin="2" Background="#F0F0F0" CornerRadius="4" Height="100">
-                        <StackPanel>
-                            <TextBlock Text="二" HorizontalAlignment="Center"/>
-                            <TextBlock x:Name="DateTextBlock1" HorizontalAlignment="Center" FontSize="16" FontWeight="Bold"/>
-                        </StackPanel>
-                    </Border>
-
-                    <Border x:Name="DateColumn2" Grid.Column="2" Margin="2" Background="#F0F0F0" CornerRadius="4" Height="100">
-                        <StackPanel>
-                            <TextBlock Text="三" HorizontalAlignment="Center"/>
-                            <TextBlock x:Name="DateTextBlock2" HorizontalAlignment="Center" FontSize="16" FontWeight="Bold"/>
-                        </StackPanel>
-                    </Border>
-
-                    <Border x:Name="DateColumn3" Grid.Column="3" Margin="2" Background="#F0F0F0" CornerRadius="4" Height="100">
-                        <StackPanel>
-                            <TextBlock Text="四" HorizontalAlignment="Center"/>
-                            <TextBlock x:Name="DateTextBlock3" HorizontalAlignment="Center" FontSize="16" FontWeight="Bold"/>
-                        </StackPanel>
-                    </Border>
-
-                    <Border x:Name="DateColumn4" Grid.Column="4" Margin="2" Background="#F0F0F0" CornerRadius="4" Height="100">
-                        <StackPanel>
-                            <TextBlock Text="五" HorizontalAlignment="Center"/>
-                            <TextBlock x:Name="DateTextBlock4" HorizontalAlignment="Center" FontSize="16" FontWeight="Bold"/>
-                        </StackPanel>
-                    </Border>
-
-                    <Border x:Name="DateColumn5" Grid.Column="5" Margin="2" Background="#F0F0F0" CornerRadius="4" Height="100">
-                        <StackPanel>
-                            <TextBlock Text="六" HorizontalAlignment="Center"/>
-                            <TextBlock x:Name="DateTextBlock5" HorizontalAlignment="Center" FontSize="16" FontWeight="Bold"/>
-                        </StackPanel>
-                    </Border>
-
-                    <Border x:Name="DateColumn6" Grid.Column="6" Margin="2" Background="#F0F0F0" CornerRadius="4" Height="100">
-                        <StackPanel>
-                            <TextBlock Text="日" HorizontalAlignment="Center"/>
-                            <TextBlock x:Name="DateTextBlock6" HorizontalAlignment="Center" FontSize="16" FontWeight="Bold"/>
-                        </StackPanel>
-                    </Border>
-
-
-
-                    <!-- Task Grid -->
-                    <Grid x:Name="taskGrid" Grid.Row="1" Grid.ColumnSpan="7">
-                        
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="140"/> 
-                            <ColumnDefinition Width="140"/>
-                            <ColumnDefinition Width="140"/>
-                            <ColumnDefinition Width="140"/>
-                            <ColumnDefinition Width="140"/>
-                            <ColumnDefinition Width="140"/>
-                            <ColumnDefinition Width="140"/>
-                        </Grid.ColumnDefinitions>
-
+                    <!-- 时间轴 -->
+                    <Grid Grid.Column="0">
                         <Grid.RowDefinitions>
-                            <!-- 全天任务 -->
-                            <RowDefinition Height="40"/>
-                            
                             <RowDefinition Height="40"/>
                             <!-- 0:00 -->
                             <RowDefinition Height="40"/>
@@ -278,18 +184,96 @@
                             <RowDefinition Height="40"/>
                             <!-- 23:00 -->
                         </Grid.RowDefinitions>
+                        <TextBlock Text="0:00" Grid.Row="0" VerticalAlignment="Center" HorizontalAlignment="Left"/>
+                        <TextBlock Text="1:00" Grid.Row="1" VerticalAlignment="Center" HorizontalAlignment="Left"/>
+                        <TextBlock Text="2:00" Grid.Row="2" VerticalAlignment="Center" HorizontalAlignment="Left"/>
+                        <TextBlock Text="3:00" Grid.Row="3" VerticalAlignment="Center" HorizontalAlignment="Left"/>
+                        <TextBlock Text="4:00" Grid.Row="4" VerticalAlignment="Center" HorizontalAlignment="Left"/>
+                        <TextBlock Text="5:00" Grid.Row="5" VerticalAlignment="Center" HorizontalAlignment="Left"/>
+                        <TextBlock Text="6:00" Grid.Row="6" VerticalAlignment="Center" HorizontalAlignment="Left"/>
+                        <TextBlock Text="7:00" Grid.Row="7" VerticalAlignment="Center" HorizontalAlignment="Left"/>
+                        <TextBlock Text="8:00" Grid.Row="8" VerticalAlignment="Center" HorizontalAlignment="Left"/>
+                        <TextBlock Text="9:00" Grid.Row="9" VerticalAlignment="Center" HorizontalAlignment="Left"/>
+                        <TextBlock Text="10:00" Grid.Row="10" VerticalAlignment="Center" HorizontalAlignment="Left"/>
+                        <TextBlock Text="11:00" Grid.Row="11" VerticalAlignment="Center" HorizontalAlignment="Left"/>
+                        <TextBlock Text="12:00" Grid.Row="12" VerticalAlignment="Center" HorizontalAlignment="Left"/>
+                        <TextBlock Text="13:00" Grid.Row="13" VerticalAlignment="Center" HorizontalAlignment="Left"/>
+                        <TextBlock Text="14:00" Grid.Row="14" VerticalAlignment="Center" HorizontalAlignment="Left"/>
+                        <TextBlock Text="15:00" Grid.Row="15" VerticalAlignment="Center" HorizontalAlignment="Left"/>
+                        <TextBlock Text="16:00" Grid.Row="16" VerticalAlignment="Center" HorizontalAlignment="Left"/>
+                        <TextBlock Text="17:00" Grid.Row="17" VerticalAlignment="Center" HorizontalAlignment="Left"/>
+                        <TextBlock Text="18:00" Grid.Row="18" VerticalAlignment="Center" HorizontalAlignment="Left"/>
+                        <TextBlock Text="19:00" Grid.Row="19" VerticalAlignment="Center" HorizontalAlignment="Left"/>
+                        <TextBlock Text="20:00" Grid.Row="20" VerticalAlignment="Center" HorizontalAlignment="Left"/>
+                        <TextBlock Text="21:00" Grid.Row="21" VerticalAlignment="Center" HorizontalAlignment="Left"/>
+                        <TextBlock Text="22:00" Grid.Row="22" VerticalAlignment="Center" HorizontalAlignment="Left"/>
+                        <TextBlock Text="23:00" Grid.Row="23" VerticalAlignment="Center" HorizontalAlignment="Left"/>
+                    </Grid>
+
+                    <!-- 时间任务区域 -->
+                    <Grid Grid.Column="1">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
 
                         <!-- 背景高亮层 -->
-                        <Border x:Name="TaskColumn0" Grid.Column="0" Grid.Row="0" Grid.RowSpan="25" Background="Transparent"/>
-                        <Border x:Name="TaskColumn1" Grid.Column="1" Grid.Row="0" Grid.RowSpan="25" Background="Transparent"/>
-                        <Border x:Name="TaskColumn2" Grid.Column="2" Grid.Row="0" Grid.RowSpan="25" Background="Transparent"/>
-                        <Border x:Name="TaskColumn3" Grid.Column="3" Grid.Row="0" Grid.RowSpan="25" Background="Transparent"/>
-                        <Border x:Name="TaskColumn4" Grid.Column="4" Grid.Row="0" Grid.RowSpan="25" Background="Transparent"/>
-                        <Border x:Name="TaskColumn5" Grid.Column="5" Grid.Row="0" Grid.RowSpan="25" Background="Transparent"/>
-                        <Border x:Name="TaskColumn6" Grid.Column="6" Grid.Row="0" Grid.RowSpan="25" Background="Transparent"/>
-                        
-                        
-                        <ItemsControl ItemsSource="{Binding TaskBlocks}">
+                        <Border x:Name="TaskColumn0" Grid.Column="0" Background="Transparent"/>
+                        <Border x:Name="TaskColumn1" Grid.Column="1" Background="Transparent"/>
+                        <Border x:Name="TaskColumn2" Grid.Column="2" Background="Transparent"/>
+                        <Border x:Name="TaskColumn3" Grid.Column="3" Background="Transparent"/>
+                        <Border x:Name="TaskColumn4" Grid.Column="4" Background="Transparent"/>
+                        <Border x:Name="TaskColumn5" Grid.Column="5" Background="Transparent"/>
+                        <Border x:Name="TaskColumn6" Grid.Column="6" Background="Transparent"/>
+
+                        <!-- 课程显示区域 -->
+                        <ItemsControl Grid.ColumnSpan="7" ItemsSource="{Binding CourseTaskBlocks}">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="40"/>
+                                            <RowDefinition Height="40"/>
+                                            <RowDefinition Height="40"/>
+                                            <RowDefinition Height="40"/>
+                                            <RowDefinition Height="40"/>
+                                            <RowDefinition Height="40"/>
+                                            <RowDefinition Height="40"/>
+                                            <RowDefinition Height="40"/>
+                                            <RowDefinition Height="40"/>
+                                            <RowDefinition Height="40"/>
+                                            <RowDefinition Height="40"/>
+                                            <RowDefinition Height="40"/>
+                                            <RowDefinition Height="40"/>
+                                            <RowDefinition Height="40"/>
+                                            <RowDefinition Height="40"/>
+                                            <RowDefinition Height="40"/>
+                                            <RowDefinition Height="40"/>
+                                            <RowDefinition Height="40"/>
+                                            <RowDefinition Height="40"/>
+                                            <RowDefinition Height="40"/>
+                                            <RowDefinition Height="40"/>
+                                            <RowDefinition Height="40"/>
+                                            <RowDefinition Height="40"/>
+                                            <RowDefinition Height="40"/>
+                                        </Grid.RowDefinitions>
+                                    </Grid>
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
                             <ItemsControl.ItemContainerStyle>
                                 <Style TargetType="ContentPresenter">
                                     <Setter Property="Grid.Column" Value="{Binding Column}" />
@@ -299,37 +283,136 @@
                             </ItemsControl.ItemContainerStyle>
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate>
-                                    <Border Background="{Binding Brush}">
-                                        <TextBlock Text="{Binding Name}" />
+                                    <Border Background="#E6F7FF" BorderBrush="#1890FF" BorderThickness="1" CornerRadius="3" Margin="2"
+                                            MouseLeftButtonDown="TaskBlock_MouseLeftButtonDown">
+                                        <Grid>
+                                            <Grid.RowDefinitions>
+                                                <RowDefinition Height="Auto"/>
+                                                <RowDefinition Height="Auto"/>
+                                                <RowDefinition Height="Auto"/>
+                                            </Grid.RowDefinitions>
+
+                                            <!-- 课程名称和时间 -->
+                                            <StackPanel Grid.Row="0" Orientation="Vertical">
+                                                <TextBlock Text="{Binding Name}" 
+                                                    FontWeight="Bold" Margin="5,3,5,1" 
+                                                    TextWrapping="Wrap" 
+                                                    Foreground="#0078D4"/>
+                                                <TextBlock Margin="5,0,5,2"  FontSize="11" Foreground="#333333">
+                                                    <Run Text="{Binding StartTime, Converter={StaticResource TimeSpanToStringConverter}}"/>
+                                                    <Run Text=" - "/>
+                                                    <Run Text="{Binding EndTime, Converter={StaticResource TimeSpanToStringConverter}}"/>
+                                                </TextBlock>
+                                            </StackPanel>
+
+                                            <!-- 教师和教室信息 -->
+                                            <StackPanel Grid.Row="2" Orientation="Vertical" Margin="5,0,5,3">
+                                                <TextBlock FontSize="11" TextWrapping="Wrap">
+                                                <Run Text="教师: "/>
+                                                <Run Text="{Binding Note, Converter={StaticResource NoteToTeacherConverter}}"/>
+                                                </TextBlock>
+                                                <TextBlock FontSize="11" TextWrapping="Wrap">
+                                                <Run Text="教室: "/>
+                                                <Run Text="{Binding Note, Converter={StaticResource NoteToLocationConverter}}"/>
+                                                </TextBlock>
+                                            </StackPanel>
+                                        </Grid>
                                     </Border>
                                 </DataTemplate>
                             </ItemsControl.ItemTemplate>
                         </ItemsControl>
 
-
-
-
+                        <!-- 分时任务区域 -->
+                        <ItemsControl Grid.ColumnSpan="7" ItemsSource="{Binding TimedTaskBlocksView}">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="40"/>
+                                            <RowDefinition Height="40"/>
+                                            <RowDefinition Height="40"/>
+                                            <RowDefinition Height="40"/>
+                                            <RowDefinition Height="40"/>
+                                            <RowDefinition Height="40"/>
+                                            <RowDefinition Height="40"/>
+                                            <RowDefinition Height="40"/>
+                                            <RowDefinition Height="40"/>
+                                            <RowDefinition Height="40"/>
+                                            <RowDefinition Height="40"/>
+                                            <RowDefinition Height="40"/>
+                                            <RowDefinition Height="40"/>
+                                            <RowDefinition Height="40"/>
+                                            <RowDefinition Height="40"/>
+                                            <RowDefinition Height="40"/>
+                                            <RowDefinition Height="40"/>
+                                            <RowDefinition Height="40"/>
+                                            <RowDefinition Height="40"/>
+                                            <RowDefinition Height="40"/>
+                                            <RowDefinition Height="40"/>
+                                            <RowDefinition Height="40"/>
+                                            <RowDefinition Height="40"/>
+                                            <RowDefinition Height="40"/>
+                                        </Grid.RowDefinitions>
+                                    </Grid>
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                            <ItemsControl.ItemContainerStyle>
+                                <Style TargetType="ContentPresenter">
+                                    <Setter Property="Grid.Column" Value="{Binding Column}" />
+                                    <Setter Property="Grid.Row" Value="{Binding Row}" />
+                                    <Setter Property="Grid.RowSpan" Value="{Binding RowSpan}" />
+                                </Style>
+                            </ItemsControl.ItemContainerStyle>
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Grid MouseEnter="Grid_MouseEnter" MouseLeave="Grid_MouseLeave" Tag="{Binding}">
+                                        <Border Background="{Binding Brush}" CornerRadius="3" Margin="2"
+                                                MouseLeftButtonDown="TaskBlock_MouseLeftButtonDown">
+                                            <Grid>
+                                                <!-- 任务内容 -->
+                                                <TextBlock Text="{Binding Name}" Margin="5" TextWrapping="Wrap"/>
+                                                <!-- 删除按钮（叉号） -->
+                                                <Button x:Name="DeleteButton"
+                                                        Content="✕" 
+                                                        Width="20" Height="20" 
+                                                        HorizontalAlignment="Right" 
+                                                        VerticalAlignment="Top" 
+                                                        Margin="2"
+                                                        Background="Transparent"
+                                                        BorderThickness="0"
+                                                        Foreground="Red"
+                                                        FontWeight="Bold"
+                                                        Visibility="Collapsed"
+                                                        Command="{Binding DataContext.RemoveTaskBlockCommand, 
+                                                            RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                                                        CommandParameter="{Binding}"/>
+                                            </Grid>
+                                        </Border>
+                                    </Grid>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
                     </Grid>
                 </Grid>
-                
-                
+            </ScrollViewer>
+        </Grid>
 
-            </Grid>
-        </ScrollViewer>
+        <!-- 添加按钮Canvas -->
         <Canvas x:Name="RootCanvas">
-            <!-- 任务块... -->
             <Button x:Name="AddTaskButton"
-            Content="＋"
-            Width="40" Height="40"
-            Visibility="Collapsed"
-            Click="AddTaskButton_Click"
-            />
+                    Content="＋"
+                    Width="40" Height="40"
+                    Visibility="Collapsed"
+                    Click="AddTaskButton_Click"/>
         </Canvas>
-        
-
-
-
-
     </Grid>
 </ui:Page>
- 

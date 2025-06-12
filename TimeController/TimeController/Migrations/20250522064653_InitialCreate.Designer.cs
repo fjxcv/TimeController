@@ -11,8 +11,8 @@ using TimeController.Services;
 namespace TimeController.Migrations
 {
     [DbContext(typeof(TaskDbContext))]
-    [Migration("20250517123146_AddIsReminderEnabledToTask")]
-    partial class AddIsReminderEnabledToTask
+    [Migration("20250522064653_InitialCreate")]
+    partial class InitialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -26,13 +26,16 @@ namespace TimeController.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
+                    b.Property<DateTime?>("AbandonedAt")
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("Category")
                         .HasColumnType("TEXT");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("TEXT");
 
-                    b.Property<DateTime?>("EndTime")
+                    b.Property<TimeSpan?>("EndTime")
                         .HasColumnType("TEXT");
 
                     b.Property<bool>("IsAllDay")
@@ -64,10 +67,16 @@ namespace TimeController.Migrations
                     b.Property<DateTime?>("PostponeDate")
                         .HasColumnType("TEXT");
 
+                    b.Property<DateTime?>("PostponedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("PostponedCount")
+                        .HasColumnType("INTEGER");
+
                     b.Property<string>("Reason")
                         .HasColumnType("TEXT");
 
-                    b.Property<DateTime?>("StartTime")
+                    b.Property<TimeSpan?>("StartTime")
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Status")
@@ -75,11 +84,12 @@ namespace TimeController.Migrations
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Type")
+                        .IsRequired()
                         .HasColumnType("TEXT");
 
                     b.HasKey("Id");
 
-                    b.ToTable("Tasks");
+                    b.ToTable("Task");
                 });
 #pragma warning restore 612, 618
         }

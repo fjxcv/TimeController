@@ -9,7 +9,7 @@ namespace TimeController
         public TaskDbContext CreateDbContext(string[] args)
         {
             var optionsBuilder = new DbContextOptionsBuilder<TaskDbContext>();
-            optionsBuilder.UseSqlite("Data Source=task.db");
+            optionsBuilder.UseSqlite("Data Source=task.db"); //改成task了
 
             return new TaskDbContext(optionsBuilder.Options);
         }

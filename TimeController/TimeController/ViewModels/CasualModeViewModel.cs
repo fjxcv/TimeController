@@ -2,9 +2,11 @@
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.ComponentModel;
+using System.Globalization;
 using System.Linq;
 using System.Windows;
 using System.Windows.Input;
+using System.Windows.Threading;
 using System.Xml.Linq;
 using TimeController.Models;
 
@@ -12,6 +14,66 @@ namespace TimeController.ViewModels
 {
     public class CasualModeViewModel : INotifyPropertyChanged
     {
+
+        // 记录上次重置时的年和周（默认 0，表示还没重置过）
+        private int _lastResetYear = 0;
+        private int _lastResetWeek = 0;
+        public int LastResetYear
+        {
+            get => _lastResetYear;
+            private set
+            {
+                if (_lastResetYear != value)
+                {
+                    _lastResetYear = value;
+                    OnPropertyChanged(nameof(LastResetYear));
+                }
+            }
+        }
+        public int LastResetWeek
+        {
+            get => _lastResetWeek;
+            private set
+            {
+                if (_lastResetWeek != value)
+                {
+                    _lastResetWeek = value;
+                    OnPropertyChanged(nameof(LastResetWeek));
+                }
+            }
+        }
+
+        // —— 可配置阈值，每周默认完成4个有奖励 —— 
+        private int _rewardThreshold = 4;
+        public int RewardThreshold
+        {
+            get => _rewardThreshold;
+            set
+            {
+                if (_rewardThreshold != value)
+                {
+                    _rewardThreshold = value;
+                    OnPropertyChanged(nameof(RewardThreshold));
+                }
+            }
+        }
+
+        // —— 是否已领取过奖励 —— 
+        private bool _hasRewarded = false;
+        public bool HasRewarded
+        {
+            get => _hasRewarded;
+            private set
+            {
+                if (_hasRewarded != value)
+                {
+                    _hasRewarded = value;
+                    OnPropertyChanged(nameof(HasRewarded));
+                }
+            }
+        }
+
+
         public ICommand ToggleRewardPopupCommand { get; }
         public ICommand AddRewardTaskCommand { get; }
 
@@ -34,7 +96,6 @@ namespace TimeController.ViewModels
 
         // 结束编辑任务的Command
         public ICommand EndEditTaskCommand { get; }
-
 
         public CasualModeViewModel()
         {
@@ -147,76 +208,126 @@ namespace TimeController.ViewModels
             });
 
             //奖励弹窗相关
+
             // 删除奖励任务命令
             DeleteRewardTaskCommand = new RelayCommand<TaskModel>(DeleteRewardTask);
             // 奖励弹窗命令
             ToggleRewardPopupCommand = new RelayCommand<object>(_ =>
             {
                 IsRewardPopupOpen = !IsRewardPopupOpen;
-                // 如果弹窗打开，延迟设置焦点到输入框 (此逻辑保留在View)
             });
             //添加奖励任务
             AddRewardTaskCommand = new RelayCommand<object>(_ =>
             {
                 AddRewardTask(NewRewardTaskText);
             });
-           
-            // 进度监听
+
+            // 订阅模块任务改变事件
             foreach (var module in Modules)
             {
-                module.Tasks.CollectionChanged += (sender, e) =>
+                module.Tasks.CollectionChanged += (s, e) =>
                 {
-                    // 处理新增任务的属性订阅
+                    // 新增任务时订阅属性变化
                     if (e.NewItems != null)
                     {
-                        foreach (TaskModel task in e.NewItems)
+                        foreach (TaskModel t in e.NewItems)
                         {
-                            task.PropertyChanged += Task_PropertyChanged;
+                            t.PropertyChanged += Task_PropertyChanged;
                         }
                     }
-                    // 处理移除任务的属性取消订阅
+                    // 移除任务时解绑属性变化
                     if (e.OldItems != null)
                     {
-                        foreach (TaskModel task in e.OldItems)
+                        foreach (TaskModel t in e.OldItems)
                         {
-                            task.PropertyChanged -= Task_PropertyChanged;
+                            t.PropertyChanged -= Task_PropertyChanged;
                         }
                     }
-
-                    // 直接触发进度更新
+                    // 任何任务列表变化都要刷新进度
                     UpdateProgress();
                 };
 
-                // 为初始化时已有的任务订阅事件
-                foreach (var task in module.Tasks)
+                // 初始化时已有任务订阅
+                foreach (var t in module.Tasks)
                 {
-                    task.PropertyChanged += Task_PropertyChanged;
+                    t.PropertyChanged += Task_PropertyChanged;
                 }
             }
 
-            // 监听所有模块的任务列表变化
-            foreach (var module in Modules)
+            // 应用启动时先检查一次：如果跨周就重置
+            CheckAndPerformWeeklyReset();
+
+            // 启动“每天零点检查”定时器
+            StartDailyResetTimer();
+
+        }
+
+        private void CheckAndPerformWeeklyReset()
+        {
+            DateTime now = DateTime.Now;
+            CultureInfo ci = CultureInfo.CurrentCulture;
+            // 按照“周一为一周第一天”的规则计算当前周数
+            int thisWeek = ci.Calendar.GetWeekOfYear(now, CalendarWeekRule.FirstDay, DayOfWeek.Monday);
+            int thisYear = now.Year;
+
+            // 如果当前年-周与上次记录的不同，就说明进入新一周，需要重置
+            if (thisYear != LastResetYear || thisWeek != LastResetWeek)
             {
-                module.Tasks.CollectionChanged += (sender, e) =>
-                {
-                    if (e.NewItems != null)
-                    {
-                        foreach (TaskModel task in e.NewItems)
-                        {
-                            task.PropertyChanged += Task_PropertyChanged;
-                        }
-                    }
-                    if (e.OldItems != null)
-                    {
-                        foreach (TaskModel task in e.OldItems)
-                        {
-                            task.PropertyChanged -= Task_PropertyChanged;
-                        }
-                    }
-                };
+                PerformWeeklyReset();
+                LastResetYear = thisYear;
+                LastResetWeek = thisWeek;
             }
         }
-        // —— 奖励弹窗相关 —— 
+
+        //清除已完成的任务 + 重置进度和奖励状态
+        private void PerformWeeklyReset()
+        {
+            // 1. 遍历前 4 个模块，移除所有 IsCompleted == true 的任务
+            foreach (var module in Modules.Take(4))
+            {
+                var completedTasks = module.Tasks.Where(t => t.IsCompleted).ToList();
+                foreach (var t in completedTasks)
+                {
+                    module.Tasks.Remove(t);
+                }
+            }
+
+            // 2. 重置进度条和奖励标记
+            Progress = 0;
+            OnPropertyChanged(nameof(Progress));
+
+            HasRewarded = false;
+
+        }
+
+
+        // —— 定时器：每天零点触发一次 CheckAndPerformWeeklyReset() —— 
+        private DispatcherTimer _dailyTimer;
+        private void StartDailyResetTimer()
+        {
+            DateTime now = DateTime.Now;
+            // 下一个零点时刻
+            DateTime nextMidnight = now.Date.AddDays(1);
+            TimeSpan untilMidnight = nextMidnight - now;
+
+            // 第一个短定时器，等到当天零点
+            var startTimer = new DispatcherTimer { Interval = untilMidnight };
+            startTimer.Tick += (s, e) =>
+            {
+                startTimer.Stop();
+                // 零点到，先检查一次
+                CheckAndPerformWeeklyReset();
+
+                // 再启动一个 24 小时周期的定时器
+                _dailyTimer = new DispatcherTimer { Interval = TimeSpan.FromHours(24) };
+                _dailyTimer.Tick += (s2, e2) => CheckAndPerformWeeklyReset();
+                _dailyTimer.Start();
+            };
+            startTimer.Start();
+        }
+
+
+        // —— 奖励弹窗是否打开 —— 
         private bool _isRewardPopupOpen;
         public bool IsRewardPopupOpen
         {
@@ -225,20 +336,14 @@ namespace TimeController.ViewModels
             {
                 if (_isRewardPopupOpen != value)
                 {
-                    bool wasOpen = _isRewardPopupOpen;
                     _isRewardPopupOpen = value;
                     OnPropertyChanged(nameof(IsRewardPopupOpen));
 
-                    // 从打开状态切换到关闭状态：重置进度
-                    if (wasOpen && !_isRewardPopupOpen)
-                    {
-                        Progress = 0;
-                        OnPropertyChanged(nameof(Progress));
-                    }
                 }
             }
         }
-        // —— 进度与模块 —— 
+
+        // —— 进度值 —— 
         private int _progress;
         public int Progress
         {
@@ -314,13 +419,7 @@ namespace TimeController.ViewModels
         {
             if (e.PropertyName == nameof(TaskModel.IsCompleted))
             {
-                Application.Current.Dispatcher.InvokeAsync(() =>
-                {
-                    // 删除此行：SortTasks(); 
-                    // 触发进度更新（无论是否长期备忘模块）
-                    var viewModel = Application.Current.MainWindow?.DataContext as CasualModeViewModel;
-                    viewModel?.UpdateProgress();
-                });
+                // UI 线程调用
                 Application.Current.Dispatcher.InvokeAsync(UpdateProgress);
             }
         }
@@ -329,7 +428,7 @@ namespace TimeController.ViewModels
         public void ToggleTask(TaskModel task)
         {
             task.IsCompleted = !task.IsCompleted;
-            UpdateProgress(); // 无论任务属于哪个模块，直接触发更新
+            UpdateProgress(); // 取消或恢复完成状态时
 
             // 任务完成且正在编辑，结束编辑
             if (task.IsCompleted && task.IsEditing)
@@ -393,19 +492,44 @@ namespace TimeController.ViewModels
         }
         public void UpdateProgress()
         {
-            int totalCompleted = Modules.Take(4).Sum(m => m.Tasks.Count(t => t.IsCompleted));
-            // 计算余数
-            int mod = totalCompleted % 4;
-            // 如果刚好整除且 >0，就把进度显示为 4（满格），否则按照余数显示
-            Progress = (mod == 0 && totalCompleted > 0) ? 4 : mod;
-            OnPropertyChanged(nameof(Progress));
+            // 1. 先检查是否要做本周重置（如果你启用了跨周重置，这里保持不变）
+            CheckAndPerformWeeklyReset();
 
-            // 当整除且大于0时打开弹窗
-            if (totalCompleted > 0 && mod == 0)
+            // 2. 统计前四个模块里当前已完成任务的总数
+            int totalCompleted = Modules.Take(4).Sum(m => m.Tasks.Count(t => t.IsCompleted));
+
+            // 3. 如果之前已经发过奖励，但现在“完成数”被撤销导致少于阈值，就把 HasRewarded 置回 false
+            if (HasRewarded && totalCompleted < RewardThreshold)
             {
+                HasRewarded = false;
+            }
+
+            // 4. 如果还没发奖励，且已经达到阈值，就弹窗并设为已发放
+            if (!HasRewarded && totalCompleted >= RewardThreshold)
+            {
+                Progress = RewardThreshold;
+                OnPropertyChanged(nameof(Progress));
+
                 IsRewardPopupOpen = true;
+                HasRewarded = true;
+            }
+            else
+            {
+                // 5. 如果发过奖励但仍 >= 阈值，就保持满格；否则实时显示「已完成数」
+                if (HasRewarded && totalCompleted >= RewardThreshold)
+                {
+                    Progress = RewardThreshold;
+                }
+                else
+                {
+                    // HasRewarded == false && totalCompleted < 阈值  的情况
+                    Progress = totalCompleted;
+                }
+                OnPropertyChanged(nameof(Progress));
             }
         }
+
+
 
         public event PropertyChangedEventHandler? PropertyChanged;
         protected void OnPropertyChanged(string name) =>
