@@ -52,6 +52,7 @@ namespace TimeController
                     services.AddTransient<WeekViewModel>();
                     services.AddScoped<ReviewViewModel_everyday>();
                     services.AddScoped<ReviewViewModel_everyweek>();
+                    services.AddScoped<CasualModeViewModel>();
 
                     // MainWindow
                     services.AddSingleton<MainWindow>();

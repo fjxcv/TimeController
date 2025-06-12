@@ -33,6 +33,7 @@ namespace TimeController.Services
         Task<List<TaskModel>> GetCourseTasksForWeekAsync(DateTime referenceDate);
 
 
+
         event Action<TaskModel> TaskSaved;
 
     }

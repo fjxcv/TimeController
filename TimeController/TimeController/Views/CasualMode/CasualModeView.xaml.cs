@@ -18,6 +18,7 @@ using Page = iNKORE.UI.WPF.Modern.Controls.Page;
 using TimeController.Models;
 using System.ComponentModel;
 using System.Windows.Threading;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace TimeController.Views.CasualMode
 {
@@ -30,7 +31,7 @@ namespace TimeController.Views.CasualMode
         public CasualModeView()
         {
             InitializeComponent();
-            DataContext = new CasualModeViewModel();
+            DataContext = App.Services.GetRequiredService<CasualModeViewModel>();
             RewardPopup.Opened += RewardPopup_Opened;
 
             // ViewModel的属性变化，处理View层的UI操作

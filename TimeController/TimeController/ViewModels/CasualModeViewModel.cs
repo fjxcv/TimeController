@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.Extensions.DependencyInjection;
+using System;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.ComponentModel;
@@ -9,11 +10,14 @@ using System.Windows.Input;
 using System.Windows.Threading;
 using System.Xml.Linq;
 using TimeController.Models;
+using TimeController.Services;
+using System.Threading.Tasks;
 
 namespace TimeController.ViewModels
 {
     public class CasualModeViewModel : INotifyPropertyChanged
     {
+        private readonly ITaskService _taskService;
 
         // 记录上次重置时的年和周（默认 0，表示还没重置过）
         private int _lastResetYear = 0;
@@ -97,14 +101,23 @@ namespace TimeController.ViewModels
         // 结束编辑任务的Command
         public ICommand EndEditTaskCommand { get; }
 
-        public CasualModeViewModel()
+        public CasualModeViewModel() : this(App.Services.GetRequiredService<ITaskService>())
         {
+        }
+
+        public CasualModeViewModel(ITaskService taskService)
+        {
+            _taskService = taskService;
             // 初始化模块
             Modules.Add(new ModuleViewModel { Name = "自我滋养", MaxTasks = 5 });
             Modules.Add(new ModuleViewModel { Name = "创造表达", MaxTasks = 5 });
             Modules.Add(new ModuleViewModel { Name = "生活杂务", MaxTasks = 5 });
             Modules.Add(new ModuleViewModel { Name = "人际连接", MaxTasks = 5 });
             Modules.Add(new ModuleViewModel { Name = "长期备忘" });
+
+
+            // 从数据库加载任务
+            _ = LoadTasksFromDatabaseAsync();
 
             // 普通任务命令
             ToggleTaskCommand = new RelayCommand<TaskModel>(ToggleTask);
@@ -198,6 +211,11 @@ namespace TimeController.ViewModels
                         {
                             DeleteTask(task);
                         }
+                        else
+                        {
+                            _ = _taskService.UpdateTaskAsync(task);
+                        }
+
                         task.IsEditing = false;
                         if (CurrentEditingTask == task)
                         {
@@ -255,14 +273,14 @@ namespace TimeController.ViewModels
             }
 
             // 应用启动时先检查一次：如果跨周就重置
-            CheckAndPerformWeeklyReset();
+            _ = CheckAndPerformWeeklyResetAsync();
 
             // 启动“每天零点检查”定时器
             StartDailyResetTimer();
 
         }
 
-        private void CheckAndPerformWeeklyReset()
+        private async Task CheckAndPerformWeeklyResetAsync()
         {
             DateTime now = DateTime.Now;
             CultureInfo ci = CultureInfo.CurrentCulture;
@@ -273,23 +291,24 @@ namespace TimeController.ViewModels
             // 如果当前年-周与上次记录的不同，就说明进入新一周，需要重置
             if (thisYear != LastResetYear || thisWeek != LastResetWeek)
             {
-                PerformWeeklyReset();
+                await PerformWeeklyResetAsync();
                 LastResetYear = thisYear;
                 LastResetWeek = thisWeek;
             }
         }
 
         //清除已完成的任务 + 重置进度和奖励状态
-        private void PerformWeeklyReset()
+        private async Task PerformWeeklyResetAsync()
         {
             // 1. 遍历前 4 个模块，移除所有 IsCompleted == true 的任务
             foreach (var module in Modules.Take(4))
             {
-                var completedTasks = module.Tasks.Where(t => t.IsCompleted).ToList();
-                foreach (var t in completedTasks)
-                {
-                    module.Tasks.Remove(t);
-                }
+                    var toReset = module.Tasks.Where(t => t.IsCompleted && !t.IsAllDay).ToList();
+                    foreach (var t in toReset)
+                    {
+                        t.IsCompleted = false;
+                        await _taskService.UpdateTaskAsync(t);
+                    }
             }
 
             // 2. 重置进度条和奖励标记
@@ -316,11 +335,11 @@ namespace TimeController.ViewModels
             {
                 startTimer.Stop();
                 // 零点到，先检查一次
-                CheckAndPerformWeeklyReset();
+                _ = CheckAndPerformWeeklyResetAsync();
 
                 // 再启动一个 24 小时周期的定时器
                 _dailyTimer = new DispatcherTimer { Interval = TimeSpan.FromHours(24) };
-                _dailyTimer.Tick += (s2, e2) => CheckAndPerformWeeklyReset();
+                _dailyTimer.Tick += async (s2, e2) => await CheckAndPerformWeeklyResetAsync();
                 _dailyTimer.Start();
             };
             startTimer.Start();
@@ -428,6 +447,7 @@ namespace TimeController.ViewModels
         public void ToggleTask(TaskModel task)
         {
             task.IsCompleted = !task.IsCompleted;
+            _ = _taskService.UpdateTaskAsync(task);
             UpdateProgress(); // 取消或恢复完成状态时
 
             // 任务完成且正在编辑，结束编辑
@@ -443,6 +463,7 @@ namespace TimeController.ViewModels
             var module = Modules.FirstOrDefault(m => m.Tasks.Contains(task));
             if (module != null)
             {
+                _ = _taskService.DeleteTaskAsync(task);
                 module.Tasks.Remove(task);
                 UpdateProgress(); // 直接触发更新
             }
@@ -473,7 +494,15 @@ namespace TimeController.ViewModels
 
             if (!string.IsNullOrWhiteSpace(taskName))
             {
-                module.Tasks.Add(new TaskModel { Name = taskName });
+                var task = new TaskModel
+                {
+                    Name = taskName,
+                    Mode = TaskMode.Casual,
+                    Category = module.Name,
+                    CreatedAt = DateTime.Now
+                };
+                module.Tasks.Add(task);
+                _ = _taskService.UpdateTaskAsync(task);
 
                 // 在ViewModel中处理排序
                 var sortedTasks = module.Tasks.OrderBy(t => t.IsCompleted).ToList();
@@ -493,7 +522,7 @@ namespace TimeController.ViewModels
         public void UpdateProgress()
         {
             // 1. 先检查是否要做本周重置（如果你启用了跨周重置，这里保持不变）
-            CheckAndPerformWeeklyReset();
+            _ = CheckAndPerformWeeklyResetAsync();
 
             // 2. 统计前四个模块里当前已完成任务的总数
             int totalCompleted = Modules.Take(4).Sum(m => m.Tasks.Count(t => t.IsCompleted));
@@ -529,6 +558,20 @@ namespace TimeController.ViewModels
             }
         }
 
+        private async Task LoadTasksFromDatabaseAsync()
+        {
+            var tasks = await _taskService.GetAllTasksAsync();
+            var casual = tasks.Where(t => t.Mode == TaskMode.Casual);
+
+            foreach (var module in Modules)
+            {
+                var moduleTasks = casual.Where(t => t.Category == module.Name);
+                foreach (var t in moduleTasks.OrderBy(t => t.IsCompleted))
+                    module.Tasks.Add(t);
+            }
+
+            UpdateProgress();
+        }
 
 
         public event PropertyChangedEventHandler? PropertyChanged;
