@@ -19,6 +19,7 @@ using TimeController.Models;
 using System.ComponentModel;
 using System.Windows.Threading;
 using Microsoft.Extensions.DependencyInjection;
+using System.Diagnostics;
 
 namespace TimeController.Views.CasualMode
 {
@@ -28,6 +29,7 @@ namespace TimeController.Views.CasualMode
     public partial class CasualModeView : Page
 
     {
+
         public CasualModeView()
         {
             InitializeComponent();
@@ -45,6 +47,7 @@ namespace TimeController.Views.CasualMode
                     module.PropertyChanged += Module_PropertyChanged;
                 }
             }
+
         }
 
         private void RewardPopup_Opened(object? sender, EventArgs e)

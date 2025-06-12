@@ -152,7 +152,12 @@ namespace TimeController.ViewModels
             UncompletedTasks.Clear();
 
             // 从数据库或服务中获取指定日期的任务
-            var tasks = await _taskService.GetTasksForDate(date);
+            var allTasks = await _taskService.GetTasksForDate(date);
+
+            // 过滤出强管理任务
+            var tasks = allTasks
+                .Where(t => t.Mode == TaskMode.Strong)
+                .ToList();
 
             //调试！！！！
             System.Diagnostics.Debug.WriteLine($"任务加载数: {tasks.Count}");
@@ -180,14 +185,17 @@ namespace TimeController.ViewModels
             TodayPendingTasks = new ObservableCollection<TaskModel>(
                 tasks.Where(t =>
                     (t.Status == MyTaskStatus.Pending || t.Status == MyTaskStatus.Postponed) &&
-                    t.PlannedDate.Date == date.Date));       //只要PlannedDate == date，就显示
+                    t.PlannedDate.Date == today));      //只要PlannedDate == date，就显示
 
 
             // 获取所有 pending 任务
             var allPending = await _taskService.GetAllPendingTasksAsync();
 
             OverduePendingTasks = new ObservableCollection<TaskModel>(
-                allPending.Where(t => t.Status == MyTaskStatus.Pending && t.PlannedDate.Date < today));
+                allPending
+                  .Where(t => t.Mode == TaskMode.Strong
+                           && t.Status == MyTaskStatus.Pending
+                           && t.PlannedDate.Date < today));
 
             OnPropertyChanged(nameof(PendingTasksCount));
 

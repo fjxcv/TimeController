@@ -13,6 +13,8 @@ using TimeController.Models;
 using TimeController.Services;
 using System.Threading.Tasks;
 using System.Text;
+using System.Windows.Media;
+using System.Diagnostics;
 
 namespace TimeController.ViewModels
 {
@@ -20,6 +22,7 @@ namespace TimeController.ViewModels
     {
         private readonly ITaskService _taskService;
         private readonly IRewardService _rewardService;
+        public ObservableCollection<ReviewLine> ReviewLines { get; } = new ObservableCollection<ReviewLine>();
 
 
         // 记录上次重置时的年和周（默认 0，表示还没重置过）
@@ -492,6 +495,9 @@ namespace TimeController.ViewModels
                 task.IsEditing = false;
                 CurrentEditingTask = null;
             }
+
+            //刷新复盘
+            UpdateWeeklyReviewText();
         }
 
         private void DeleteTask(TaskModel task)
@@ -503,6 +509,9 @@ namespace TimeController.ViewModels
                 module.Tasks.Remove(task);
                 UpdateProgress(); // 直接触发更新
             }
+
+            //刷新复盘
+            UpdateWeeklyReviewText();
         }
 
         // 删除奖励任务
@@ -543,6 +552,8 @@ namespace TimeController.ViewModels
                     CreatedAt = DateTime.Now
                 };
                 module.Tasks.Add(task);
+
+                // 持久化到数据库
                 _ = _taskService.UpdateTaskAsync(task);
 
                 // 在ViewModel中处理排序
@@ -558,6 +569,9 @@ namespace TimeController.ViewModels
                 module.NewTaskText = string.Empty; // 清空输入框文本
                 module.IsInputVisible = false; // 添加任务后隐藏输入框
                 UpdateProgress();
+
+                //刷新复盘
+                UpdateWeeklyReviewText();
             }
         }
         public void UpdateProgress()
@@ -567,9 +581,6 @@ namespace TimeController.ViewModels
 
             // 2. 统计前四个模块里当前已完成任务的总数
             int totalCompleted = Modules.Take(4).Sum(m => m.Tasks.Count(t => t.IsCompleted));
-            RewardHint = totalCompleted >= RewardThreshold
-                ? "🎉 去领取本周奖励吧！"
-                : "再接再厉，冲刺你的奖励进度吧！";
 
             // 3. 如果之前已经发过奖励，但现在“完成数”被撤销导致少于阈值，就把 HasRewarded 置回 false
             if (HasRewarded && totalCompleted < RewardThreshold)
@@ -604,19 +615,25 @@ namespace TimeController.ViewModels
             UpdateWeeklyReviewText();
         }
 
+
         private async Task LoadTasksFromDatabaseAsync()
         {
-            var tasks = await _taskService.GetAllTasksAsync();
-            var casual = tasks.Where(t => t.Mode == TaskMode.Casual);
 
-            foreach (var module in Modules)
-            {
-                var moduleTasks = casual.Where(t => t.Category == module.Name);
-                foreach (var t in moduleTasks.OrderBy(t => t.IsCompleted))
-                    module.Tasks.Add(t);
-            }
+                var all = await _taskService.GetAllTasksAsync();
+                var casual = all.Where(t => t.Mode == TaskMode.Casual).ToList();
 
-            UpdateProgress();
+                foreach (var module in Modules)
+                {
+                    var moduleTasks = casual.Where(t => t.Category == module.Name);
+                    foreach (var t in moduleTasks.OrderBy(t => t.IsCompleted))
+                        module.Tasks.Add(t);
+                }
+
+                UpdateProgress();
+
+                //刷新复盘
+                UpdateWeeklyReviewText();
+
         }
 
         private async Task LoadRewardsAsync()
@@ -628,6 +645,9 @@ namespace TimeController.ViewModels
 
         private void UpdateWeeklyReviewText()
         {
+            // 先清空
+            ReviewLines.Clear();
+
             // 1. 计算本周完成总数
             int total = Modules.Take(4).Sum(m => m.Tasks.Count(t => t.IsCompleted));
 
@@ -638,18 +658,18 @@ namespace TimeController.ViewModels
                 .FirstOrDefault()?.Name
                 ?? string.Empty;
 
-            // 3. 找到本周未开启的模块列表（只取第一个演示）
-            var zero = modules4
-                .Where(m => m.Tasks.Count(t => t.IsCompleted) == 0)
+            // 3. 收集所有没添加任务的模块
+            var zeroList = modules4
+                .Where(m => m.Tasks.Count == 0)
                 .Select(m => m.Name)
                 .ToList();
 
-            // 4. 四个模块各自对应的“勤奋”文案
+            // 4. 四个模块各自对应的文案
             var topPhrases = new Dictionary<string, string>
             {
                 ["自我滋养"] = "坚持了好习惯，身心都在成长！",
                 ["创造表达"] = "创意爆发，让世界听到你的声音！",
-                ["生活杂物"] = "家务达人上线，生活井井有条！",
+                ["生活杂务"] = "家务达人上线，生活井井有条！",
                 ["人际连接"] = "社交达人，友谊更紧密~"
             };
 
@@ -658,29 +678,86 @@ namespace TimeController.ViewModels
             {
                 ["自我滋养"] = "记得给自己留点休息时间哦～",
                 ["创造表达"] = "多动动笔，多激发灵感吧！",
-                ["生活杂物"] = "整理能让心情更舒畅，试试吧！",
+                ["生活杂务"] = "整理能让心情更舒畅，试试吧！",
                 ["人际连接"] = "和朋友聊聊天，也是一种充电方式~"
             };
 
-            // 6. 拼第一个部分：完成数 + 最勤奋
             var sb = new StringBuilder();
-            sb.Append($"本周你完成了{total}个任务，");
-            if (topPhrases.TryGetValue(top, out var topText))
-                sb.Append($"其中【{top}】最勤奋——{topText}  ");
-            else
-                sb.Append($"其中【{top}】最勤奋~  ");
 
-            // 7. 拼第二个部分：未开启
-            if (zero.Any() && zeroPhrases.TryGetValue(zero[0], out var zeroText))
+            // 1) 完成数分支
+            if (total == 0)
             {
-                sb.Append($"【{zero[0]}】区本周未开启——{zeroText}  ");
+                ReviewLines.Add(new ReviewLine
+                {
+                    Icon = "😉",
+                    Text = "本周暂未完成任何任务，挑战自己就从现在开始~",
+                    Foreground = Brushes.Gray
+                });
+                ReviewLines.Add(new ReviewLine
+                {
+                    Icon = "🎯",
+                    Text = "给自己设一个小目标，行动起来吧！",
+                    Foreground = Brushes.Gray
+                });
+            }
+            else if (total < RewardThreshold)
+            {
+                ReviewLines.Add(new ReviewLine
+                {
+                    Icon = "💪",
+                    Text = $"本周已完成 {total} 个任务，继续保持，加油！",
+                    Foreground = Brushes.DarkSlateBlue
+                });
+            }
+            else
+            {
+                ReviewLines.Add(new ReviewLine
+                {
+                    Icon = "🏆",
+                    Text = $"本周已完成 {total} 个任务，太棒了！",
+                    Foreground = Brushes.Green
+                });
             }
 
-            // 8. 奖励提示
-            sb.Append("去领取本周奖励吧！");
+            // 2) 最勤奋（total>0 时）
+            if (total > 0 && topPhrases.TryGetValue(top, out var topText))
+            {
+                ReviewLines.Add(new ReviewLine
+                {
+                    Icon = "🏅",
+                    Text = $"其中【{top}】最勤奋 —— {topText}",
+                    Foreground = Brushes.Goldenrod
+                });
+            }
 
-            WeeklyReviewText = sb.ToString();
-            OnPropertyChanged(nameof(WeeklyReviewText));
+
+
+            // 3) 所有未开启模块
+            foreach (var name in zeroList)
+            {
+                if (zeroPhrases.TryGetValue(name, out var zp))
+                {
+                    ReviewLines.Add(new ReviewLine
+                    {
+                        Icon = "🌱",
+                        Text = $"【{name}】区本周未添加任务 —— {zp}",
+                        Foreground = Brushes.DarkGoldenrod
+                    });
+                }
+            }
+
+            // 4) 到达阈值才提示领奖励
+            if (total >= RewardThreshold)
+            {
+                ReviewLines.Add(new ReviewLine
+                {
+                    Icon = "🎉",
+                    Text = "去领取本周奖励吧！",
+                    Foreground = Brushes.MediumSeaGreen
+                });
+            }
+
+            OnPropertyChanged(nameof(ReviewLines));
         }
 
 
@@ -826,4 +903,13 @@ namespace TimeController.ViewModels
         protected void OnPropertyChanged(string name) =>
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
     }
+
+    public class ReviewLine
+    {
+        public string Icon { get; set; }      // Emoji
+        public string Text { get; set; }      // 文案
+        public Brush Foreground { get; set; } // 文字颜色
+    }
+
+
 }
