@@ -9,6 +9,12 @@ using TimeController.ViewModels;
 using TimeController.Views;
 using TimeController.Models;
 using TimeController.Views.SettingsInfo;
+using TimeController.Views.CasualMode;
+using TimeController.Views.Review;
+using TimeController.Views.StrongGoalMonth;
+using TimeController.Views.StrongGoalWeek;
+using iNKORE.UI.WPF.Modern.Helpers.Styles;
+using MessageBox = iNKORE.UI.WPF.Modern.Controls.MessageBox;
 
 namespace TimeController
 {
@@ -46,11 +52,14 @@ namespace TimeController
                     services.AddDbContext<TaskDbContext>(options =>
                         options.UseSqlite("Data Source=task.db"));
 
+                    // 改MessageBox效果
+                    MessageBox.DefaultBackdropType = BackdropType.Mica;
+
                     // Services
                     services.AddScoped<ITaskService, TaskService>();
                     services.AddSingleton<INavigationService, NavigationService>();
                     services.AddScoped<IRewardService, RewardService>();
-                    services.AddSingleton<ISettingsService, AppSettingsService>();
+                    services.AddSingleton<ISettingsService, JsonSettingsService>();
 
                     // ViewModels
                     services.AddTransient<WeekViewModel>();
@@ -60,8 +69,14 @@ namespace TimeController
                     services.AddTransient<SettingsPageViewModel>();
                     services.AddTransient<AboutPageViewModel>();
 
-                    services.AddTransient<AboutPage>();
+                    //views
+                    services.AddTransient<CasualModeView>();
+                    services.AddTransient<WeekView>();
+                    services.AddTransient<MonthView>();
+                    services.AddTransient<ReviewView_everyday>();
                     services.AddTransient<SettingsPage>();
+                    services.AddTransient<AboutPage>();
+
 
                     // MainWindow
                     services.AddSingleton<MainWindow>();

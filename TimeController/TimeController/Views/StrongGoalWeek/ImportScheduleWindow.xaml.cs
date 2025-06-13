@@ -5,6 +5,7 @@ using System.Windows.Controls;
 using TimeController.Models;
 using TimeController.ViewModels;
 using TimeController.Views.StrongGoalWeek;
+using MessageBox = iNKORE.UI.WPF.Modern.Controls.MessageBox;
 
 namespace TimeController.Views.StrongGoalWeek
 {

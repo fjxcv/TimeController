@@ -14,7 +14,7 @@ using System.Windows.Data;
 using System.Data;
 using System.Windows;
 using Microsoft.Windows.Input;
-
+using MessageBox = iNKORE.UI.WPF.Modern.Controls.MessageBox;
 
 namespace TimeController.ViewModels
 {

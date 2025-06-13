@@ -15,6 +15,7 @@ using System.Threading.Tasks;
 using System.Text;
 using System.Windows.Media;
 using System.Diagnostics;
+using MessageBox = iNKORE.UI.WPF.Modern.Controls.MessageBox;
 
 namespace TimeController.ViewModels
 {

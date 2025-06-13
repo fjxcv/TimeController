@@ -3,14 +3,16 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:ui="http://schemas.inkore.net/lib/ui/wpf/modern" 
              xmlns:ikw="http://schemas.inkore.net/lib/ui/wpf"
+            xmlns:local="clr-namespace:TimeController.Services"
+
 >
 
 <ScrollViewer>
     <ikw:SimpleStackPanel Spacing="4">
 
         <!-- 每周目标任务量 -->
-        <ui:SettingsCard Header="每周目标任务量"
-                         Description="设置您希望每周完成的任务数量。"
+        <ui:SettingsCard Header="【咸鱼】每周目标任务量"
+                         Description="设置您希望咸鱼模式每周完成的任务数量。"
                          IsEnabled="True">
             <ui:SettingsCard.HeaderIcon>
                 <ui:FontIcon Glyph="&#xE8EC;"/>
@@ -28,18 +30,45 @@
 
             </ui:SettingsCard>
 
-        <!-- 跟随系统主题 -->
-        <ui:SettingsCard Header="跟随系统主题"
-                         Description="开启后，应用将自动跟随操作系统的浅/深色模式切换。"
-                         IsEnabled="True">
-            <ui:SettingsCard.HeaderIcon>
-                <ui:FontIcon Glyph="&#xE706;"/>
-            </ui:SettingsCard.HeaderIcon>
-            <ui:ToggleSwitch IsOn="{Binding FollowSystemTheme, Mode=TwoWay}"
-                           OnContent="开启" OffContent="关闭"/>
-        </ui:SettingsCard>
+            <!-- 主题设置卡片 -->
+            <ui:SettingsCard Header="主题模式"
+                 Description="选择浅色 / 深色，或跟随系统"
+                 IsEnabled="True">
+                <ui:SettingsCard.HeaderIcon>
+                    <ui:FontIcon Glyph="&#xE765;" FontSize="20"/>
+                </ui:SettingsCard.HeaderIcon>
 
-    </ikw:SimpleStackPanel>
+                <ComboBox Width="60"
+                        SelectedValue="{Binding SelectedThemeOption}"
+                        SelectedValuePath="Tag"
+                        Margin="0,8,0,0">
+                    <ComboBoxItem Content="Light"    Tag="{x:Static local:ThemeOption.Light}"   />
+                    <ComboBoxItem Content="Dark"     Tag="{x:Static local:ThemeOption.Dark}"    />
+                    <ComboBoxItem Content="跟随系统" Tag="{x:Static local:ThemeOption.System}"  />
+                </ComboBox>
+            </ui:SettingsCard>
+
+            <!-- 保存 & 重置 按钮 -->
+            <StackPanel Orientation="Horizontal"
+                          HorizontalAlignment="Right"
+                          Margin="0,16,0,0">
+                <!-- 重置：普通按钮 -->
+                <Button Content="重置"
+                        MinWidth="70"
+                        MinHeight="35"
+                        Command="{Binding ResetCommand}"
+                        Margin="0,0,0,0"/>
+
+                <!-- 保存：Accent 风格按钮 -->
+                <Button Content="保存"
+                        Command="{Binding SaveCommand}"
+                        MinWidth="70"
+                        MinHeight="35"
+                        Margin="20,0,30,0"
+                        Style="{StaticResource {x:Static ui:ThemeKeys.AccentButtonStyleKey}}" />
+            </StackPanel>
+        
+        </ikw:SimpleStackPanel>
 </ScrollViewer>
 
 </ui:Page>

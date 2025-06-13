@@ -35,6 +35,25 @@ namespace TimeController.Services
             ConfigurationManager.RefreshSection("appSettings");
         }
 
+        // 新增：读枚举，默认为System
+        public ThemeOption LoadThemeOption()
+        {
+            var s = ConfigurationManager.AppSettings["ThemeOption"];
+            return Enum.TryParse<ThemeOption>(s, out var m) ? m : ThemeOption.Light;
+        }
+
+        public void SaveThemeOption(ThemeOption option)
+        {
+            var config = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.None);
+            var settings = config.AppSettings.Settings;
+            var str = option.ToString();
+            if (settings["ThemeOption"] == null)
+                settings.Add("ThemeOption", str);
+            else
+                settings["ThemeOption"].Value = str;
+            config.Save(ConfigurationSaveMode.Modified);
+            ConfigurationManager.RefreshSection("appSettings");
+        }
 
         public bool LoadFollowSystemTheme() =>
             bool.TryParse(ConfigurationManager.AppSettings["FollowSystemTheme"], out var v) && v;

@@ -6,6 +6,7 @@ using System.Windows.Media;
 using TimeController.Models;
 using TimeController.ViewModels;
 using iNKORE.UI.WPF.Modern.Controls;
+using MessageBox = iNKORE.UI.WPF.Modern.Controls.MessageBox;
 
 namespace TimeController.Views.StrongGoalWeek
 {
@@ -26,7 +27,7 @@ namespace TimeController.Views.StrongGoalWeek
             // 验证输入
             if (string.IsNullOrWhiteSpace(_viewModel.Name))
             {
-                System.Windows.MessageBox.Show("课程名称不能为空", "验证错误", MessageBoxButton.OK, MessageBoxImage.Warning);
+                MessageBox.Show("课程名称不能为空", "验证错误", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
 

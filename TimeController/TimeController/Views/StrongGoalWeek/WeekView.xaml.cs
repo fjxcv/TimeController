@@ -19,6 +19,7 @@ using TimeController.Models;
 using TimeController.Services;
 using TimeController.ViewModels;
 using Page = iNKORE.UI.WPF.Modern.Controls.Page;
+using MessageBox = iNKORE.UI.WPF.Modern.Controls.MessageBox;
 
 namespace TimeController.Views.StrongGoalWeek
 {
