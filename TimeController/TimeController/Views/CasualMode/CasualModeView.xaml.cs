@@ -1,12 +1,24 @@
-﻿using System.Windows;
+﻿using System;
+using System.Collections.Generic;
+using System.Globalization;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Data;
+using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
+using System.Windows.Media.Imaging;
+using System.Windows.Navigation;
+using System.Windows.Shapes;
 using TimeController.ViewModels;
 using Page = iNKORE.UI.WPF.Modern.Controls.Page;
 using TimeController.Models;
 using System.ComponentModel;
 using System.Windows.Threading;
+using System.Windows.Media.Animation;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace TimeController.Views.CasualMode
@@ -16,6 +28,11 @@ namespace TimeController.Views.CasualMode
     /// </summary>
     public partial class CasualModeView : Page
     {
+        private Random _rand = new Random();
+        private RewardCelebrationWindow? _rewardWindowInstance;
+        private bool _isRewardWindowCurrentlyShowing = false;
+        private DateTime _lastRewardCelebrationShownTime = DateTime.MinValue;
+        private readonly TimeSpan _minTimeBetweenCelebrations = TimeSpan.FromSeconds(2);
 
         public CasualModeView()
         {
@@ -51,76 +68,6 @@ namespace TimeController.Views.CasualMode
             }));
         }
 
-        private void PlayFireworksAndSound()
-        {
-            // 播放音效
-            if (RewardSound != null)
-            {
-                RewardSound.Stop(); // 确保音效重置
-                RewardSound.Play();
-            }
-
-            // 简单的烟花动画
-            if (FireworksCanvas != null)
-            {
-                FireworksCanvas.Children.Clear(); // 清除之前的烟花粒子
-
-                for (int i = 0; i < 50; i++) // 创建 50 个小圆点作为烟花粒子
-                {
-                    Ellipse fireworkParticle = new Ellipse
-                    {
-                        Width = _rand.Next(3, 8),
-                        Height = _rand.Next(3, 8),
-                        Fill = new SolidColorBrush(System.Windows.Media.Color.FromArgb(255, (byte)_rand.Next(256), (byte)_rand.Next(256), (byte)_rand.Next(256))),
-                        Opacity = 1.0
-                    };
-
-                    double startX = _rand.NextDouble() * FireworksCanvas.ActualWidth;
-                    double startY = _rand.NextDouble() * FireworksCanvas.ActualHeight;
-
-                    Canvas.SetLeft(fireworkParticle, startX);
-                    Canvas.SetTop(fireworkParticle, startY);
-                    FireworksCanvas.Children.Add(fireworkParticle);
-
-                    // 动画：位置随机移动并逐渐消失
-                    System.Windows.Media.Animation.DoubleAnimation xAnimation = new System.Windows.Media.Animation.DoubleAnimation
-                    {
-                        To = startX + (_rand.NextDouble() - 0.5) * 100, // 随机水平移动
-                        Duration = TimeSpan.FromSeconds(1.5),
-                        AutoReverse = false
-                    };
-                    System.Windows.Media.Animation.DoubleAnimation yAnimation = new System.Windows.Media.Animation.DoubleAnimation
-                    {
-                        To = startY + (_rand.NextDouble() - 0.5) * 100, // 随机垂直移动
-                        Duration = TimeSpan.FromSeconds(1.5),
-                        AutoReverse = false
-                    };
-                    System.Windows.Media.Animation.DoubleAnimation fadeAnimation = new System.Windows.Media.Animation.DoubleAnimation
-                    {
-                        To = 0,
-                        Duration = TimeSpan.FromSeconds(1.5),
-                        AutoReverse = false
-                    };
-
-                    System.Windows.Media.Animation.Storyboard storyboard = new System.Windows.Media.Animation.Storyboard();
-                    storyboard.Children.Add(xAnimation);
-                    storyboard.Children.Add(yAnimation);
-                    storyboard.Children.Add(fadeAnimation);
-
-                    System.Windows.Media.Animation.Storyboard.SetTarget(xAnimation, fireworkParticle);
-                    System.Windows.Media.Animation.Storyboard.SetTargetProperty(xAnimation, new PropertyPath("(Canvas.Left)"));
-                    System.Windows.Media.Animation.Storyboard.SetTarget(yAnimation, fireworkParticle);
-                    System.Windows.Media.Animation.Storyboard.SetTargetProperty(yAnimation, new PropertyPath("(Canvas.Top)"));
-                    System.Windows.Media.Animation.Storyboard.SetTarget(fadeAnimation, fireworkParticle);
-                    System.Windows.Media.Animation.Storyboard.SetTargetProperty(fadeAnimation, new PropertyPath("Opacity"));
-
-                    // 动画完成后移除粒子
-                    storyboard.Completed += (s, ev) => FireworksCanvas.Children.Remove(fireworkParticle);
-                    storyboard.Begin();
-                }
-            }
-        }
-
         private TextBox? _currentEditingTextBox;
         private TaskModel? _currentEditingTaskModel;
 
@@ -154,21 +101,48 @@ namespace TimeController.Views.CasualMode
             {
             }
         }
-
+        private bool _isRewardWindowCurrentlyShowing1 = false; // 使用类级别的标志
         private void HandleShowRewardCelebration()
         {
-            // 在 UI 线程上显示新窗口
+            if (_isRewardWindowCurrentlyShowing1)
+                return;
+            _isRewardWindowCurrentlyShowing1 = true;
+
             Dispatcher.Invoke(() =>
             {
-                var rewardWindow = new RewardCelebrationWindow();
-                rewardWindow.Owner = Application.Current.MainWindow; // 设置主窗口为所有者，使其居中
-                rewardWindow.ShowDialog();
+                // 添加检查，防止多个窗口同时显示
+                if (_isRewardWindowCurrentlyShowing)
+                    return;
+
+                _isRewardWindowCurrentlyShowing1 = true;
+
+                try
+                {
+                    var rewardWindow = new RewardCelebrationWindow();
+
+                    // 设置为全屏无边框
+                    rewardWindow.WindowState = WindowState.Maximized;
+                    rewardWindow.WindowStyle = WindowStyle.None;
+                    rewardWindow.Topmost = true;
+
+                    // 设置为主窗口的子窗口
+                    rewardWindow.Owner = Application.Current.MainWindow;
+
+                    // 添加关闭事件处理
+                    rewardWindow.Closed += (s, e) => {
+                        _isRewardWindowCurrentlyShowing1 = false;
+                    };
+
+                    rewardWindow.ShowDialog();
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"显示奖励窗口时出错: {ex.Message}");
+                    _isRewardWindowCurrentlyShowing1 = false;
+                }
             });
-
-            // 播放音效和烟花动画
-            PlayFireworksAndSound();
         }
-
+        
         //双击编辑后是空任务点击别处就直接删除
         private void CurrentEditingTextBox_LostFocus(object sender, RoutedEventArgs e)
         {
@@ -181,7 +155,7 @@ namespace TimeController.Views.CasualMode
                     {
                         vm.EndEditTaskCommand.Execute(_currentEditingTaskModel);
                     }
-                }  
+                }
                
                 if (_currentEditingTextBox != null)
                 {

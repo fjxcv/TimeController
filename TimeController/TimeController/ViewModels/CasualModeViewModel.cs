@@ -14,7 +14,6 @@ using TimeController.Services;
 using System.Threading.Tasks;
 using System.Text;
 using System.Windows.Media;
-using System.Diagnostics;
 
 namespace TimeController.ViewModels
 {
@@ -23,12 +22,12 @@ namespace TimeController.ViewModels
         private readonly ITaskService _taskService;
         private readonly IRewardService _rewardService;
         private readonly ISettingsService _settingsService;
+        public event Action OnShowRewardCelebration;
         public ObservableCollection<ReviewLine> ReviewLines { get; } = new ObservableCollection<ReviewLine>();
 
 
         // 记录上次重置时的年和周（默认 0，表示还没重置过）
         private int _lastResetYear = 0;
-        private int _lastResetWeek = 0;
         public int LastResetYear
         {
             get => _lastResetYear;
@@ -41,6 +40,7 @@ namespace TimeController.ViewModels
                 }
             }
         }
+        private int _lastResetWeek = 0;
         public int LastResetWeek
         {
             get => _lastResetWeek;
@@ -85,7 +85,6 @@ namespace TimeController.ViewModels
                 }
             }
         }
-
 
         public ICommand ToggleRewardPopupCommand { get; }
         public ICommand AddRewardTaskCommand { get; }
@@ -582,6 +581,7 @@ namespace TimeController.ViewModels
                 UpdateWeeklyReviewText();
             }
         }
+        private bool _isRewardBeingShown = false;
         public void UpdateProgress()
         {
             // 1. 先检查是否要做本周重置（如果你启用了跨周重置，这里保持不变）
@@ -619,7 +619,7 @@ namespace TimeController.ViewModels
                 }
                 OnPropertyChanged(nameof(Progress));
             }
-
+            
             UpdateWeeklyReviewText();
         }
 
@@ -681,7 +681,7 @@ namespace TimeController.ViewModels
                 ["人际连接"] = "社交达人，友谊更紧密~"
             };
 
-            // 5. 四个模块各自对应的“未开启”鼓励文案
+            // 5. 四个模块各自对应的"未开启"鼓励文案
             var zeroPhrases = new Dictionary<string, string>
             {
                 ["自我滋养"] = "记得给自己留点休息时间哦～",

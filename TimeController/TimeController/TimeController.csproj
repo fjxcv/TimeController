@@ -10,6 +10,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="Resources\fireworks.wav" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="CsvHelper" Version="33.1.0" />
     <PackageReference Include="DevExpress.Data" Version="24.2.7" />
     <PackageReference Include="DevExpress.WPF.ProjectTemplates" Version="24.2.7" />
@@ -37,6 +41,10 @@
     <Folder Include="Views\Components\" />
     <Folder Include="Styles\" />
     <Folder Include="Assets\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Resource Include="Resources\fireworks.wav" />
   </ItemGroup>
 
 </Project>

@@ -7,6 +7,7 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:local="clr-namespace:TimeController.Views.CasualMode"
         xmlns:local1="clr-namespace:TimeController.ViewModels"
+         xmlns:vm="clr-namespace:TimeController.ViewModels"
         xmlns:input="clr-namespace:System.Windows.Input;assembly=PresentationCore" d:DataContext="{d:DesignInstance Type=local1:CasualModeViewModel}"
          mc:Ignorable="d"
         Title="" d:DesignHeight="800" d:DesignWidth="1104"
@@ -128,12 +129,7 @@
                   LoadedBehavior="Manual"
                   UnloadedBehavior="Stop"
                   Visibility="Collapsed" />
-
-                <!-- 顶层透明Canvas，用于烟花动画 -->
-                <Canvas x:Name="FireworksCanvas"
-                    IsHitTestVisible="False"
-                    Panel.ZIndex="100" />
-                
+      
                 <Popup x:Name="RewardPopup"
                        Style="{StaticResource RewardPopupStyle}"
                        IsOpen="{Binding IsRewardPopupOpen, Mode=TwoWay}"
@@ -782,9 +778,6 @@
                     </ScrollViewer>
                 </StackPanel>
             </Border>
-
-
-
         </Grid>
     </Grid>
 </ui:Page>
