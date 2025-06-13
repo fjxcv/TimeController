@@ -37,6 +37,9 @@ namespace TimeController.ViewModels
                 Page pageToLoad = tag switch
                 {
                     "CasualMode" => new CasualModeView(),
+
+                    //点强管理默认进入周视图
+                    "StrongGoalMode" => new WeekView(),
                     "MonthView" => new MonthView(),
                     "WeekView" => new WeekView(),
                     "Review" => new ReviewView_everyday(

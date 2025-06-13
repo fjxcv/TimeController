@@ -9,11 +9,21 @@
       d:DesignHeight="450" d:DesignWidth="800"
       Title="AboutPage">
 
-    <ScrollViewer Padding="16">
+    <ScrollViewer  Padding="16">
         <StackPanel>
 
+            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                <TextBlock Text="关于 TimeController"
+                   FontSize="24"
+                   FontWeight="Bold"
+                   VerticalAlignment="Center" Margin="0,0,0,20"/>
+            </StackPanel>
+            
             <!-- 新手教程 -->
             <ui:SettingsCard Header="新手教程" Description="快速上手指南">
+                <ui:SettingsCard.HeaderIcon>
+                    <ui:FontIcon Glyph="&#xE8A5;" FontSize="20"/>
+                </ui:SettingsCard.HeaderIcon>
                 <StackPanel>
                     <ItemsControl ItemsSource="{Binding TutorialSteps}">
                         <ItemsControl.ItemTemplate>
@@ -30,18 +40,37 @@
 
             <!-- 系统理念 -->
             <ui:SettingsCard Header="系统理念" Description="背后的设计哲学">
-                <TextBlock Text="{Binding Philosophy}" TextWrapping="Wrap"/>
+                <ui:SettingsCard.HeaderIcon>
+                    <ui:FontIcon Glyph="&#xE83B;" FontSize="20"/>
+                </ui:SettingsCard.HeaderIcon>
+                <StackPanel>
+                    <ItemsControl ItemsSource="{Binding PhilosophyLines}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="•" Margin="0,0,4,0"/>
+                                    <TextBlock Text="{Binding}" TextWrapping="Wrap"/>
+                                </StackPanel>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
             </ui:SettingsCard>
 
-            <!-- 更多资源链接 -->
-            <ui:SettingsCard Header="更多资源" Description="延伸阅读与支持">
-                <ItemsControl ItemsSource="{Binding Links}">
+            <!-- 致谢 -->
+            <ui:SettingsCard Header="致谢" Description="感谢以下贡献者与开源项目">
+                <ui:SettingsCard.HeaderIcon>
+                    <ui:FontIcon Glyph="&#xE716;" FontSize="20"/>
+                </ui:SettingsCard.HeaderIcon>
+                <ItemsControl ItemsSource="{Binding Acknowledgements}" Margin="0,8,0,0">
                     <ItemsControl.ItemTemplate>
                         <DataTemplate>
-                            <ui:HyperlinkButton
-                                  Content="{Binding Label}"
-                                  NavigateUri="{Binding Uri}"
-                                  Margin="0,4,0,0"/>
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="•"
+                                            Margin="0,0,4,0"/>
+                                <TextBlock Text="{Binding}"
+                                            TextWrapping="Wrap"/>
+                            </StackPanel>
                         </DataTemplate>
                     </ItemsControl.ItemTemplate>
                 </ItemsControl>
@@ -49,5 +78,5 @@
 
         </StackPanel>
     </ScrollViewer>
-    
+
 </ui:Page>

@@ -50,14 +50,23 @@
             
             <!--页脚菜单-->
             <ui:NavigationView.FooterMenuItems>
-            <ui:NavigationViewItem x:Name="NavigationViewItem_Settings" 
-                                  Content="设置" 
-                                  Tag="settings" 
-                                  Icon="Settings" />
-            <ui:NavigationViewItem x:Name="NavigationViewItem_About" 
-                                  Content="关于" 
-                                  Tag="about" 
-                                  Icon="Info"/>
+            <ui:NavigationViewItem x:Name="NavigationViewItem_Settings"
+                                  Content="设置"
+                                  Tag="settings">
+                <ui:NavigationViewItem.Icon>
+
+                    <ui:FontIcon Glyph="&#xE713;" FontSize="16"/>
+                </ui:NavigationViewItem.Icon>
+            </ui:NavigationViewItem>
+
+            <ui:NavigationViewItem x:Name="NavigationViewItem_About"
+                                  Content="关于"
+                                  Tag="about">
+                <ui:NavigationViewItem.Icon>
+
+                    <ui:FontIcon Glyph="&#xE946;" FontSize="16"/>
+                </ui:NavigationViewItem.Icon>
+            </ui:NavigationViewItem>
         </ui:NavigationView.FooterMenuItems>
         
             <!--内容框架-->

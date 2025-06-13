@@ -8,7 +8,7 @@
 >
 
 <ScrollViewer>
-    <ikw:SimpleStackPanel Spacing="4">
+    <ikw:SimpleStackPanel Spacing="6" Margin="0,20,0,0">
 
         <!-- 每周目标任务量 -->
         <ui:SettingsCard Header="【咸鱼】每周目标任务量"
