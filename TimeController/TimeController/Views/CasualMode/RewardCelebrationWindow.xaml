@@ -3,21 +3,83 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:uiControls="clr-namespace:iNKORE.UI.WPF.Modern.Controls;assembly=iNKORE.UI.WPF.Modern"
         mc:Ignorable="d"
-        Title="奖励时刻" Height="300" Width="300"
+        Title="奖励时刻" Height="400" Width="350" 
         WindowStartupLocation="CenterScreen"
         ResizeMode="NoResize"
-        WindowStyle="None">
-    <Border Background="White" CornerRadius="10" BorderBrush="#E0E0E0" BorderThickness="1">
+        WindowStyle="None"
+        AllowsTransparency="True" Background="Transparent">
+
+    <Window.Resources>
+        <!-- 圆角按钮样式 -->
+        <Style x:Key="RoundedButtonStyle" TargetType="Button">
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border CornerRadius="{TemplateBinding Tag}" 
+                                Background="{TemplateBinding Background}"
+                                BorderThickness="0">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </Window.Resources>
+
+    <Border CornerRadius="20" Background="#E6F2ED" BorderThickness="1" BorderBrush="#B2D8C8">
         <Grid>
-            <TextBlock Text="恭喜你点亮了本周的努力格子，现在是你的奖励时刻" 
-                       HorizontalAlignment="Center" 
-                       VerticalAlignment="Center" 
-                       TextWrapping="Wrap"
-                       FontSize="20" 
-                       FontWeight="Bold" 
-                       TextAlignment="Center" 
-                       Margin="20"/>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+
+            <!-- Fireworks Icon -->
+            <uiControls:FontIcon Grid.Row="0" Glyph="&#xE734;" FontSize="40" Foreground="#FF8C00" Margin="0,20,0,10"
+                               HorizontalAlignment="Center" VerticalAlignment="Center"/>
+
+            <TextBlock Grid.Row="1"
+                       Text="恭喜你点亮了本周所有的努力格子!"
+                       FontSize="28" FontWeight="Bold" Foreground="#2E8B57"
+                       TextAlignment="Center" TextWrapping="Wrap"
+                       Margin="20,10,20,-10"
+                       HorizontalAlignment="Center" VerticalAlignment="Center"/>
+
+            <TextBlock Grid.Row="2"
+                       Text="一周的用心，现在是你的奖励时刻~"
+                       FontSize="16" Foreground="#696969"
+                       TextAlignment="Center" TextWrapping="Wrap"
+                       Margin="20,0,20,20"
+                       HorizontalAlignment="Center" VerticalAlignment="Center"/>
+
+            <!-- Reward Button -->
+            <Button Grid.Row="3"
+                    Width="200" Height="50"
+                    Margin="0,0,0,20"
+                    HorizontalAlignment="Center"
+                    Background="#B2D8C8"
+                    Style="{StaticResource RoundedButtonStyle}"
+                    Tag="10">
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center" HorizontalAlignment="Center">
+                    <uiControls:FontIcon Glyph="&#xE78E;" FontSize="24" Foreground="#2E8B57" Margin="0,0,10,0"/>
+                    <TextBlock Text="看电影" FontSize="20" FontWeight="SemiBold" Foreground="#2E8B57"/>
+                </StackPanel>
+            </Button>
+
+            <!-- Claim Button -->
+            <Button x:Name="ClaimRewardButton" Grid.Row="4"
+                    Content="立即领取"
+                    Width="150" Height="40"
+                    HorizontalAlignment="Center"
+                    Background="#6A9DD1" Foreground="White"
+                    Style="{StaticResource RoundedButtonStyle}"
+                    Tag="8"
+                    Click="ClaimRewardButton_Click" Margin="0,0,0,20"/>
         </Grid>
     </Border>
-</Window> 
+</Window>

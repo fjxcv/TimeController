@@ -257,7 +257,7 @@ namespace TimeController.ViewModels
             // 应用启动时先检查一次：如果跨周就重置
             CheckAndPerformWeeklyReset();
 
-            // 启动“每天零点检查”定时器
+            // 启动"每天零点检查"定时器
             StartDailyResetTimer();
 
         }
@@ -266,7 +266,7 @@ namespace TimeController.ViewModels
         {
             DateTime now = DateTime.Now;
             CultureInfo ci = CultureInfo.CurrentCulture;
-            // 按照“周一为一周第一天”的规则计算当前周数
+            // 按照"周一为一周第一天"的规则计算当前周数
             int thisWeek = ci.Calendar.GetWeekOfYear(now, CalendarWeekRule.FirstDay, DayOfWeek.Monday);
             int thisYear = now.Year;
 
@@ -498,7 +498,7 @@ namespace TimeController.ViewModels
             // 2. 统计前四个模块里当前已完成任务的总数
             int totalCompleted = Modules.Take(4).Sum(m => m.Tasks.Count(t => t.IsCompleted));
 
-            // 3. 如果之前已经发过奖励，但现在“完成数”被撤销导致少于阈值，就把 HasRewarded 置回 false
+            // 3. 如果之前已经发过奖励，但现在"完成数"被撤销导致少于阈值，就把 HasRewarded 置回 false
             if (HasRewarded && totalCompleted < RewardThreshold)
             {
                 HasRewarded = false;
@@ -510,7 +510,7 @@ namespace TimeController.ViewModels
                 Progress = RewardThreshold;
                 OnPropertyChanged(nameof(Progress));
 
-                IsRewardPopupOpen = true;
+                OnShowRewardCelebration?.Invoke(); // 只调用事件显示奖励庆祝窗口
                 HasRewarded = true;
             }
             else
@@ -529,7 +529,7 @@ namespace TimeController.ViewModels
             }
         }
 
-
+        public Action? OnShowRewardCelebration; // 新增：用于通知View层显示奖励庆祝窗口
 
         public event PropertyChangedEventHandler? PropertyChanged;
         protected void OnPropertyChanged(string name) =>

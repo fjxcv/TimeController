@@ -19,6 +19,7 @@ using TimeController.Models;
 using System.ComponentModel;
 using System.Windows.Threading;
 using System.Windows.Media.Animation;
+using TimeController.Views.CasualMode;
 
 namespace TimeController.Views.CasualMode
 {
@@ -26,7 +27,6 @@ namespace TimeController.Views.CasualMode
     /// CasualModeView.xaml 的交互逻辑
     /// </summary>
     public partial class CasualModeView : Page
-
     {
         private Random _rand = new Random(); // 用于烟花动画的随机数生成器
 
@@ -34,13 +34,14 @@ namespace TimeController.Views.CasualMode
         {
             InitializeComponent();
             DataContext = new CasualModeViewModel();
-            RewardPopup.Opened += RewardPopup_Opened;
+            RewardPopup.Opened += RewardPopup_Opened; // 重新订阅 RewardPopup.Opened 事件
 
             // ViewModel的属性变化，处理View层的UI操作
             if (DataContext is CasualModeViewModel vm)
             {
                 vm.PropertyChanged += ViewModel_PropertyChanged;
                 vm.Modules.CollectionChanged += Modules_CollectionChanged;
+                vm.OnShowRewardCelebration += HandleShowRewardCelebration; // 订阅新事件
                 // 为初始加载的模块订阅属性变化
                 foreach (var module in vm.Modules)
                 {
@@ -51,7 +52,7 @@ namespace TimeController.Views.CasualMode
 
         private void RewardPopup_Opened(object? sender, EventArgs e)
         {
-            //确保弹窗完全打开
+            // 确保弹窗完全打开并设置焦点，不播放烟花和音效
             Dispatcher.BeginInvoke(DispatcherPriority.Input, new Action(() =>
             {
                 if (RewardTaskInput != null)
@@ -60,9 +61,6 @@ namespace TimeController.Views.CasualMode
                     Keyboard.Focus(RewardTaskInput);
                 }
             }));
-
-            // 播放奖励音效和烟花动画
-            PlayFireworksAndSound();
         }
 
         private void PlayFireworksAndSound()
@@ -166,12 +164,23 @@ namespace TimeController.Views.CasualMode
         {
             if (DataContext is CasualModeViewModel vm)
             {
-                if (e.PropertyName == nameof(CasualModeViewModel.IsRewardPopupOpen))
-                {
-
-                }
             }
         }
+
+        private void HandleShowRewardCelebration()
+        {
+            // 在 UI 线程上显示新窗口
+            Dispatcher.Invoke(() =>
+            {
+                var rewardWindow = new RewardCelebrationWindow();
+                rewardWindow.Owner = Application.Current.MainWindow; // 设置主窗口为所有者，使其居中
+                rewardWindow.ShowDialog();
+            });
+
+            // 播放音效和烟花动画
+            PlayFireworksAndSound();
+        }
+
         //双击编辑后是空任务点击别处就直接删除
         private void CurrentEditingTextBox_LostFocus(object sender, RoutedEventArgs e)
         {

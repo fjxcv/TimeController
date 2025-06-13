@@ -8,5 +8,10 @@ namespace TimeController.Views.CasualMode
         {
             InitializeComponent();
         }
+
+        private void ClaimRewardButton_Click(object sender, RoutedEventArgs e)
+        {
+            this.Close();
+        }
     }
 } 
