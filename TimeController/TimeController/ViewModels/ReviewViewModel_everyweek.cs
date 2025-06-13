@@ -163,7 +163,10 @@ namespace TimeController.ViewModels
             var allHistory = await _taskService.GetAllTasksAsync();
 
             // 1. 拉出本周所在日期范围内的所有“按计划”任务
-            var scheduledTasks = await _taskService.GetTasksForDateRange(weekStart, weekStart.AddDays(6));
+            var allThisWeek = await _taskService.GetTasksForDateRange(weekStart, weekStart.AddDays(6));
+            var scheduledTasks = allThisWeek
+                .Where(t => t.Mode == TaskMode.Strong)
+                .ToList();
 
             // 2. 按状态分类：本周“完成” & “未完成”
             foreach (var t in scheduledTasks)
@@ -176,36 +179,34 @@ namespace TimeController.ViewModels
 
             // 3. 拉出所有任务，找出本周发生过的“推迟/放弃”事件
             var allTasks = await _taskService.GetAllTasksAsync();
-            var postponedThisWeek = allTasks
-                .Where(t => t.PostponedAt.HasValue
-                         && t.PostponedAt.Value >= weekStart
-                         && t.PostponedAt.Value < weekEnd);
+            var strongHistory = allTasks.Where(t => t.Mode == TaskMode.Strong);
 
-            var abandonedThisWeek = allTasks
-                .Where(t => t.AbandonedAt.HasValue
-                         && t.AbandonedAt.Value >= weekStart
-                         && t.AbandonedAt.Value < weekEnd);
+            var postponedThisWeek = strongHistory
+                .Where(t => t.PostponedAt >= weekStart && t.PostponedAt < weekEnd);
+
+            var abandonedThisWeek = strongHistory
+                .Where(t => t.AbandonedAt >= weekStart && t.AbandonedAt < weekEnd);
+
 
             // 合并并按时间排序
             var skippedThisWeek = postponedThisWeek
-            .Concat(abandonedThisWeek)
-            .OrderBy(t => t.PostponedAt ?? t.AbandonedAt)
-            // 按 Name 分组，取每组第一条，去重效果
-            .GroupBy(t => t.Name)
-            .Select(g => g.First())
-            .ToList();
-
+                .Concat(abandonedThisWeek)
+                .OrderBy(t => t.PostponedAt ?? t.AbandonedAt)// 按 Name 分组，取每组第一条，去重效果
+                .GroupBy(t => t.Name)
+                .Select(g => g.First())
+                .ToList();
+            
             SkippedTasks = new ObservableCollection<TaskModel>(skippedThisWeek);
 
 
             // 生成卡片、折线图
             var generator = new ReviewCardGenerator();
             WeeklyReviewCards = new ObservableCollection<ReviewCardModel>(
-                generator.GenerateCards(tasksThisWeek, allHistory, weekStart, weekEnd)
+                generator.GenerateCards(scheduledTasks, strongHistory.ToList(), weekStart, weekEnd)
             );
 
             // 生成完成率卡片
-            LoadChart(tasksThisWeek);
+            LoadChart(scheduledTasks);
 
             OnPropertyChanged(nameof(WeeklyCompletedTasks));
             OnPropertyChanged(nameof(WeeklyUncompletedTasks));

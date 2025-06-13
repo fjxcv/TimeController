@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.Extensions.DependencyInjection;
+using System;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.ComponentModel;
@@ -9,11 +10,21 @@ using System.Windows.Input;
 using System.Windows.Threading;
 using System.Xml.Linq;
 using TimeController.Models;
+using TimeController.Services;
+using System.Threading.Tasks;
+using System.Text;
+using System.Windows.Media;
+using System.Diagnostics;
 
 namespace TimeController.ViewModels
 {
     public class CasualModeViewModel : INotifyPropertyChanged
     {
+        private readonly ITaskService _taskService;
+        private readonly IRewardService _rewardService;
+        private readonly ISettingsService _settingsService;
+        public ObservableCollection<ReviewLine> ReviewLines { get; } = new ObservableCollection<ReviewLine>();
+
 
         // 记录上次重置时的年和周（默认 0，表示还没重置过）
         private int _lastResetYear = 0;
@@ -43,18 +54,20 @@ namespace TimeController.ViewModels
             }
         }
 
-        // —— 可配置阈值，每周默认完成4个有奖励 —— 
-        private int _rewardThreshold = 4;
+        // 从设置里加载阈值
+        private int _rewardThreshold;
         public int RewardThreshold
         {
             get => _rewardThreshold;
             set
             {
-                if (_rewardThreshold != value)
-                {
-                    _rewardThreshold = value;
-                    OnPropertyChanged(nameof(RewardThreshold));
-                }
+                if (_rewardThreshold == value) return;
+                _rewardThreshold = value;
+                OnPropertyChanged(nameof(RewardThreshold));
+                // 保存设置
+                _settingsService.SaveWeeklyTarget(value);
+                // 使用新阈值后立刻刷新一次进度/奖励状态
+                UpdateProgress();
             }
         }
 
@@ -97,14 +110,33 @@ namespace TimeController.ViewModels
         // 结束编辑任务的Command
         public ICommand EndEditTaskCommand { get; }
 
-        public CasualModeViewModel()
+        public CasualModeViewModel() : this(
+            App.Services.GetRequiredService<ITaskService>(),
+            App.Services.GetRequiredService<IRewardService>(),
+            App.Services.GetRequiredService<ISettingsService>()
+            )
         {
+        }
+
+        public CasualModeViewModel(ITaskService taskService, IRewardService rewardService, ISettingsService settingsService)
+        {
+            _taskService = taskService;
+            _rewardService = rewardService;
+            _settingsService = settingsService;
+
             // 初始化模块
             Modules.Add(new ModuleViewModel { Name = "自我滋养", MaxTasks = 5 });
             Modules.Add(new ModuleViewModel { Name = "创造表达", MaxTasks = 5 });
             Modules.Add(new ModuleViewModel { Name = "生活杂务", MaxTasks = 5 });
             Modules.Add(new ModuleViewModel { Name = "人际连接", MaxTasks = 5 });
             Modules.Add(new ModuleViewModel { Name = "长期备忘" });
+
+            // 从持久化设置里读取阈值（默认为 4）
+            RewardThreshold = Math.Max(1, _settingsService.LoadWeeklyTarget());
+
+            // 从数据库加载任务
+            _ = LoadTasksFromDatabaseAsync();
+            _ = LoadRewardsAsync();
 
             // 普通任务命令
             ToggleTaskCommand = new RelayCommand<TaskModel>(ToggleTask);
@@ -198,6 +230,11 @@ namespace TimeController.ViewModels
                         {
                             DeleteTask(task);
                         }
+                        else
+                        {
+                            _ = _taskService.UpdateTaskAsync(task);
+                        }
+
                         task.IsEditing = false;
                         if (CurrentEditingTask == task)
                         {
@@ -210,7 +247,7 @@ namespace TimeController.ViewModels
             //奖励弹窗相关
 
             // 删除奖励任务命令
-            DeleteRewardTaskCommand = new RelayCommand<TaskModel>(DeleteRewardTask);
+            DeleteRewardTaskCommand = new RelayCommand<RewardModel>(DeleteRewardTask);
             // 奖励弹窗命令
             ToggleRewardPopupCommand = new RelayCommand<object>(_ =>
             {
@@ -255,14 +292,14 @@ namespace TimeController.ViewModels
             }
 
             // 应用启动时先检查一次：如果跨周就重置
-            CheckAndPerformWeeklyReset();
+            _ = CheckAndPerformWeeklyResetAsync();
 
             // 启动"每天零点检查"定时器
             StartDailyResetTimer();
 
         }
 
-        private void CheckAndPerformWeeklyReset()
+        private async Task CheckAndPerformWeeklyResetAsync()
         {
             DateTime now = DateTime.Now;
             CultureInfo ci = CultureInfo.CurrentCulture;
@@ -273,23 +310,24 @@ namespace TimeController.ViewModels
             // 如果当前年-周与上次记录的不同，就说明进入新一周，需要重置
             if (thisYear != LastResetYear || thisWeek != LastResetWeek)
             {
-                PerformWeeklyReset();
+                await PerformWeeklyResetAsync();
                 LastResetYear = thisYear;
                 LastResetWeek = thisWeek;
             }
         }
 
         //清除已完成的任务 + 重置进度和奖励状态
-        private void PerformWeeklyReset()
+        private async Task PerformWeeklyResetAsync()
         {
             // 1. 遍历前 4 个模块，移除所有 IsCompleted == true 的任务
             foreach (var module in Modules.Take(4))
             {
-                var completedTasks = module.Tasks.Where(t => t.IsCompleted).ToList();
-                foreach (var t in completedTasks)
-                {
-                    module.Tasks.Remove(t);
-                }
+                    var toReset = module.Tasks.Where(t => t.IsCompleted && !t.IsAllDay).ToList();
+                    foreach (var t in toReset)
+                    {
+                        t.IsCompleted = false;
+                        await _taskService.UpdateTaskAsync(t);
+                    }
             }
 
             // 2. 重置进度条和奖励标记
@@ -316,11 +354,11 @@ namespace TimeController.ViewModels
             {
                 startTimer.Stop();
                 // 零点到，先检查一次
-                CheckAndPerformWeeklyReset();
+                _ = CheckAndPerformWeeklyResetAsync();
 
                 // 再启动一个 24 小时周期的定时器
                 _dailyTimer = new DispatcherTimer { Interval = TimeSpan.FromHours(24) };
-                _dailyTimer.Tick += (s2, e2) => CheckAndPerformWeeklyReset();
+                _dailyTimer.Tick += async (s2, e2) => await CheckAndPerformWeeklyResetAsync();
                 _dailyTimer.Start();
             };
             startTimer.Start();
@@ -373,8 +411,8 @@ namespace TimeController.ViewModels
         }
 
         // —— 奖励任务列表 —— 
-        private ObservableCollection<TaskModel> _rewardTasks = new();
-        public ObservableCollection<TaskModel> RewardTasks
+        private ObservableCollection<RewardModel> _rewardTasks = new();
+        public ObservableCollection<RewardModel> RewardTasks
         {
             get => _rewardTasks;
             set
@@ -397,6 +435,34 @@ namespace TimeController.ViewModels
                 {
                     _newRewardTaskText = value;
                     OnPropertyChanged(nameof(NewRewardTaskText));
+                }
+            }
+        }
+
+        private string _weeklyReviewText = string.Empty;
+        public string WeeklyReviewText
+        {
+            get => _weeklyReviewText;
+            set
+            {
+                if (_weeklyReviewText != value)
+                {
+                    _weeklyReviewText = value;
+                    OnPropertyChanged(nameof(WeeklyReviewText));
+                }
+            }
+        }
+
+        private string _rewardHint = string.Empty;
+        public string RewardHint
+        {
+            get => _rewardHint;
+            set
+            {
+                if (_rewardHint != value)
+                {
+                    _rewardHint = value;
+                    OnPropertyChanged(nameof(RewardHint));
                 }
             }
         }
@@ -428,6 +494,7 @@ namespace TimeController.ViewModels
         public void ToggleTask(TaskModel task)
         {
             task.IsCompleted = !task.IsCompleted;
+            _ = _taskService.UpdateTaskAsync(task);
             UpdateProgress(); // 取消或恢复完成状态时
 
             // 任务完成且正在编辑，结束编辑
@@ -436,6 +503,9 @@ namespace TimeController.ViewModels
                 task.IsEditing = false;
                 CurrentEditingTask = null;
             }
+
+            //刷新复盘
+            UpdateWeeklyReviewText();
         }
 
         private void DeleteTask(TaskModel task)
@@ -443,22 +513,31 @@ namespace TimeController.ViewModels
             var module = Modules.FirstOrDefault(m => m.Tasks.Contains(task));
             if (module != null)
             {
+                _ = _taskService.DeleteTaskAsync(task);
                 module.Tasks.Remove(task);
                 UpdateProgress(); // 直接触发更新
             }
+
+            //刷新复盘
+            UpdateWeeklyReviewText();
         }
-       
+
         // 删除奖励任务
-        public void DeleteRewardTask(TaskModel task) =>
+        public void DeleteRewardTask(RewardModel task)
+        {
+            _ = _rewardService.DeleteRewardAsync(task);
             RewardTasks.Remove(task);
+        }
 
         // 添加奖励任务
         public void AddRewardTask(string taskName)
         {
             if (!string.IsNullOrWhiteSpace(taskName))
             {
-                RewardTasks.Add(new TaskModel { Name = taskName });
+                var reward = new RewardModel { Title = taskName };
+                RewardTasks.Add(reward);
                 NewRewardTaskText = string.Empty;
+                _ = _rewardService.AddRewardAsync(reward);
             }
         }
 
@@ -473,7 +552,17 @@ namespace TimeController.ViewModels
 
             if (!string.IsNullOrWhiteSpace(taskName))
             {
-                module.Tasks.Add(new TaskModel { Name = taskName });
+                var task = new TaskModel
+                {
+                    Name = taskName,
+                    Mode = TaskMode.Casual,
+                    Category = module.Name,
+                    CreatedAt = DateTime.Now
+                };
+                module.Tasks.Add(task);
+
+                // 持久化到数据库
+                _ = _taskService.UpdateTaskAsync(task);
 
                 // 在ViewModel中处理排序
                 var sortedTasks = module.Tasks.OrderBy(t => t.IsCompleted).ToList();
@@ -488,12 +577,15 @@ namespace TimeController.ViewModels
                 module.NewTaskText = string.Empty; // 清空输入框文本
                 module.IsInputVisible = false; // 添加任务后隐藏输入框
                 UpdateProgress();
+
+                //刷新复盘
+                UpdateWeeklyReviewText();
             }
         }
         public void UpdateProgress()
         {
             // 1. 先检查是否要做本周重置（如果你启用了跨周重置，这里保持不变）
-            CheckAndPerformWeeklyReset();
+            _ = CheckAndPerformWeeklyResetAsync();
 
             // 2. 统计前四个模块里当前已完成任务的总数
             int totalCompleted = Modules.Take(4).Sum(m => m.Tasks.Count(t => t.IsCompleted));
@@ -527,9 +619,155 @@ namespace TimeController.ViewModels
                 }
                 OnPropertyChanged(nameof(Progress));
             }
+
+            UpdateWeeklyReviewText();
         }
 
-        public Action? OnShowRewardCelebration; // 新增：用于通知View层显示奖励庆祝窗口
+
+        private async Task LoadTasksFromDatabaseAsync()
+        {
+
+                var all = await _taskService.GetAllTasksAsync();
+                var casual = all.Where(t => t.Mode == TaskMode.Casual).ToList();
+
+                foreach (var module in Modules)
+                {
+                    var moduleTasks = casual.Where(t => t.Category == module.Name);
+                    foreach (var t in moduleTasks.OrderBy(t => t.IsCompleted))
+                        module.Tasks.Add(t);
+                }
+
+                UpdateProgress();
+
+                //刷新复盘
+                UpdateWeeklyReviewText();
+
+        }
+
+        private async Task LoadRewardsAsync()
+        {
+            var rewards = await _rewardService.GetRewardsAsync();
+            foreach (var r in rewards)
+                RewardTasks.Add(r);
+        }
+
+        private void UpdateWeeklyReviewText()
+        {
+            // 先清空
+            ReviewLines.Clear();
+
+            // 1. 计算本周完成总数
+            int total = Modules.Take(4).Sum(m => m.Tasks.Count(t => t.IsCompleted));
+
+            // 2. 找到最勤奋的模块
+            var modules4 = Modules.Take(4).ToList();
+            string top = modules4
+                .OrderByDescending(m => m.Tasks.Count(t => t.IsCompleted))
+                .FirstOrDefault()?.Name
+                ?? string.Empty;
+
+            // 3. 收集所有没添加任务的模块
+            var zeroList = modules4
+                .Where(m => m.Tasks.Count == 0)
+                .Select(m => m.Name)
+                .ToList();
+
+            // 4. 四个模块各自对应的文案
+            var topPhrases = new Dictionary<string, string>
+            {
+                ["自我滋养"] = "坚持了好习惯，身心都在成长！",
+                ["创造表达"] = "创意爆发，让世界听到你的声音！",
+                ["生活杂务"] = "家务达人上线，生活井井有条！",
+                ["人际连接"] = "社交达人，友谊更紧密~"
+            };
+
+            // 5. 四个模块各自对应的“未开启”鼓励文案
+            var zeroPhrases = new Dictionary<string, string>
+            {
+                ["自我滋养"] = "记得给自己留点休息时间哦～",
+                ["创造表达"] = "多动动笔，多激发灵感吧！",
+                ["生活杂务"] = "整理能让心情更舒畅，试试吧！",
+                ["人际连接"] = "和朋友聊聊天，也是一种充电方式~"
+            };
+
+            var sb = new StringBuilder();
+
+            // 1) 完成数分支
+            if (total == 0)
+            {
+                ReviewLines.Add(new ReviewLine
+                {
+                    Icon = "😉",
+                    Text = "本周暂未完成任何任务，挑战自己就从现在开始~",
+                    Foreground = Brushes.Gray
+                });
+                ReviewLines.Add(new ReviewLine
+                {
+                    Icon = "🎯",
+                    Text = "给自己设一个小目标，行动起来吧！",
+                    Foreground = Brushes.Gray
+                });
+            }
+            else if (total < RewardThreshold)
+            {
+                ReviewLines.Add(new ReviewLine
+                {
+                    Icon = "💪",
+                    Text = $"本周已完成 {total} 个任务，继续保持，加油！",
+                    Foreground = Brushes.DarkSlateBlue
+                });
+            }
+            else
+            {
+                ReviewLines.Add(new ReviewLine
+                {
+                    Icon = "🏆",
+                    Text = $"本周已完成 {total} 个任务，太棒了！",
+                    Foreground = Brushes.Green
+                });
+            }
+
+            // 2) 最勤奋（total>0 时）
+            if (total > 0 && topPhrases.TryGetValue(top, out var topText))
+            {
+                ReviewLines.Add(new ReviewLine
+                {
+                    Icon = "🏅",
+                    Text = $"其中【{top}】最勤奋 —— {topText}",
+                    Foreground = Brushes.Goldenrod
+                });
+            }
+
+
+
+            // 3) 所有未开启模块
+            foreach (var name in zeroList)
+            {
+                if (zeroPhrases.TryGetValue(name, out var zp))
+                {
+                    ReviewLines.Add(new ReviewLine
+                    {
+                        Icon = "🌱",
+                        Text = $"【{name}】区本周未添加任务 —— {zp}",
+                        Foreground = Brushes.DarkGoldenrod
+                    });
+                }
+            }
+
+            // 4) 到达阈值才提示领奖励
+            if (total >= RewardThreshold)
+            {
+                ReviewLines.Add(new ReviewLine
+                {
+                    Icon = "🎉",
+                    Text = "去领取本周奖励吧！",
+                    Foreground = Brushes.MediumSeaGreen
+                });
+            }
+
+            OnPropertyChanged(nameof(ReviewLines));
+        }
+
 
         public event PropertyChangedEventHandler? PropertyChanged;
         protected void OnPropertyChanged(string name) =>
@@ -673,4 +911,13 @@ namespace TimeController.ViewModels
         protected void OnPropertyChanged(string name) =>
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
     }
+
+    public class ReviewLine
+    {
+        public string Icon { get; set; }      // Emoji
+        public string Text { get; set; }      // 文案
+        public Brush Foreground { get; set; } // 文字颜色
+    }
+
+
 }

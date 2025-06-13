@@ -1,25 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Globalization;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows;
+﻿using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
 using TimeController.ViewModels;
 using Page = iNKORE.UI.WPF.Modern.Controls.Page;
 using TimeController.Models;
 using System.ComponentModel;
 using System.Windows.Threading;
-using System.Windows.Media.Animation;
-using TimeController.Views.CasualMode;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace TimeController.Views.CasualMode
 {
@@ -28,13 +16,12 @@ namespace TimeController.Views.CasualMode
     /// </summary>
     public partial class CasualModeView : Page
     {
-        private Random _rand = new Random(); // 用于烟花动画的随机数生成器
 
         public CasualModeView()
         {
             InitializeComponent();
-            DataContext = new CasualModeViewModel();
-            RewardPopup.Opened += RewardPopup_Opened; // 重新订阅 RewardPopup.Opened 事件
+            DataContext = App.Services.GetRequiredService<CasualModeViewModel>();
+            RewardPopup.Opened += RewardPopup_Opened;
 
             // ViewModel的属性变化，处理View层的UI操作
             if (DataContext is CasualModeViewModel vm)
@@ -48,6 +35,7 @@ namespace TimeController.Views.CasualMode
                     module.PropertyChanged += Module_PropertyChanged;
                 }
             }
+
         }
 
         private void RewardPopup_Opened(object? sender, EventArgs e)

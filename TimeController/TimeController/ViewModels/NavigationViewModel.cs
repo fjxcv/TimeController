@@ -11,6 +11,7 @@ using TimeController.Views.CasualMode;
 using TimeController.Views.Review;
 using TimeController.Views.StrongGoalWeek;
 using TimeController.Views.StrongGoalMonth;
+using TimeController.Views.SettingsInfo;
 using TimeController.Services;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -42,8 +43,9 @@ namespace TimeController.ViewModels
                         new ReviewViewModel_everyday(App.AppHost.Services.GetRequiredService<ITaskService>())
                         ),
 
-                    //"settings" => 
-                    //"about" => 
+                    "settings" => App.AppHost.Services.GetRequiredService<SettingsPage>(),
+                    "about" => App.AppHost.Services.GetRequiredService<AboutPage>(),
+
                     _ => new CasualModeView()
                 };
 
