@@ -6,7 +6,9 @@ using System.Windows;
 using Microsoft.EntityFrameworkCore;
 using TimeController.Services;
 using TimeController.ViewModels;
+using TimeController.Views;
 using TimeController.Models;
+using TimeController.Views.SettingsInfo;
 
 namespace TimeController
 {
@@ -48,15 +50,22 @@ namespace TimeController
                     services.AddScoped<ITaskService, TaskService>();
                     services.AddSingleton<INavigationService, NavigationService>();
                     services.AddScoped<IRewardService, RewardService>();
+                    services.AddSingleton<ISettingsService, AppSettingsService>();
 
                     // ViewModels
                     services.AddTransient<WeekViewModel>();
                     services.AddScoped<ReviewViewModel_everyday>();
                     services.AddScoped<ReviewViewModel_everyweek>();
                     services.AddScoped<CasualModeViewModel>();
+                    services.AddTransient<SettingsPageViewModel>();
+                    services.AddTransient<AboutPageViewModel>();
+
+                    services.AddTransient<AboutPage>();
+                    services.AddTransient<SettingsPage>();
 
                     // MainWindow
                     services.AddSingleton<MainWindow>();
+
                 })
                 .Build();
             AppHost.Start();

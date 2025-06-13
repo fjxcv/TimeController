@@ -1,0 +1,53 @@
+﻿<ui:Page x:Class="TimeController.Views.SettingsInfo.AboutPage"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+      xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+      xmlns:local="clr-namespace:TimeController.Views.SettingsInfo"
+      xmlns:ui="http://schemas.inkore.net/lib/ui/wpf/modern"
+      mc:Ignorable="d" 
+      d:DesignHeight="450" d:DesignWidth="800"
+      Title="AboutPage">
+
+    <ScrollViewer Padding="16">
+        <StackPanel>
+
+            <!-- 新手教程 -->
+            <ui:SettingsCard Header="新手教程" Description="快速上手指南">
+                <StackPanel>
+                    <ItemsControl ItemsSource="{Binding TutorialSteps}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="•" Margin="0,0,4,0"/>
+                                    <TextBlock Text="{Binding}" TextWrapping="Wrap"/>
+                                </StackPanel>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
+            </ui:SettingsCard>
+
+            <!-- 系统理念 -->
+            <ui:SettingsCard Header="系统理念" Description="背后的设计哲学">
+                <TextBlock Text="{Binding Philosophy}" TextWrapping="Wrap"/>
+            </ui:SettingsCard>
+
+            <!-- 更多资源链接 -->
+            <ui:SettingsCard Header="更多资源" Description="延伸阅读与支持">
+                <ItemsControl ItemsSource="{Binding Links}">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <ui:HyperlinkButton
+                                  Content="{Binding Label}"
+                                  NavigateUri="{Binding Uri}"
+                                  Margin="0,4,0,0"/>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </ui:SettingsCard>
+
+        </StackPanel>
+    </ScrollViewer>
+    
+</ui:Page>

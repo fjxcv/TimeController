@@ -85,6 +85,14 @@
             <Setter Property="StaysOpen" Value="False"/>
             <Setter Property="PopupAnimation" Value="Slide"/>
         </Style>
+
+        <!-- 给任务名用的 TextBlock 定义一个专属样式 -->
+        <Style x:Key="ModuleTaskNameStyle" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="18"/>
+            <!-- 你想要的大小，比如 18 -->
+            <Setter Property="FontWeight" Value="Normal"/>
+            <Setter Property="Foreground" Value="Black"/>
+        </Style>
     </ui:Page.Resources>
 
 
@@ -238,22 +246,14 @@
                                         <CheckBox Grid.Column="0" 
                                                   IsChecked="{Binding IsCompleted, Mode=TwoWay}" 
                                                   VerticalAlignment="Center"/>
-                                        <TextBlock Grid.Column="1" Text="{Binding Name}" Margin="0,0,0,0" VerticalAlignment="Center">
+                                        <TextBlock Grid.Column="1" Text="{Binding Name}" Margin="0,0,0,0" VerticalAlignment="Center" Style="{StaticResource ModuleTaskNameStyle}">
                                             <TextBlock.InputBindings>
                                                 <MouseBinding MouseAction="LeftDoubleClick"
                                                               Command="{Binding DataContext.StartEditTaskCommand, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ui:Page}}}"
                                                               CommandParameter="{Binding}"/>
                                             </TextBlock.InputBindings>
-                                            <TextBlock.Style>
-                                                <Style TargetType="TextBlock">
-                                                    <Style.Triggers>
-                                                        <DataTrigger Binding="{Binding IsCompleted}" Value="True">
-                                                            <Setter Property="TextDecorations" Value="Strikethrough"/>
-                                                        </DataTrigger>
-                                                    </Style.Triggers>
-                                                </Style>
-                                            </TextBlock.Style>
                                         </TextBlock>
+                                        
                                         <TextBox Grid.Column="1" Text="{Binding Name, UpdateSourceTrigger=PropertyChanged}" 
                                          Visibility="{Binding IsEditing, Converter={StaticResource BoolToVisibility}}"
                                          Margin="0,0,0,0" VerticalAlignment="Center">
@@ -359,22 +359,14 @@
                                         <CheckBox Grid.Column="0" 
                                                   IsChecked="{Binding IsCompleted, Mode=TwoWay}" 
                                                   VerticalAlignment="Center"/>
-                                        <TextBlock Grid.Column="1" Text="{Binding Name}" Margin="0,0,0,0" VerticalAlignment="Center">
+                                        <TextBlock Grid.Column="1" Text="{Binding Name}" Margin="0,0,0,0" VerticalAlignment="Center" Style="{StaticResource ModuleTaskNameStyle}">
                                             <TextBlock.InputBindings>
                                                 <MouseBinding MouseAction="LeftDoubleClick"
                                                               Command="{Binding DataContext.StartEditTaskCommand, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ui:Page}}}"
                                                               CommandParameter="{Binding}"/>
                                             </TextBlock.InputBindings>
-                                            <TextBlock.Style>
-                                                <Style TargetType="TextBlock">
-                                                    <Style.Triggers>
-                                                        <DataTrigger Binding="{Binding IsCompleted}" Value="True">
-                                                            <Setter Property="TextDecorations" Value="Strikethrough"/>
-                                                        </DataTrigger>
-                                                    </Style.Triggers>
-                                                </Style>
-                                            </TextBlock.Style>
                                         </TextBlock>
+                                        
                                         <TextBox Grid.Column="1" Text="{Binding Name, UpdateSourceTrigger=PropertyChanged}" 
                                          Visibility="{Binding IsEditing, Converter={StaticResource BoolToVisibility}}"
                                          Margin="0,0,0,0" VerticalAlignment="Center">
@@ -479,22 +471,14 @@
                                         <CheckBox Grid.Column="0" 
                                                   IsChecked="{Binding IsCompleted, Mode=TwoWay}" 
                                                   VerticalAlignment="Center"/>
-                                        <TextBlock Grid.Column="1" Text="{Binding Name}" Margin="0,0,0,0" VerticalAlignment="Center">
+                                        <TextBlock Grid.Column="1" Text="{Binding Name}" Margin="0,0,0,0" VerticalAlignment="Center" Style="{StaticResource ModuleTaskNameStyle}">
                                             <TextBlock.InputBindings>
                                                 <MouseBinding MouseAction="LeftDoubleClick"
                                                               Command="{Binding DataContext.StartEditTaskCommand, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ui:Page}}}"
                                                               CommandParameter="{Binding}"/>
                                             </TextBlock.InputBindings>
-                                            <TextBlock.Style>
-                                                <Style TargetType="TextBlock">
-                                                    <Style.Triggers>
-                                                        <DataTrigger Binding="{Binding IsCompleted}" Value="True">
-                                                            <Setter Property="TextDecorations" Value="Strikethrough"/>
-                                                        </DataTrigger>
-                                                    </Style.Triggers>
-                                                </Style>
-                                            </TextBlock.Style>
                                         </TextBlock>
+                                        
                                         <TextBox Grid.Column="1" Text="{Binding Name, UpdateSourceTrigger=PropertyChanged}" 
                                          Visibility="{Binding IsEditing, Converter={StaticResource BoolToVisibility}}"
                                          Margin="0,0,0,0" VerticalAlignment="Center">
@@ -571,22 +555,14 @@
                                         <CheckBox Grid.Column="0" 
                                                   IsChecked="{Binding IsCompleted, Mode=TwoWay}" 
                                                   VerticalAlignment="Center"/>
-                                        <TextBlock Grid.Column="1" Text="{Binding Name}" Margin="0,0,0,0" VerticalAlignment="Center">
+                                        <TextBlock Grid.Column="1" Text="{Binding Name}" Margin="0,0,0,0" VerticalAlignment="Center" Style="{StaticResource ModuleTaskNameStyle}">
                                             <TextBlock.InputBindings>
                                                 <MouseBinding MouseAction="LeftDoubleClick"
                                                               Command="{Binding DataContext.StartEditTaskCommand, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ui:Page}}}"
                                                               CommandParameter="{Binding}"/>
                                             </TextBlock.InputBindings>
-                                            <TextBlock.Style>
-                                                <Style TargetType="TextBlock">
-                                                    <Style.Triggers>
-                                                        <DataTrigger Binding="{Binding IsCompleted}" Value="True">
-                                                            <Setter Property="TextDecorations" Value="Strikethrough"/>
-                                                        </DataTrigger>
-                                                    </Style.Triggers>
-                                                </Style>
-                                            </TextBlock.Style>
                                         </TextBlock>
+                                        
                                         <TextBox Grid.Column="1" Text="{Binding Name, UpdateSourceTrigger=PropertyChanged}" 
                                          Visibility="{Binding IsEditing, Converter={StaticResource BoolToVisibility}}"
                                          Margin="0,0,0,0" VerticalAlignment="Center">

@@ -10,6 +10,7 @@ using TimeController.Helpers;
 using Microsoft.Extensions.DependencyInjection;
 using TimeController.ViewModels;
 using MessageBox = iNKORE.UI.WPF.Modern.Controls.MessageBox;
+using TimeController.Views.SettingsInfo;
 
 namespace TimeController.Views.Navigation
 {
@@ -78,11 +79,11 @@ namespace TimeController.Views.Navigation
             }
             else if (item == NavigationViewItem_Settings)
             {
-                //page = Page_Settings;
+                page = App.AppHost.Services.GetRequiredService<SettingsPage>();
             }
             else if (item == NavigationViewItem_About)
             {
-                //page = Page_About;
+                page = App.AppHost.Services.GetRequiredService<AboutPage>();
             }
 
             if (page != null)
@@ -91,48 +92,6 @@ namespace TimeController.Views.Navigation
                 ContentFrame.Navigate(page);
             }
         }
-
-        //public void NavigateTo(string viewKey)
-        //{
-        //    switch (viewKey)
-        //    {
-        //        case "Everyday":
-        //            {
-        //                var taskService = App.AppHost.Services.GetRequiredService<ITaskService>();
-        //                var page = new ReviewView_everyday(taskService);
-        //                var vm = App.AppHost.Services.GetRequiredService<ReviewViewModel_everyday>();
-
-        //                vm.IsEverydayPage = true; //默认每日复盘按钮亮
-        //                vm.NavigateToEveryweekRequested += () =>
-        //                {
-        //                    NavigateTo("Everyweek");
-        //                };
-
-        //                page.DataContext = vm;
-        //                ContentFrame.Navigate(page);
-        //                break;
-        //            }
-
-        //        case "Everyweek":
-        //            {
-        //                var vm = App.AppHost.Services.GetRequiredService<ReviewViewModel_everyweek>();
-        //                vm.IsEverydayPage = false;
-
-        //                vm.NavigateToEverydayRequested += () =>
-        //                {
-        //                    NavigateTo("Everyday");
-        //                };
-
-        //                var page = new ReviewView_everyweek(vm);
-        //                ContentFrame.Navigate(page);
-        //                break;
-        //            }
-
-        //        default:
-        //            throw new ArgumentException($"Unknown view key: {viewKey}");
-        //    }
-        //}
-
 
 
     }

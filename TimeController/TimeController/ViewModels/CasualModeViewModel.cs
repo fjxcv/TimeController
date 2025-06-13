@@ -22,6 +22,7 @@ namespace TimeController.ViewModels
     {
         private readonly ITaskService _taskService;
         private readonly IRewardService _rewardService;
+        private readonly ISettingsService _settingsService;
         public ObservableCollection<ReviewLine> ReviewLines { get; } = new ObservableCollection<ReviewLine>();
 
 
@@ -53,18 +54,20 @@ namespace TimeController.ViewModels
             }
         }
 
-        // —— 可配置阈值，每周默认完成4个有奖励 —— 
-        private int _rewardThreshold = 4;
+        // 从设置里加载阈值
+        private int _rewardThreshold;
         public int RewardThreshold
         {
             get => _rewardThreshold;
             set
             {
-                if (_rewardThreshold != value)
-                {
-                    _rewardThreshold = value;
-                    OnPropertyChanged(nameof(RewardThreshold));
-                }
+                if (_rewardThreshold == value) return;
+                _rewardThreshold = value;
+                OnPropertyChanged(nameof(RewardThreshold));
+                // 保存设置
+                _settingsService.SaveWeeklyTarget(value);
+                // 使用新阈值后立刻刷新一次进度/奖励状态
+                UpdateProgress();
             }
         }
 
@@ -109,14 +112,17 @@ namespace TimeController.ViewModels
 
         public CasualModeViewModel() : this(
             App.Services.GetRequiredService<ITaskService>(),
-            App.Services.GetRequiredService<IRewardService>())
+            App.Services.GetRequiredService<IRewardService>(),
+            App.Services.GetRequiredService<ISettingsService>()
+            )
         {
         }
 
-        public CasualModeViewModel(ITaskService taskService, IRewardService rewardService)
+        public CasualModeViewModel(ITaskService taskService, IRewardService rewardService, ISettingsService settingsService)
         {
             _taskService = taskService;
             _rewardService = rewardService;
+            _settingsService = settingsService;
 
             // 初始化模块
             Modules.Add(new ModuleViewModel { Name = "自我滋养", MaxTasks = 5 });
@@ -125,6 +131,8 @@ namespace TimeController.ViewModels
             Modules.Add(new ModuleViewModel { Name = "人际连接", MaxTasks = 5 });
             Modules.Add(new ModuleViewModel { Name = "长期备忘" });
 
+            // 从持久化设置里读取阈值（默认为 4）
+            RewardThreshold = Math.Max(1, _settingsService.LoadWeeklyTarget());
 
             // 从数据库加载任务
             _ = LoadTasksFromDatabaseAsync();
