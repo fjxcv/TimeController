@@ -4,13 +4,14 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:uiControls="clr-namespace:iNKORE.UI.WPF.Modern.Controls;assembly=iNKORE.UI.WPF.Modern"
+        xmlns:vm="clr-namespace:TimeController.ViewModels"
         mc:Ignorable="d"
         Title="奖励时刻" Height="350" Width="400" 
         WindowStartupLocation="CenterScreen"
         ResizeMode="NoResize"
         WindowStyle="None"
         AllowsTransparency="True" Background="Transparent"
-        Loaded="Window_Loaded" >
+        Loaded="Window_Loaded">
 
     <Window.Resources>
         <!-- 圆角按钮样式 -->
@@ -38,7 +39,7 @@
                 Background="Transparent"
                 IsHitTestVisible="False"/>
 
-        <!-- 你的原始弹窗 Border -->
+        <!-- 奖励弹窗 Border -->
         <Border CornerRadius="20"
                 Background="#E6F2ED"
                 BorderThickness="1"
@@ -81,18 +82,20 @@
                            TextWrapping="Wrap"
                            Margin="0,2,0,0"/>
 
-                <!-- 示例奖励按钮 -->
+                <!-- 显示最终选中的奖励任务 -->
                 <Button Grid.Row="4"
                         Width="200"
                         Height="50"
                         Margin="0,0,0,20"
                         HorizontalAlignment="Center"
                         Background="#B2D8C8"
-                        Style="{StaticResource RoundedButtonStyle}"
-                        Tag="10">
+                        Style="{StaticResource RoundedButtonStyle}">
                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center" HorizontalAlignment="Center">
-                        <uiControls:FontIcon Glyph="&#xE78E;" FontSize="24" Foreground="#2E8B57" Margin="0,0,10,0"/>
-                        <TextBlock Text="看电影" FontSize="20" FontWeight="SemiBold" Foreground="#2E8B57"/>
+                        <Image Source="pack://application:,,,/TimeController;component/Resources/reward.png" Width="24" Height="24" Margin="0,0,10,0" VerticalAlignment="Center"/>
+                        <TextBlock Text="{Binding FinalRewardTask.Title, FallbackValue='未选择奖励'}"
+                                 FontSize="20"
+                                 FontWeight="SemiBold"
+                                 Foreground="#2E8B57"/>
                     </StackPanel>
                 </Button>
 

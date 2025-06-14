@@ -14,6 +14,7 @@ using TimeController.Services;
 using System.Threading.Tasks;
 using System.Text;
 using System.Windows.Media;
+using System.Windows.Controls;
 
 namespace TimeController.ViewModels
 {
@@ -109,12 +110,20 @@ namespace TimeController.ViewModels
         // 结束编辑任务的Command
         public ICommand EndEditTaskCommand { get; }
 
-        public CasualModeViewModel() : this(
-            App.Services.GetRequiredService<ITaskService>(),
-            App.Services.GetRequiredService<IRewardService>(),
-            App.Services.GetRequiredService<ISettingsService>()
-            )
+        // 添加最终选择的奖励任务属性
+        private RewardModel? _finalRewardTask;
+        public RewardModel? FinalRewardTask
         {
+            get => _finalRewardTask;
+            set
+            {
+                if (_finalRewardTask != value)
+                {
+                    _finalRewardTask = value;
+                    OnPropertyChanged(nameof(FinalRewardTask));
+                    // SetFinalRewardAsync 的调用移到 RewardTask_PropertyChanged 中处理
+                }
+            }
         }
 
         public CasualModeViewModel(ITaskService taskService, IRewardService rewardService, ISettingsService settingsService)
@@ -136,7 +145,7 @@ namespace TimeController.ViewModels
             // 从数据库加载任务
             _ = LoadTasksFromDatabaseAsync();
             _ = LoadRewardsAsync();
-
+            
             // 普通任务命令
             ToggleTaskCommand = new RelayCommand<TaskModel>(ToggleTask);
             // 删除任务命令
@@ -290,12 +299,41 @@ namespace TimeController.ViewModels
                 }
             }
 
+            // 订阅奖励任务集合变化事件
+            RewardTasks.CollectionChanged += (s, e) =>
+            {
+                // 新增奖励任务时订阅属性变化
+                if (e.NewItems != null)
+                {
+                    foreach (TimeController.Models.RewardModel r in e.NewItems)
+                    {
+                        r.PropertyChanged += RewardTask_PropertyChanged;
+                    }
+                }
+                // 移除奖励任务时解绑属性变化
+                if (e.OldItems != null)
+                {
+                    foreach (TimeController.Models.RewardModel r in e.OldItems)
+                    {
+                        r.PropertyChanged -= RewardTask_PropertyChanged;
+                    }
+                }
+            };
+
+            // 初始化时已有奖励任务订阅
+            foreach (var r in RewardTasks)
+            {
+                r.PropertyChanged += RewardTask_PropertyChanged;
+            }
+
             // 应用启动时先检查一次：如果跨周就重置
             _ = CheckAndPerformWeeklyResetAsync();
 
             // 启动"每天零点检查"定时器
             StartDailyResetTimer();
-
+            
+            // 在这里加载最终奖励任务，以确保 RewardTasks 已填充
+            _ = LoadFinalRewardAsync();
         }
 
         private async Task CheckAndPerformWeeklyResetAsync()
@@ -584,7 +622,7 @@ namespace TimeController.ViewModels
         private bool _isRewardBeingShown = false;
         public void UpdateProgress()
         {
-            // 1. 先检查是否要做本周重置（如果你启用了跨周重置，这里保持不变）
+            // 1. 先检查是否要做本周重置
             _ = CheckAndPerformWeeklyResetAsync();
 
             // 2. 统计前四个模块里当前已完成任务的总数
@@ -596,27 +634,18 @@ namespace TimeController.ViewModels
                 HasRewarded = false;
             }
 
-            // 4. 如果还没发奖励，且已经达到阈值，就弹窗并设为已发放
+            // 4. 如果还没发奖励，且已经达到阈值，就触发奖励事件并设为已发放
             if (!HasRewarded && totalCompleted >= RewardThreshold)
             {
+                HasRewarded = true;  // 先设置标志位
                 Progress = RewardThreshold;
                 OnPropertyChanged(nameof(Progress));
-
-                OnShowRewardCelebration?.Invoke(); // 只调用事件显示奖励庆祝窗口
-                HasRewarded = true;
+                OnShowRewardCelebration?.Invoke();  // 再触发事件
             }
             else
             {
                 // 5. 如果发过奖励但仍 >= 阈值，就保持满格；否则实时显示「已完成数」
-                if (HasRewarded && totalCompleted >= RewardThreshold)
-                {
-                    Progress = RewardThreshold;
-                }
-                else
-                {
-                    // HasRewarded == false && totalCompleted < 阈值  的情况
-                    Progress = totalCompleted;
-                }
+                Progress = HasRewarded && totalCompleted >= RewardThreshold ? RewardThreshold : totalCompleted;
                 OnPropertyChanged(nameof(Progress));
             }
             
@@ -768,6 +797,55 @@ namespace TimeController.ViewModels
             OnPropertyChanged(nameof(ReviewLines));
         }
 
+        // 新增奖励任务的属性变化处理
+        private void RewardTask_PropertyChanged(object? sender, PropertyChangedEventArgs e)
+        {
+            if (e.PropertyName == nameof(RewardModel.IsClaimed))
+            {
+                if (sender is RewardModel changedReward)
+                {
+                    if (changedReward.IsClaimed)
+                    {
+                        // 如果当前任务被勾选，则设为最终奖励，并取消其他任务的勾选
+                        FinalRewardTask = changedReward;
+                        foreach (var reward in RewardTasks.Where(r => r != changedReward && r.IsClaimed))
+                        {
+                            // 直接修改 IsClaimed，避免不必要的递归和数据库操作
+                            reward.IsClaimed = false; 
+                        }
+                        _ = _rewardService.SetFinalRewardAsync(changedReward);
+                    }
+                    else
+                    {
+                        // 如果任务被取消勾选，且它是当前的最终奖励，则清除最终奖励
+                        if (FinalRewardTask == changedReward)
+                        {
+                            FinalRewardTask = null;
+                            _ = _rewardService.SetFinalRewardAsync(null); // 清除数据库中的最终奖励
+                        }
+                    }
+                }
+            }
+        }
+
+        private async Task LoadFinalRewardAsync()
+        {
+            var finalReward = await _rewardService.GetFinalRewardAsync();
+            if (finalReward != null)
+            {
+                // 确保加载的最终奖励任务在集合中被正确标记
+                var existingReward = RewardTasks.FirstOrDefault(r => r.Id == finalReward.Id);
+                if (existingReward != null)
+                {
+                    existingReward.IsClaimed = true; // 标记为勾选状态
+                    FinalRewardTask = existingReward;
+                } else {
+                    // 如果加载的最终奖励不在当前RewardTasks中 (例如：已被删除)
+                    FinalRewardTask = null;
+                    _ = _rewardService.SetFinalRewardAsync(null);
+                }
+            }
+        }
 
         public event PropertyChangedEventHandler? PropertyChanged;
         protected void OnPropertyChanged(string name) =>

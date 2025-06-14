@@ -26,33 +26,38 @@ namespace TimeController.Views.CasualMode
     /// <summary>
     /// CasualModeView.xaml 的交互逻辑
     /// </summary>
+
+
     public partial class CasualModeView : Page
     {
         private Random _rand = new Random();
-        private RewardCelebrationWindow? _rewardWindowInstance;
         private bool _isRewardWindowCurrentlyShowing = false;
         private DateTime _lastRewardCelebrationShownTime = DateTime.MinValue;
         private readonly TimeSpan _minTimeBetweenCelebrations = TimeSpan.FromSeconds(2);
+        private bool _isSubscribed = false; // 添加订阅状态标志
+        private CasualModeViewModel? _viewModel;
 
         public CasualModeView()
         {
             InitializeComponent();
-            DataContext = App.Services.GetRequiredService<CasualModeViewModel>();
+            _viewModel = App.Services.GetRequiredService<CasualModeViewModel>();
+            DataContext = _viewModel;
             RewardPopup.Opened += RewardPopup_Opened;
+            
+            // 订阅奖励事件
+            _viewModel.OnShowRewardCelebration += HandleShowRewardCelebration;
+            
+            // 订阅页面卸载事件，用于清理
+            this.Unloaded += CasualModeView_Unloaded;
+        }
 
-            // ViewModel的属性变化，处理View层的UI操作
-            if (DataContext is CasualModeViewModel vm)
+        private void CasualModeView_Unloaded(object sender, RoutedEventArgs e)
+        {
+            // 取消订阅事件
+            if (_viewModel != null)
             {
-                vm.PropertyChanged += ViewModel_PropertyChanged;
-                vm.Modules.CollectionChanged += Modules_CollectionChanged;
-                vm.OnShowRewardCelebration += HandleShowRewardCelebration; // 订阅新事件
-                // 为初始加载的模块订阅属性变化
-                foreach (var module in vm.Modules)
-                {
-                    module.PropertyChanged += Module_PropertyChanged;
-                }
+                _viewModel.OnShowRewardCelebration -= HandleShowRewardCelebration;
             }
-
         }
 
         private void RewardPopup_Opened(object? sender, EventArgs e)
@@ -101,46 +106,21 @@ namespace TimeController.Views.CasualMode
             {
             }
         }
-        private bool _isRewardWindowCurrentlyShowing1 = false; // 使用类级别的标志
+
         private void HandleShowRewardCelebration()
         {
-            if (_isRewardWindowCurrentlyShowing1)
-                return;
-            _isRewardWindowCurrentlyShowing1 = true;
-
-            Dispatcher.Invoke(() =>
+            if (_isRewardWindowCurrentlyShowing)
             {
-                // 添加检查，防止多个窗口同时显示
-                if (_isRewardWindowCurrentlyShowing)
-                    return;
+                return;
+            }
 
-                _isRewardWindowCurrentlyShowing1 = true;
-
-                try
-                {
-                    var rewardWindow = new RewardCelebrationWindow();
-
-                    // 设置为全屏无边框
-                    rewardWindow.WindowState = WindowState.Maximized;
-                    rewardWindow.WindowStyle = WindowStyle.None;
-                    rewardWindow.Topmost = true;
-
-                    // 设置为主窗口的子窗口
-                    rewardWindow.Owner = Application.Current.MainWindow;
-
-                    // 添加关闭事件处理
-                    rewardWindow.Closed += (s, e) => {
-                        _isRewardWindowCurrentlyShowing1 = false;
-                    };
-
-                    rewardWindow.ShowDialog();
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine($"显示奖励窗口时出错: {ex.Message}");
-                    _isRewardWindowCurrentlyShowing1 = false;
-                }
-            });
+            _isRewardWindowCurrentlyShowing = true;
+            var window = new RewardCelebrationWindow(_viewModel);
+            window.Closed += (s, e) => 
+            {
+                _isRewardWindowCurrentlyShowing = false;
+            };
+            window.ShowDialog();
         }
         
         //双击编辑后是空任务点击别处就直接删除

@@ -9,5 +9,7 @@ namespace TimeController.Services
         Task<List<RewardModel>> GetRewardsAsync();
         Task AddRewardAsync(RewardModel reward);
         Task DeleteRewardAsync(RewardModel reward);
+        Task<RewardModel?> GetFinalRewardAsync();
+        Task SetFinalRewardAsync(RewardModel reward);
     }
 }
