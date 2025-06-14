@@ -10,7 +10,7 @@ namespace TimeController.Helpers
     {
         private static readonly string[] Keywords = new[]
         {
-            "完成率","推迟","计划","生活","鼓励","警告","注意","优秀"
+            "完成率","推迟","任务分配","计划","目标","平衡","优化"
         };
 
         public static FlowDocument CreateHighlightedDocument(string text, Brush highlightBrush)
