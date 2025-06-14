@@ -8,10 +8,22 @@
              mc:Ignorable="d">
 
     <UserControl.Resources>
+        <SolidColorBrush x:Key="SystemAccentBrushLight" Color="#B3E5FC"/>
         <converters:CompletedToTextDecorationConverter x:Key="CompletedToTextDecorationConverter"/>
+
     </UserControl.Resources>
 
     <Border x:Name="ColumnBorder" Background="#F0F0F0" CornerRadius="4" Margin="2" MinHeight="100">
+        <Border.Style>
+            <Style TargetType="Border">
+                <Setter Property="Background" Value="#F0F0F0"/>
+                <Style.Triggers>
+                    <DataTrigger Binding="{Binding IsToday}" Value="True">
+                        <Setter Property="Background" Value="#E6F7FF"/>
+                    </DataTrigger>
+                </Style.Triggers>
+            </Style>
+        </Border.Style>
         <Grid>
 			<Grid.RowDefinitions>
 				<RowDefinition Height="Auto"/>
@@ -20,15 +32,34 @@
 				<RowDefinition/>
 			</Grid.RowDefinitions>
 
-			<!-- 日期标题 -->
-			<StackPanel Grid.Row="0" HorizontalAlignment="Center" VerticalAlignment="Center">
-				<TextBlock Text="{Binding WeekDayText}" HorizontalAlignment="Center"/>
-				<TextBlock x:Name="DateTextBlock" Text="{Binding DateText}" 
-                           HorizontalAlignment="Center" FontSize="16" FontWeight="Bold"
-                           Foreground="{Binding IsCurrentMonth, Converter={StaticResource BoolToColorConverter}}"/>
-			</StackPanel>
+            <!-- 日期标题 -->
+            <StackPanel Grid.Row="0" HorizontalAlignment="Center" VerticalAlignment="Center">
+                <TextBlock Text="{Binding WeekDayText}" HorizontalAlignment="Center"/>
 
-			<!-- 全天任务列表 -->
+                <TextBlock Text="{Binding DateText}"
+               HorizontalAlignment="Center"
+               FontSize="16">
+                    <TextBlock.Style>
+                        <Style TargetType="TextBlock">
+                            <!-- 默认颜色和字体粗细 -->
+                            <Setter Property="Foreground"
+                        Value="{Binding IsCurrentMonth, Converter={StaticResource BoolToColorConverter}}"/>
+                            <Setter Property="FontWeight" Value="Bold"/>
+
+                            <!--<Style.Triggers>
+                                --><!-- 今天高亮 --><!--
+                                <DataTrigger Binding="{Binding IsToday}" Value="True">
+                                    <Setter Property="Foreground"
+                                Value="{StaticResource SystemAccentBrushLight}"/>
+                                    <Setter Property="FontWeight" Value="ExtraBold"/>
+                                </DataTrigger>
+                            </Style.Triggers>-->
+                        </Style>
+                    </TextBlock.Style>
+                </TextBlock>
+            </StackPanel>
+
+            <!-- 全天任务列表 -->
 			<ItemsControl Grid.Row="1" Margin="2,2,2,2" 
                           ItemsSource="{Binding AllDayTasksView}">
 				<ItemsControl.ItemsPanel>

@@ -101,6 +101,8 @@ namespace TimeController.ViewModels
             ToggleCompleteCommand = new RelayCommand<TaskBlock>(ToggleComplete);
             ToggleColumnExpandCommand = new RelayCommand<int>(ToggleColumnExpand);
 
+            DateTime monday = GetCurrentWeekMonday();
+
             // 初始化日期列
             for (int i = 0; i < 7; i++)
             {
@@ -108,6 +110,7 @@ namespace TimeController.ViewModels
                 {
                     Index = i,
                     WeekDayText = GetWeekDayText(i),
+                    Date = monday.AddDays(i),
                     AllDayTasks = AllDayTaskBlocksPerDay[i],
                     IsExpanded = ExpandedColumns[i]
                 });
@@ -328,6 +331,8 @@ namespace TimeController.ViewModels
             {
                 DateTime currentDay = monday.AddDays(i);
                 var column = DateColumns[i];
+
+                column.Date = currentDay;
 
                 // 更新日期文本
                 if (currentDay.Month != currentMonth)

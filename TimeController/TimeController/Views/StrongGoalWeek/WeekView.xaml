@@ -65,11 +65,19 @@
                     Click="ImportSchedule_Click"/>
 
             <Button Grid.Column="3"
-                    Content="进入复盘" 
+                    Content="进入复盘"
                     Command="{Binding ReviewCommand}"
                     Padding="16,8"/>
         </Grid>
 
+        <Button Grid.Column="4"
+                    Content="📍 今天"
+                    Padding="8,4"
+                    VerticalAlignment="Center"
+                    HorizontalAlignment="Center"
+                    Margin="350,0,0,0"
+                    Click="TodayButton_Click"/>
+            
         <!-- 内容区 - 采用新布局 -->
         <Grid Grid.Row="2" Margin="24,24,24,0">
             <Grid.RowDefinitions>
@@ -114,13 +122,13 @@
                     </Grid.ColumnDefinitions>
 
                     <!-- 使用自定义控件显示日期 -->
-                    <local:DateColumnControl Grid.Column="0" DataContext="{Binding DateColumns[0]}"/>
-                    <local:DateColumnControl Grid.Column="1" DataContext="{Binding DateColumns[1]}"/>
-                    <local:DateColumnControl Grid.Column="2" DataContext="{Binding DateColumns[2]}"/>
-                    <local:DateColumnControl Grid.Column="3" DataContext="{Binding DateColumns[3]}"/>
-                    <local:DateColumnControl Grid.Column="4" DataContext="{Binding DateColumns[4]}"/>
-                    <local:DateColumnControl Grid.Column="5" DataContext="{Binding DateColumns[5]}"/>
-                    <local:DateColumnControl Grid.Column="6" DataContext="{Binding DateColumns[6]}"/>
+                    <local:DateColumnControl x:Name="DateColumn0" Grid.Column="0" DataContext="{Binding DateColumns[0]}"/>
+                    <local:DateColumnControl x:Name="DateColumn1" Grid.Column="1" DataContext="{Binding DateColumns[1]}"/>
+                    <local:DateColumnControl x:Name="DateColumn2" Grid.Column="2" DataContext="{Binding DateColumns[2]}"/>
+                    <local:DateColumnControl x:Name="DateColumn3" Grid.Column="3" DataContext="{Binding DateColumns[3]}"/>
+                    <local:DateColumnControl x:Name="DateColumn4" Grid.Column="4" DataContext="{Binding DateColumns[4]}"/>
+                    <local:DateColumnControl x:Name="DateColumn5" Grid.Column="5" DataContext="{Binding DateColumns[5]}"/>
+                    <local:DateColumnControl x:Name="DateColumn6" Grid.Column="6" DataContext="{Binding DateColumns[6]}"/>
                 </Grid>
             </Grid>
 

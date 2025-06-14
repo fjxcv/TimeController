@@ -573,7 +573,18 @@ namespace TimeController.Views.StrongGoalWeek
                 }
             }
         }
+        private void TodayButton_Click(object sender, RoutedEventArgs e)
+        {
+            _viewModel.CurrentDate = DateTime.Today;
 
+            int todayIndex = _viewModel.DateColumns.ToList().FindIndex(c => c.IsToday);
+            if (todayIndex >= 0)
+            {
+                HighlightColumn(todayIndex);
+                double colWidth = WeekContentGrid.ActualWidth / 7;
+                TimeTasksScrollViewer.ScrollToHorizontalOffset(colWidth * todayIndex);
+            }
+        }
 
     }
 
