@@ -7,6 +7,7 @@ using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using TimeController.Models;
 using System.Windows.Controls.Primitives;
+using System.Windows.Media;
 
 namespace TimeController.Views.StrongGoalMonth
 {
@@ -40,14 +41,14 @@ namespace TimeController.Views.StrongGoalMonth
             "Tasks",
             typeof(ObservableCollection<TaskModel>),
             typeof(DateCard),
-            new PropertyMetadata(null, OnTasksChanged));
+            new PropertyMetadata(new ObservableCollection<TaskModel>(), OnTasksChanged));
 
         // 是否展开显示所有任务
         public static readonly DependencyProperty IsExpandedProperty = DependencyProperty.Register(
             "IsExpanded",
             typeof(bool),
             typeof(DateCard),
-            new PropertyMetadata(false, OnExpandedChanged));
+            new PropertyMetadata(false, OnIsExpandedChanged));
 
         /// <summary>
         /// 获取或设置卡片显示的日期
@@ -129,19 +130,12 @@ namespace TimeController.Views.StrongGoalMonth
             UpdateDisplayedTasks();
         }
 
-        private static void OnExpandedChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
-        {
-            // 改成popup了，暂时没删
-        }
 
         /// <summary>
         /// 鼠标左键抬起事件处理
         /// </summary>
         private void Border_MouseLeftButtonUp(object sender, MouseButtonEventArgs e)
         {
-            // 切换展开状态
-            IsExpanded = !IsExpanded;
-
             // 检查命令是否可用，并传递当前日期作为参数
             if (Command?.CanExecute(Date) == true)
             {
@@ -151,13 +145,117 @@ namespace TimeController.Views.StrongGoalMonth
 
         private void ToggleExpand(object sender, RoutedEventArgs e)
         {
-            IsExpanded = !IsExpanded;
-            TaskPopup.IsOpen = IsExpanded;
+            try
+            {
+                if (Tasks?.Any() != true)
+                {
+                    return;
+                }
+
+                // 停止事件冒泡，防止触发其他点击事件
+                e.Handled = true;
+
+                if (!IsExpanded)
+                {
+                    // 计算弹出位置
+                    CalculatePopupPosition();
+                    
+                    // 设置动画效果
+                    TaskPopup.PopupAnimation = PopupAnimation.Fade;
+                    
+                    // 打开弹出框并更新状态
+                    TaskPopup.IsOpen = true;
+                    IsExpanded = true;
+                }
+                else
+                {
+                    // 只有通过收缩按钮才能关闭
+                    ClosePopup();
+                }
+            }
+            catch (Exception ex)
+            {
+                // 记录错误但不影响用户体验
+                System.Diagnostics.Debug.WriteLine($"ToggleExpand error: {ex.Message}");
+                ClosePopup();
+            }
+        }
+
+        private void CalculatePopupPosition()
+        {
+            //// 获取卡片在屏幕上的位置
+            //var cardPosition = CardBorder.PointToScreen(new Point(0, 0));
+            
+            //// 获取主窗口
+            //var mainWindow = Window.GetWindow(this);
+            //if (mainWindow == null) return;
+
+            //// 计算相对于主窗口的位置
+            //var windowPosition = mainWindow.PointToScreen(new Point(0, 0));
+            //var relativeX = cardPosition.X - windowPosition.X;
+            //var relativeY = cardPosition.Y - windowPosition.Y;
+
+            //// 设置弹出框位置
+            //TaskPopup.HorizontalOffset = relativeX;
+            //TaskPopup.VerticalOffset = relativeY + CardBorder.ActualHeight + 4; // 4是间距
+        }
+
+        private void ClosePopup()
+        {
+            if (TaskPopup.IsOpen)
+            {
+                TaskPopup.IsOpen = false;
+            }
         }
 
         private void TaskPopup_Closed(object? sender, EventArgs e)
         {
-            IsExpanded = false;
+            // 确保弹出框确实已关闭
+            if (!TaskPopup.IsOpen)
+            {
+                // 更新展开状态
+                IsExpanded = false;
+                
+                // 可以在这里添加额外的清理逻辑
+                System.Diagnostics.Debug.WriteLine("Popup closed via collapse button, IsExpanded set to false");
+            }
+        }
+
+        // 添加属性变更通知，用于响应 IsExpanded 的变化
+        private static void OnIsExpandedChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        {
+            if (d is DateCard card)
+            {
+                // 通知属性变更，触发按钮图标更新
+                card.OnPropertyChanged(nameof(IsExpanded));
+                
+                // 可以在这里添加额外的状态同步逻辑
+                System.Diagnostics.Debug.WriteLine($"IsExpanded changed to: {e.NewValue}");
+            }
+        }
+
+        // 添加窗口大小改变事件处理
+        protected override void OnRenderSizeChanged(SizeChangedInfo sizeInfo)
+        {
+            base.OnRenderSizeChanged(sizeInfo);
+            
+            // 如果弹出框是打开的，重新计算位置
+            if (TaskPopup.IsOpen)
+            {
+                CalculatePopupPosition();
+            }
+        }
+
+        // 添加窗口位置改变事件处理
+        protected override void OnRender(DrawingContext drawingContext)
+        {
+            base.OnRender(drawingContext);
+            
+            // 如果弹出框是打开的，重新计算位置
+            if (TaskPopup.IsOpen)
+            {
+                CalculatePopupPosition();
+            }
         }
 
         /// <summary>

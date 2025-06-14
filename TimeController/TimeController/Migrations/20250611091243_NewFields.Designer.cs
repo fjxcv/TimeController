@@ -11,7 +11,7 @@ using TimeController.Services;
 namespace TimeController.Migrations
 {
     [DbContext(typeof(TaskDbContext))]
-    [Migration("20250522034840_NewFields")]
+    [Migration("20250611091243_NewFields")]
     partial class NewFields
     {
         /// <inheritdoc />
@@ -25,6 +25,9 @@ namespace TimeController.Migrations
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
+
+                    b.Property<DateTime?>("AbandonedAt")
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("Category")
                         .HasColumnType("TEXT");
@@ -47,9 +50,6 @@ namespace TimeController.Migrations
                     b.Property<bool>("IsReminderEnabled")
                         .HasColumnType("INTEGER");
 
-                    b.Property<bool>("IsSelected")
-                        .HasColumnType("INTEGER");
-
                     b.Property<string>("Mode")
                         .IsRequired()
                         .HasColumnType("TEXT");
@@ -65,6 +65,9 @@ namespace TimeController.Migrations
                         .HasColumnType("TEXT");
 
                     b.Property<DateTime?>("PostponeDate")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("PostponedAt")
                         .HasColumnType("TEXT");
 
                     b.Property<int>("PostponedCount")

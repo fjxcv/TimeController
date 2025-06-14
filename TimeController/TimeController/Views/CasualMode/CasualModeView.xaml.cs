@@ -27,11 +27,11 @@ namespace TimeController.Views.CasualMode
     public partial class CasualModeView : Page
 
     {
-        private void RewardPopup_Opened(object? sender, EventArgs e)
-        {
-            // 在弹窗完全打开后，显式设置焦点到奖励任务输入框
-            RewardTaskInput.Focus();
-        }
+        // private void RewardPopup_Opened(object? sender, EventArgs e)
+        // {
+        //     // 在弹窗完全打开后，显式设置焦点到奖励任务输入框
+        //     RewardTaskInput.Focus();
+        // }
         // Store the currently edited TextBox and its TaskModel to handle LostFocus
         private TextBox? _currentEditingTextBox;
         private TaskModel? _currentEditingTaskModel;
@@ -68,8 +68,8 @@ namespace TimeController.Views.CasualMode
             }));
         }
 
-        private TextBox? _currentEditingTextBox;
-        private TaskModel? _currentEditingTaskModel;
+        // private TextBox? _currentEditingTextBox;
+        // private TaskModel? _currentEditingTaskModel;
 
         private void Modules_CollectionChanged(object sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
         {

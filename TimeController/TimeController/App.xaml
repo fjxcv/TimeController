@@ -17,6 +17,9 @@
             <converters:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter"/>
             <converters:BooleanToAngleConverter x:Key="BooleanToAngleConverter" />
             <converters:BoolToVisibilityConverter x:Key="BoolToVisibility" />
+            <converters:StringToVisibilityConverter x:Key="StringToVisibilityConverter" />
+            <converters:NullToVisibilityConverter x:Key="NullToVisibilityConverter" />
+            <converters:InverseBoolToVisibilityConverter x:Key="InverseBoolToVisibilityConverter"/>
 
             <!-- 在这里添加你的 ColumnToVisibilityConverter -->
             <converters:ColumnToVisibilityConverter x:Key="ColumnToVisibilityConverter"/>

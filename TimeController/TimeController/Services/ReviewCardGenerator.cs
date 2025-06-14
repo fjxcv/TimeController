@@ -88,9 +88,6 @@ namespace TimeController.Services
                 {
                     repeated.Add($"{task.Name}（本周已推迟{task.PostponedCount}次）");
                 }
-            else
-            {
-                message = "本周没有任务被连续推迟，干得漂亮！";
             }
             // 3. 生成提示信息
             var message = repeated.Any()

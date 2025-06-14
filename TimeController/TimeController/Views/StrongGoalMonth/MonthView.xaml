@@ -115,8 +115,17 @@
             <!-- 下一月按钮 -->
             <Button Command="{Binding NextMonthCommand}"
                     Width="40"
-                    Height="40">
+                    Height="40"
+                     Margin="0,0,24,0">
                 <uiControls:FontIcon Glyph="&#xE76C;" FontSize="16"/>
+            </Button>
+
+            <Button Command="{Binding GoToCurrentMonthCommand}"
+                Width="40"
+                Height="40"
+                ToolTip="回到当前月份"
+                Visibility="{Binding IsCurrentMonth, Converter={StaticResource InverseBoolToVisibilityConverter}}">
+                <uiControls:FontIcon Glyph="&#xE823;" FontSize="16"/>
             </Button>
         </StackPanel>
 
