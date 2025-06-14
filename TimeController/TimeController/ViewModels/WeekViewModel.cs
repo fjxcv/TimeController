@@ -70,7 +70,7 @@ namespace TimeController.ViewModels
         public ICommand NextWeekCommand { get; private set; }
         public ICommand PreviousMonthCommand { get; private set; }
         public ICommand NextMonthCommand { get; private set; }
-        public ICommand ToggleCompleteCommand { get; }
+        public ICommand ToggleCompleteCommand { get; private set; }
 
         public WeekViewModel()
               : this(
@@ -98,6 +98,7 @@ namespace TimeController.ViewModels
 
             SaveRequested += OnTaskSaved;
             RemoveTaskBlockCommand = new RelayCommand<TaskBlock>(RemoveTaskBlock);
+            ToggleCompleteCommand = new RelayCommand<TaskBlock>(ToggleComplete);
             ToggleColumnExpandCommand = new RelayCommand<int>(ToggleColumnExpand);
 
             // 初始化日期列
