@@ -104,6 +104,7 @@ namespace TimeController
 
             // 打开主窗口
             var mainWindow = AppHost.Services.GetRequiredService<MainWindow>();
+            mainWindow.Show();
 
             // 异步延迟后提醒复盘
             _ = Task.Run(async () =>
@@ -116,13 +117,25 @@ namespace TimeController
                         AppHost.Services.GetRequiredService<INavigationService>());
                 });
             });
-        }
 
+        }
         protected override void OnExit(ExitEventArgs e)
         {
             // 停止并释放 Host
             AppHost.StopAsync().Wait();
             AppHost.Dispose();
+            base.OnExit(e);
+            AppHost.Start();
+        }
+
+        protected override void OnExit(ExitEventArgs e)
+        {
+            // 保存应用程序数据
+            if (Properties.Contains("SemesterStartDate"))
+            {
+                Console.WriteLine($"保存学期开始日期: {Properties["SemesterStartDate"]}");
+            }
+
             base.OnExit(e);
         }
     }

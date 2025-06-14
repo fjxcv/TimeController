@@ -18,6 +18,7 @@ namespace TimeController.ViewModels
             DayOfWeek = "一"; // 周一
             StartTimeWrapper = DateTime.Today.AddHours(8); // 8:00
             EndTimeWrapper = DateTime.Today.AddHours(9).AddMinutes(30); // 9:30
+            WeekPattern = "1"; // 默认只在第一周显示
         }
 
         public string Name
@@ -42,6 +43,17 @@ namespace TimeController.ViewModels
         {
             get => Course.Teacher;
             set { Course.Teacher = value; OnPropertyChanged(); }
+        }
+
+        public string WeekPattern
+        {
+            get => Course.WeekPattern;
+            set
+            {
+                Course.WeekPattern = value;
+                OnPropertyChanged();
+                ValidateWeekPattern();
+            }
         }
 
         // TimePicker绑定的属性
@@ -82,7 +94,7 @@ namespace TimeController.ViewModels
         {
             if (Course.StartTime < Course.EndTime)
             {
-                IsTimeValid = true;
+                IsTimeValid = true && IsWeekPatternValid;
                 TimeError = null;
             }
             else
@@ -90,6 +102,77 @@ namespace TimeController.ViewModels
                 IsTimeValid = false;
                 TimeError = "开始时间不能晚于结束时间";
             }
+        }
+
+        private void ValidateWeekPattern()
+        {
+            if (string.IsNullOrWhiteSpace(WeekPattern))
+            {
+                IsWeekPatternValid = false;
+                WeekPatternError = "周次不能为空";
+            }
+            else
+            {
+                // 检查格式：可以是单个数字、逗号分隔的数字列表或者用-连接的范围
+                bool isValid = true;
+                string error = null;
+
+                try
+                {
+                    // 解析周次
+                    ParseWeekPattern(WeekPattern);
+                }
+                catch (Exception ex)
+                {
+                    isValid = false;
+                    error = "周次格式不正确，请使用数字、逗号或连字符，例如：1、1,3,5 或 1-10";
+                }
+
+                IsWeekPatternValid = isValid;
+                WeekPatternError = error;
+            }
+
+            // 更新总体验证状态
+            IsTimeValid = IsTimeValid && IsWeekPatternValid;
+        }
+
+        // 解析周次模式，返回包含所有周次的集合
+        public static HashSet<int> ParseWeekPattern(string pattern)
+        {
+            var weeks = new HashSet<int>();
+
+            if (string.IsNullOrWhiteSpace(pattern))
+                return weeks;
+
+            var parts = pattern.Split(',');
+            foreach (var part in parts)
+            {
+                if (part.Contains("-"))
+                {
+                    var range = part.Split('-');
+                    if (range.Length == 2 && int.TryParse(range[0], out int start) && int.TryParse(range[1], out int end))
+                    {
+                        for (int i = start; i <= end; i++)
+                        {
+                            weeks.Add(i);
+                        }
+                    }
+                    else
+                    {
+                        throw new FormatException("周次范围格式不正确");
+                    }
+                }
+                else if (int.TryParse(part, out int week))
+                {
+                    weeks.Add(week);
+                }
+                else
+                {
+                    throw new FormatException("周次必须是数字");
+                }
+            }
+
+            return weeks;
         }
 
         private bool _isTimeValid = true;
@@ -106,6 +189,21 @@ namespace TimeController.ViewModels
             }
         }
 
+        private bool _isWeekPatternValid = true;
+        public bool IsWeekPatternValid
+        {
+            get => _isWeekPatternValid;
+            set
+            {
+                if (_isWeekPatternValid != value)
+                {
+                    _isWeekPatternValid = value;
+                    OnPropertyChanged();
+                    OnPropertyChanged(nameof(IsTimeValid)); // 周次验证会影响整体验证
+                }
+            }
+        }
+
         private string _timeError;
         public string TimeError
         {
@@ -118,7 +216,20 @@ namespace TimeController.ViewModels
             }
         }
 
+        private string _weekPatternError;
+        public string WeekPatternError
+        {
+            get => _weekPatternError;
+            set
+            {
+                _weekPatternError = value;
+                OnPropertyChanged();
+                OnPropertyChanged(nameof(HasWeekPatternError));
+            }
+        }
+
         public bool HasTimeError => !string.IsNullOrEmpty(TimeError);
+        public bool HasWeekPatternError => !string.IsNullOrEmpty(WeekPatternError);
 
         public event PropertyChangedEventHandler PropertyChanged;
         protected void OnPropertyChanged([CallerMemberName] string propertyName = null)
@@ -126,5 +237,6 @@ namespace TimeController.ViewModels
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
     }
+
 }
 

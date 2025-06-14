@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Diagnostics;
 using System.Linq;
 using System.Text;
@@ -7,12 +8,17 @@ using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Internal;
 using TimeController.Models;
+using TimeController.ViewModels;
+using System.Data.Common;
+using Microsoft.EntityFrameworkCore.Storage;
+
 
 namespace TimeController.Services
 {
     public class TaskService : ITaskService
     {
         private readonly TaskDbContext _context;
+        private IDbContextTransaction? _currentTransaction; 
 
         public event Action<TaskModel>? TaskSaved;
 
@@ -38,14 +44,27 @@ namespace TimeController.Services
             while (monday.DayOfWeek != DayOfWeek.Monday)
                 monday = monday.AddDays(-1);
 
-            DateTime sunday = monday.AddDays(6);
+        public IDisposable BeginTransaction()
+        {
+            _currentTransaction = _context.Database.BeginTransaction();
+            return _currentTransaction;
+        }
 
             // 返回该周的课程任务
             return await _context.Task
                 .Where(t => t.IsCourseTask && t.PlannedDate >= monday && t.PlannedDate <= sunday)
                 .ToListAsync();
+        public void CommitTransaction()
+        {
+            _currentTransaction?.Commit();
+            _currentTransaction = null;
         }
 
+        public void RollbackTransaction()
+        {
+            _currentTransaction?.Rollback();
+            _currentTransaction = null;
+        }
 
         public async Task<List<TaskModel>> GetTasksForDate(DateTime date)
         {

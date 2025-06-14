@@ -14,5 +14,6 @@ namespace TimeController.Models
         public TimeSpan EndTime { get; set; }
         public string Location { get; set; } = string.Empty;
         public string Teacher { get; set; } = string.Empty;
+        public string WeekPattern { get; set; } = string.Empty;
     }
 }

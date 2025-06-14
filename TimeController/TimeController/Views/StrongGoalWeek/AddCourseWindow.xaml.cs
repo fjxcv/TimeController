@@ -31,6 +31,12 @@ namespace TimeController.Views.StrongGoalWeek
                 return;
             }
 
+            if (string.IsNullOrWhiteSpace(_viewModel.WeekPattern))
+            {
+                System.Windows.MessageBox.Show("上课周次不能为空", "验证错误", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
             // 创建结果对象
             ResultCourse = new Course
             {
@@ -39,11 +45,13 @@ namespace TimeController.Views.StrongGoalWeek
                 StartTime = _viewModel.Course.StartTime,
                 EndTime = _viewModel.Course.EndTime,
                 Location = _viewModel.Location,
-                Teacher = _viewModel.Teacher
+                Teacher = _viewModel.Teacher,
+                WeekPattern = _viewModel.WeekPattern
             };
 
             DialogResult = true;
         }
+
 
         private void CancelButton_Click(object sender, RoutedEventArgs e)
         {

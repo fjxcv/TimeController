@@ -1,9 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using TimeController.Models;
+using System.Data.Common;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage;
+
 
 namespace TimeController.Services
 {
@@ -32,7 +37,10 @@ namespace TimeController.Services
         //根据日期范围获取课程任务
         Task<List<TaskModel>> GetCourseTasksForWeekAsync(DateTime referenceDate);
 
-
+        // 不返回具体的事务对象，而是直接提供事务功能
+        IDisposable BeginTransaction();
+        void CommitTransaction();
+        void RollbackTransaction();
 
         event Action<TaskModel> TaskSaved;
 
