@@ -10,6 +10,7 @@
 
     <UserControl.Resources>
         <conv:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter"/>
+        <conv:CompletedToTextDecorationConverter x:Key="CompletedToTextDecorationConverter"/>
     </UserControl.Resources>
     
     <Border x:Name="CardBorder"
@@ -71,7 +72,8 @@
                                    TextTrimming="CharacterEllipsis"
                                    VerticalAlignment="Center"
                                    MaxWidth="{Binding ActualWidth, ElementName=CardBorder}"
-                                   ToolTip="{Binding Name}"/>
+                                   ToolTip="{Binding Name}"
+                                   TextDecorations="{Binding Status, Converter={StaticResource CompletedToTextDecorationConverter}}"/>
                     </DataTemplate>
                 </ItemsControl.ItemTemplate>
                 </ItemsControl>
@@ -115,7 +117,8 @@
                     <ItemsControl ItemsSource="{Binding Tasks}">
                         <ItemsControl.ItemTemplate>
                             <DataTemplate>
-                                <TextBlock Text="{Binding Name}" FontSize="12" Margin="2,0"/>
+                                <TextBlock Text="{Binding Name}" FontSize="12" Margin="2,0"
+                                           TextDecorations="{Binding Status, Converter={StaticResource CompletedToTextDecorationConverter}}"/>
                             </DataTemplate>
                         </ItemsControl.ItemTemplate>
                     </ItemsControl>
