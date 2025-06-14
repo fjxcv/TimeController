@@ -382,39 +382,74 @@
                             </ItemsControl.ItemContainerStyle>
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate>
-                                    <Grid MouseEnter="Grid_MouseEnter" MouseLeave="Grid_MouseLeave" Tag="{Binding}">
-                                        <Border Background="{Binding Brush}" CornerRadius="3" Margin="2">
-                                            <TextBlock 
-                                                Text="{Binding Name}" 
-                                                Margin="5" 
-                                                TextWrapping="Wrap"
-                                                TextDecorations="{Binding Status, Converter={StaticResource CompletedToTextDecorationConverter}}"/>
+                                    <Grid MouseEnter="Grid_MouseEnter" MouseLeave="Grid_MouseLeave" MouseLeftButtonDown="TaskBlock_MouseLeftButtonDown"
+                                        Background="Transparent" Tag="{Binding}">
+                                        <!-- 你的任务块背景 -->
+                                        <Border Background="{Binding Brush}"
+                                                CornerRadius="3"
+                                                Margin="2">
+                                            <TextBlock Text="{Binding Name}"
+                                                     Margin="8,4,8,4"
+                                                     TextTrimming="CharacterEllipsis"
+                                                     TextWrapping="NoWrap"
+                                                     Foreground="#333333"
+                                                     FontWeight="Medium"
+                                                     TextDecorations="{Binding Status, Converter={StaticResource CompletedToTextDecorationConverter}}">
+                                                <TextBlock.ToolTip>
+                                                    <ToolTip>
+                                                        <StackPanel>
+                                                            <!-- 名称 -->
+                                                            <TextBlock Text="{Binding Name}" 
+                                                                       FontWeight="Bold" 
+                                                                       Margin="0,0,0,4"/>
+                                                            <!-- 备注（如果为空就不显示也没关系） -->
+                                                            <TextBlock Text="{Binding Note}" 
+                                                                       FontStyle="Italic" 
+                                                                       Foreground="#666666" 
+                                                                       TextWrapping="Wrap" 
+                                                                       MaxWidth="200"/>
+                                                        </StackPanel>
+                                                    </ToolTip>
+                                                </TextBlock.ToolTip>
+                                                </TextBlock>
                                         </Border>
 
-                                        <StackPanel x:Name="ActionButtons" Orientation="Horizontal"
-                                                    HorizontalAlignment="Right" VerticalAlignment="Top"
-                                                    Margin="2" Visibility="Collapsed">
-
-                                            <!-- ✔ 标记完成 -->
-                                            <Button Width="24" Height="24"
-                                                      ToolTip="标记完成"
-                                                      Background="#80FFFFFF" BorderThickness="0"
-                                                      Command="{Binding DataContext.ToggleCompleteCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
-                                                      CommandParameter="{Binding}">
-                                                <ui:FontIcon 
-                                                    Glyph="&#xE73E;"
-                                                    FontFamily="Segoe MDL2 Assets"
-                                                    Foreground="White"/>
+                                        <!-- 浮动按钮组 -->
+                                        <StackPanel x:Name="ActionButtons"
+                                                    Panel.ZIndex="10"            
+                                                    Orientation="Horizontal"
+                                                    HorizontalAlignment="Right"
+                                                    VerticalAlignment="Top"
+                                                    Margin="4"
+                                                    Visibility="Collapsed">
+                                            <!-- 标记完成 -->
+                                            <Button Width="26" Height="26"
+                                                  Padding="0"
+                                                  Background="#CCFFFFFF"
+                                                  BorderThickness="0"
+                                                  Margin="4,0,5,0"
+                                                  Command="{Binding DataContext.ToggleCompleteCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                                                  CommandParameter="{Binding}">
+                                                <TextBlock 
+                                                  FontFamily="Segoe MDL2 Assets" 
+                                                  Text="&#xE73E;"
+                                                  FontSize="20" 
+                                                  Foreground="#333333"/>
                                             </Button>
 
-                                            <!-- 🗑 删除任务 -->
-                                            <Button Width="24" Height="24"
-                                                      ToolTip="删除任务"
-                                                      Background="Transparent" BorderThickness="0"
+                                            <!-- 删除任务 -->
+                                            <Button Width="26" Height="26"
+                                                      Padding="0"
+                                                      Background="#CCFFFFFF"
+                                                      BorderThickness="0"
                                                       Command="{Binding DataContext.RemoveTaskBlockCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
                                                       CommandParameter="{Binding}">
-                                                <ui:FontIcon Glyph="&#xE74D;" FontSize="16" Foreground="Red"/>
-                                            </Button>
+                                                <TextBlock 
+                                                  FontFamily="Segoe MDL2 Assets" 
+                                                  Text="&#xE74D;"
+                                                  FontSize="20" 
+                                                  Foreground="#333333"/>
+                                              </Button>
                                         </StackPanel>
                                     </Grid>
                                 </DataTemplate>

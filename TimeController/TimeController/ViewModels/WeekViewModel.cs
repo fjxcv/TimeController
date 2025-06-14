@@ -15,6 +15,7 @@ using System.Data;
 using System.Windows;
 using Microsoft.Windows.Input;
 using MessageBox = iNKORE.UI.WPF.Modern.Controls.MessageBox;
+using System.Threading.Tasks;
 
 namespace TimeController.ViewModels
 {
@@ -46,7 +47,7 @@ namespace TimeController.ViewModels
             _taskService = taskService;
             _navService = navService;
 
-            ToggleCompleteCommand = new RelayCommand<TaskBlock>(ToggleComplete);
+            ToggleColumnExpandCommand = new RelayCommand<int>(ToggleColumnExpand);
 
             //进入复盘
             ReviewCommand = new RelayCommand(_ =>
@@ -344,67 +345,58 @@ namespace TimeController.ViewModels
         // 添加任务到视图
         private void AddTaskToView(TaskModel task)
         {
-            // 计算本周一
-            DateTime monday = CurrentDate.Date;
-            while (monday.DayOfWeek != DayOfWeek.Monday)
-                monday = monday.AddDays(-1);
+            // 如果是全天任务，跳过
+            if (task.IsAllDay) return;
 
-            // 添加调试输出
-            Console.WriteLine($"尝试添加任务: {task.Name}, 计划日期: {task.PlannedDate:yyyy-MM-dd}, 本周一: {monday:yyyy-MM-dd}");
+            // 计算位置
+            DateTime monday = GetCurrentWeekMonday();
             int column = (task.PlannedDate - monday).Days;
-            if (column < 0 || column > 6) return; // 不在当前周的任务不显示
+            if (column < 0 || column > 6) return;
 
-            // 检查是否为课程任务
-            bool isCourse = task.Type == TaskType.学习学业 &&
-                !string.IsNullOrEmpty(task.Note) &&
-                (task.Note.Contains("教师:") || task.Note.Contains("地点:"));
+            bool isCourse = task.IsCourseTask;
 
-
-            // 如果是课程任务，则只添加到CourseTaskBlocks，不添加到普通任务
             if (isCourse)
             {
                 var courseBlock = new TaskBlock
                 {
+                    Id = task.Id,
                     Name = task.Name,
                     Note = task.Note,
                     Type = task.Type,
+                    Status = task.Status,
+                    IsCourse = true,
                     StartTime = task.StartTime ?? TimeSpan.Zero,
                     EndTime = task.EndTime ?? TimeSpan.Zero,
-                    Brush = new SolidColorBrush(Color.FromRgb(230, 247, 255)), // 浅蓝色背景
+                    Brush = new SolidColorBrush(Color.FromRgb(230, 247, 255)),
                     Column = column,
                     Row = task.StartTime.HasValue ? task.StartTime.Value.Hours : 0,
-                    RowSpan = (!task.IsAllDay && task.StartTime.HasValue && task.EndTime.HasValue)
-                              ? Math.Max(1, (int)(task.EndTime.Value - task.StartTime.Value).TotalHours) + 1 : 1,
-                    Id = task.Id,
-                    Status = task.Status,
-                    IsCourse = true
+                    RowSpan = task.EndTime.HasValue
+                               ? Math.Max(1, (int)(task.EndTime.Value - task.StartTime.Value).TotalHours) + 1
+                               : 1
                 };
-
                 CourseTaskBlocks.Add(courseBlock);
-                Console.WriteLine($"添加课程到CourseTaskBlocks: {task.Name}");
             }
             else
             {
-                // 非课程任务，添加到普通任务集合
-                var taskBlock = new TaskBlock
+                var timedBlock = new TaskBlock
                 {
+                    Id = task.Id,
                     Name = task.Name,
                     Note = task.Note,
                     Type = task.Type,
-                    IsAllDay = task.IsAllDay,  // 确保设置IsAllDay属性
+                    Status = task.Status,
+                    IsAllDay = false,
                     StartTime = task.StartTime ?? TimeSpan.Zero,
                     EndTime = task.EndTime ?? TimeSpan.Zero,
                     Brush = GetBrushForTaskType(task.Type),
                     Column = column,
                     Row = task.StartTime.HasValue ? task.StartTime.Value.Hours : 0,
-                    RowSpan = (!task.IsAllDay && task.StartTime.HasValue && task.EndTime.HasValue)
-                              ? Math.Max(1, (int)(task.EndTime.Value - task.StartTime.Value).TotalHours) + 1 : 1,
-                    Id = task.Id,
-                    Status = task.Status,
-                    IsCourse = false
+                    RowSpan = task.EndTime.HasValue
+                               ? Math.Max(1, (int)(task.EndTime.Value - task.StartTime.Value).TotalHours) + 1
+                               : 1
                 };
+                TaskBlocks.Add(timedBlock);
 
-                TaskBlocks.Add(taskBlock);
             }
 
             OnPropertyChanged(nameof(AllDayTaskBlocks));
@@ -770,83 +762,60 @@ namespace TimeController.ViewModels
         {
             try
             {
-                Console.WriteLine("开始加载本周任务...");
-
-                // 清空当前任务块集合
+                // 清空
                 TaskBlocks.Clear();
                 CourseTaskBlocks.Clear();
-
-                // 清空每天的全天任务集合
                 for (int i = 0; i < 7; i++)
-                {
                     AllDayTaskBlocksPerDay[i].Clear();
-                }
 
-                // 计算当前周的起止日期
+                // 周范围
                 DateTime monday = GetCurrentWeekMonday();
                 DateTime sunday = monday.AddDays(6);
 
-                Console.WriteLine($"加载周视图 - 当前周: {monday:yyyy-MM-dd} 到 {sunday:yyyy-MM-dd}");
+                // 拉数据
+                var weekTasks = await _taskService.GetTasksForDateRange(monday, sunday);
+                var courseTasks = await _taskService.GetCourseTasksForWeekAsync(CurrentDate);
+                Tasks.Clear();
+                foreach (var t in weekTasks.Concat(courseTasks))
+                    Tasks.Add(t);
 
-                // 确保我们直接从数据库获取最新数据
-                if (_taskService != null)
+                // ① 先插入分时与课程任务
+                foreach (var t in Tasks.Where(t => !t.IsAllDay))
+                    AddTaskToView(t);
+
+                // ② 再为每个全天 TaskModel 新建一个带 Brush 的 TaskBlock
+                foreach (var t in Tasks.Where(t => t.IsAllDay))
                 {
-                    // 重新从数据库加载任务，确保与数据库同步
-                    var weekTasks = await _taskService.GetTasksForDateRange(monday, sunday);
-                    var courseTasks = await _taskService.GetCourseTasksForWeekAsync(CurrentDate);
+                    int col = (t.PlannedDate - monday).Days;
+                    if (col < 0 || col > 6) continue;
 
-                    // 更新内存中的任务集合（关键修改：更新而不是追加）
-                    Tasks.Clear();
-                    foreach (var task in weekTasks.Concat(courseTasks))
+                    var allDayBlock = new TaskBlock
                     {
-                        Tasks.Add(task);
-                    }
-
-                    Console.WriteLine($"从数据库加载了 {Tasks.Count} 个任务");
-
-                    // 处理所有加载的任务
-                    foreach (var task in Tasks)
-                    {
-                        // 特殊处理课程任务
-                        if (task.IsCourseTask)
-                        {
-                            task.PlannedDate = monday.AddDays(task.WeekDay);
-                        }
-
-                        // 只添加当前周内的任务
-                        if (task.PlannedDate >= monday && task.PlannedDate <= sunday)
-                        {
-                            AddTaskToView(task);
-                        }
-                    }
-
-                    // 分组全天任务
-                    foreach (var block in TaskBlocks.Where(t => t.IsAllDay))
-                    {
-                        if (block.Column >= 0 && block.Column < 7)
-                        {
-                            AllDayTaskBlocksPerDay[block.Column].Add(block);
-                        }
-                    }
-
-                    foreach (var column in DateColumns)
-                    {
-                        column.RefreshAllDayTasksView();
-                    }
-
-                    // 通知UI更新
-                    OnPropertyChanged(nameof(TaskBlocks));
-                    OnPropertyChanged(nameof(CourseTaskBlocks));
-                    OnPropertyChanged(nameof(AllDayTaskBlocks));
-                    OnPropertyChanged(nameof(AllDayTaskBlocksPerDay));
-                    OnPropertyChanged(nameof(ShouldShowMoreButtonForColumn));
-                    OnPropertyChanged(nameof(ExpandedColumns));
-
-                    // 额外刷新一次集合视图确保UI同步
-                    TimedTaskBlocksView.Refresh();
-
-                    Console.WriteLine($"任务加载完成 - 全天任务: {TaskBlocks.Count(t => t.IsAllDay)}, 分时任务: {TaskBlocks.Count(t => !t.IsAllDay)}");
+                        Id = t.Id,
+                        Name = t.Name,
+                        Note = t.Note,
+                        Type = t.Type,
+                        Status = t.Status,
+                        IsAllDay = true,
+                        Column = col,
+                        Row = 0,
+                        RowSpan = 1,
+                        Brush = GetBrushForTaskType(t.Type)
+                    };
+                    AllDayTaskBlocksPerDay[col].Add(allDayBlock);
                 }
+
+                // ③ 刷新各列全天视图（触发折叠/展开）
+                foreach (var colVm in DateColumns)
+                    colVm.RefreshAllDayTasksView();
+
+                // ④ 刷新 UI
+                OnPropertyChanged(nameof(TaskBlocks));
+                OnPropertyChanged(nameof(CourseTaskBlocks));
+                OnPropertyChanged(nameof(AllDayTaskBlocksPerDay));
+                OnPropertyChanged(nameof(ShouldShowMoreButtonForColumn));
+                TimedTaskBlocksView.Refresh();
+
             }
             catch (Exception ex)
             {
@@ -992,17 +961,16 @@ namespace TimeController.ViewModels
         // 切换某一列的展开状态
         private void ToggleColumnExpand(int column)
         {
-            if (column >= 0 && column < 7)
-            {
-                ExpandedColumns[column] = !ExpandedColumns[column];
+            if (column < 0 || column >= DateColumns.Count) return;
 
-                // 更新对应的 DateColumnViewModel
-                DateColumns[column].IsExpanded = ExpandedColumns[column];
+            // 切换展开状态
+            DateColumns[column].IsExpanded = !DateColumns[column].IsExpanded;
 
-                // 通知相关属性更新
-                OnPropertyChanged(nameof(ExpandedColumns));
-                DateColumns[column].RefreshAllDayTasksView();
-            }
+            // 刷新全天任务视图过滤
+            DateColumns[column].RefreshAllDayTasksView();
+
+            // 通知界面更新“更多”按钮的可见性
+            OnPropertyChanged(nameof(DateColumns));
         }
 
 

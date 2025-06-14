@@ -3,13 +3,12 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:ui="http://schemas.inkore.net/lib/ui/wpf/modern"
 			  xmlns:converters="clr-namespace:TimeController.Converters"
              mc:Ignorable="d">
 
     <UserControl.Resources>
-
         <converters:CompletedToTextDecorationConverter x:Key="CompletedToTextDecorationConverter"/>
-
     </UserControl.Resources>
     
     <Border Background="#F0F0F0" CornerRadius="4" Margin="2" MinHeight="100">
@@ -31,57 +30,70 @@
 
 			<!-- 全天任务列表 -->
 			<ItemsControl Grid.Row="1" Margin="2,2,2,2" 
-                          ItemsSource="{Binding AllDayTasks}">
+                          ItemsSource="{Binding AllDayTasksView}">
 				<ItemsControl.ItemsPanel>
 					<ItemsPanelTemplate>
 						<StackPanel Orientation="Vertical"/>
 					</ItemsPanelTemplate>
 				</ItemsControl.ItemsPanel>
 				<ItemsControl.ItemTemplate>
-					<DataTemplate>
-                        <Grid MouseEnter="Grid_MouseEnter" MouseLeave="Grid_MouseLeave" Tag="{Binding}">
-							<Border Background="{Binding Brush}" 
-                                    CornerRadius="6" 
-                                    Margin="2"
-                                    Padding="6,2"
-                                    MouseLeftButtonDown="TaskBlock_MouseLeftButtonDown">
-								<Grid>
-									<TextBlock Text="{Binding Name}" 
-                                               FontWeight="Bold"
-                                               TextDecorations="{Binding Status, Converter={StaticResource CompletedToTextDecorationConverter}}"
-                                               Foreground="Black"
-                                               TextTrimming="CharacterEllipsis"
-                                               ToolTip="{Binding Note}" />
+                    <DataTemplate>
+                        <Grid MouseEnter="Grid_MouseEnter" MouseLeave="Grid_MouseLeave" MouseLeftButtonDown="TaskBlock_MouseLeftButtonDown"
+                                Background="Transparent" Tag="{Binding}">
+                            <!-- 你的任务块背景 -->
+                            <Border Background="{Binding Brush}"
+                                    CornerRadius="3"
+                                    Margin="2">
+                                <TextBlock Text="{Binding Name}"
+                                             Margin="8,4"
+                                             TextWrapping="Wrap"
+                                             Foreground="#333333"
+                                             FontWeight="Medium"
+                                             TextDecorations="{Binding Status, Converter={StaticResource CompletedToTextDecorationConverter}}"/>
+                            </Border>
 
-                                    <!-- 悬停按钮组 -->
-                                    <StackPanel
-											  x:Name="ActionButtons"
-											  Orientation="Horizontal"
-											  HorizontalAlignment="Right"
-											  VerticalAlignment="Top"
-											  Margin="2"
-											  Visibility="Collapsed">
-                                        <Button
-										Content="✔"
-										Width="24" Height="24"
-										ToolTip="标记完成"
-										Command="{Binding DataContext.ToggleCompleteCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
-										CommandParameter="{Binding}"
-										Background="Transparent" BorderThickness="0" FontSize="16"/>
-                                        <Button
-										Content="🗑"
-										Width="24" Height="24"
-										ToolTip="删除任务"
-										Command="{Binding DataContext.RemoveTaskBlockCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
-										CommandParameter="{Binding}"
-										Background="Transparent" BorderThickness="0" FontSize="16"/>
-                                    </StackPanel>
-                                    
-                                </Grid>
-							</Border>
-						</Grid>
-					</DataTemplate>
-				</ItemsControl.ItemTemplate>
+                            <!-- 浮动按钮组 -->
+                            <StackPanel x:Name="ActionButtons"
+                                        Panel.ZIndex="10"            
+                                        Orientation="Horizontal"
+                                        HorizontalAlignment="Right"
+                                        VerticalAlignment="Top"
+                                        Margin="4"
+                                        Visibility="Collapsed">
+                                <!-- 标记完成 -->
+                                <Button Width="26" Height="26"
+                                          Padding="0"
+                                          Background="#CCFFFFFF"
+                                          BorderThickness="0"
+                                          Margin="4,0,5,0"
+                                          Command="{Binding DataContext.ToggleCompleteCommand, RelativeSource={RelativeSource AncestorType=ui:Page}}"
+                                          CommandParameter="{Binding}">
+                                    <TextBlock 
+                                          FontFamily="Segoe MDL2 Assets" 
+                                          Text="&#xE73E;"
+                                          FontSize="20" 
+                                          Foreground="#333333"/>
+                                </Button>
+
+                                <!-- 删除任务 -->
+                                <Button Width="26" Height="26"
+                                          Padding="0"
+                                          Background="#CCFFFFFF"
+                                          BorderThickness="0"
+                                          Command="{Binding DataContext.RemoveTaskBlockCommand,
+                                                    RelativeSource={RelativeSource AncestorType=ui:Page}}"
+                                          CommandParameter="{Binding}">
+                                    <TextBlock 
+                                          FontFamily="Segoe MDL2 Assets" 
+                                          Text="&#xE74D;"
+                                          FontSize="20" 
+                                          Foreground="#333333"/>
+                                </Button>
+                            </StackPanel>
+                        </Grid>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+                
 				<ItemsControl.ItemContainerStyle>
 					<Style TargetType="ContentPresenter">
 						<Setter Property="Visibility" Value="Visible"/>
@@ -96,10 +108,13 @@
 							<!-- 如果是第三个以上的任务，只有在展开状态下显示 -->
 							<MultiDataTrigger>
 								<MultiDataTrigger.Conditions>
-									<Condition Binding="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ItemsControl}}, 
-                                  Path=ItemsSource, Converter={StaticResource IndexConverter}, ConverterParameter=gt2}" Value="True"/>
-									<Condition Binding="{Binding DataContext.IsExpanded, RelativeSource={RelativeSource FindAncestor, AncestorType=UserControl}}" Value="False"/>
-								</MultiDataTrigger.Conditions>
+                                    <Condition Binding="{Binding RelativeSource={RelativeSource TemplatedParent}, 
+                                             Converter={StaticResource IndexConverter}, ConverterParameter=gt2}" 
+                                             Value="True"/>
+                                    <Condition Binding="{Binding DataContext.IsExpanded, 
+                                             RelativeSource={RelativeSource AncestorType=UserControl}}" 
+                                             Value="False"/>
+                                </MultiDataTrigger.Conditions>
 								<Setter Property="Visibility" Value="Collapsed"/>
 							</MultiDataTrigger>
 						</Style.Triggers>
