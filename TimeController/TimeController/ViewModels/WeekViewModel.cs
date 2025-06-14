@@ -46,6 +46,8 @@ namespace TimeController.ViewModels
             _taskService = taskService;
             _navService = navService;
 
+            ToggleCompleteCommand = new RelayCommand<TaskBlock>(ToggleComplete);
+
             //进入复盘
             ReviewCommand = new RelayCommand(_ =>
             {
@@ -67,6 +69,7 @@ namespace TimeController.ViewModels
         public ICommand NextWeekCommand { get; private set; }
         public ICommand PreviousMonthCommand { get; private set; }
         public ICommand NextMonthCommand { get; private set; }
+        public ICommand ToggleCompleteCommand { get; }
 
         public WeekViewModel()
               : this(
@@ -373,6 +376,7 @@ namespace TimeController.ViewModels
                     RowSpan = (!task.IsAllDay && task.StartTime.HasValue && task.EndTime.HasValue)
                               ? Math.Max(1, (int)(task.EndTime.Value - task.StartTime.Value).TotalHours) + 1 : 1,
                     Id = task.Id,
+                    Status = task.Status,
                     IsCourse = true
                 };
 
@@ -396,6 +400,7 @@ namespace TimeController.ViewModels
                     RowSpan = (!task.IsAllDay && task.StartTime.HasValue && task.EndTime.HasValue)
                               ? Math.Max(1, (int)(task.EndTime.Value - task.StartTime.Value).TotalHours) + 1 : 1,
                     Id = task.Id,
+                    Status = task.Status,
                     IsCourse = false
                 };
 
@@ -548,6 +553,35 @@ namespace TimeController.ViewModels
             }
         }
 
+
+        private async void ToggleComplete(TaskBlock block)
+        {
+            if (block == null) return;
+            var task = Tasks.FirstOrDefault(t => t.Id == block.Id);
+            if (task == null) return;
+
+            // 切换 Model 状态
+            if (task.Status == MyTaskStatus.Completed)
+            {
+                task.Status = MyTaskStatus.Pending;
+                task.IsCompleted = false;
+            }
+            else
+            {
+                task.Status = MyTaskStatus.Completed;
+                task.IsCompleted = true;
+            }
+            if (_taskService != null)
+                await _taskService.UpdateTaskAsync(task);
+
+            // **同步更新视图模型状态**
+            block.Status = task.Status;
+
+            // 刷新列表样式
+            TimedTaskBlocksView.Refresh();
+            OnPropertyChanged(nameof(AllDayTaskBlocks));
+        }
+
         //任务块类
         public class TaskBlock
         {
@@ -566,6 +600,22 @@ namespace TimeController.ViewModels
             public int RowSpan { get; set; } // 跨多少小时
 
             public int Id { get; set; }//Id
+
+            private MyTaskStatus _status;
+            public MyTaskStatus Status
+            {
+                get => _status;
+                set
+                {
+                    if (_status != value)
+                    {
+                        _status = value;
+                        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Status)));
+                    }
+                }
+            }
+
+            public event PropertyChangedEventHandler? PropertyChanged;
         }
 
         //当前日期

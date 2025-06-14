@@ -5,7 +5,14 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
 			  xmlns:converters="clr-namespace:TimeController.Converters"
              mc:Ignorable="d">
-	<Border Background="#F0F0F0" CornerRadius="4" Margin="2" MinHeight="100">
+
+    <UserControl.Resources>
+
+        <converters:CompletedToTextDecorationConverter x:Key="CompletedToTextDecorationConverter"/>
+
+    </UserControl.Resources>
+    
+    <Border Background="#F0F0F0" CornerRadius="4" Margin="2" MinHeight="100">
 		<Grid>
 			<Grid.RowDefinitions>
 				<RowDefinition Height="Auto"/>
@@ -32,7 +39,7 @@
 				</ItemsControl.ItemsPanel>
 				<ItemsControl.ItemTemplate>
 					<DataTemplate>
-						<Grid MouseEnter="AllDayGrid_MouseEnter" MouseLeave="AllDayGrid_MouseLeave" Tag="{Binding}">
+                        <Grid MouseEnter="Grid_MouseEnter" MouseLeave="Grid_MouseLeave" Tag="{Binding}">
 							<Border Background="{Binding Brush}" 
                                     CornerRadius="6" 
                                     Margin="2"
@@ -41,34 +48,36 @@
 								<Grid>
 									<TextBlock Text="{Binding Name}" 
                                                FontWeight="Bold"
+                                               TextDecorations="{Binding Status, Converter={StaticResource CompletedToTextDecorationConverter}}"
                                                Foreground="Black"
                                                TextTrimming="CharacterEllipsis"
                                                ToolTip="{Binding Note}" />
-									<!-- 删除按钮（叉号） -->
-									<Button x:Name="DeleteButton"
-                                            Content="✕" 
-                                            Width="13" Height="13" 
-                                            HorizontalAlignment="Right" 
-                                            VerticalAlignment="Center" 
-                                            Margin="1"
-                                            Background="Transparent"
-                                            BorderThickness="0"
-                                            Foreground="Red"
-                                            FontWeight="Bold"
-                                            Tag="{Binding}"
-                                            Click="DeleteAllDayButton_Click">
-										<Button.Style>
-											<Style TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
-												<Setter Property="Visibility" Value="Collapsed"/>
-												<Style.Triggers>
-													<DataTrigger Binding="{Binding IsMouseOver, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Grid}}" Value="True">
-														<Setter Property="Visibility" Value="Visible"/>
-													</DataTrigger>
-												</Style.Triggers>
-											</Style>
-										</Button.Style>
-									</Button>
-								</Grid>
+
+                                    <!-- 悬停按钮组 -->
+                                    <StackPanel
+											  x:Name="ActionButtons"
+											  Orientation="Horizontal"
+											  HorizontalAlignment="Right"
+											  VerticalAlignment="Top"
+											  Margin="2"
+											  Visibility="Collapsed">
+                                        <Button
+										Content="✔"
+										Width="24" Height="24"
+										ToolTip="标记完成"
+										Command="{Binding DataContext.ToggleCompleteCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+										CommandParameter="{Binding}"
+										Background="Transparent" BorderThickness="0" FontSize="16"/>
+                                        <Button
+										Content="🗑"
+										Width="24" Height="24"
+										ToolTip="删除任务"
+										Command="{Binding DataContext.RemoveTaskBlockCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+										CommandParameter="{Binding}"
+										Background="Transparent" BorderThickness="0" FontSize="16"/>
+                                    </StackPanel>
+                                    
+                                </Grid>
 							</Border>
 						</Grid>
 					</DataTemplate>

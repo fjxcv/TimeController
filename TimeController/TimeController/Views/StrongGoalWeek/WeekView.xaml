@@ -5,10 +5,18 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:local="clr-namespace:TimeController.Views.StrongGoalWeek"
+        xmlns:conv="clr-namespace:TimeController.Converters"
+
         mc:Ignorable="d" 
         Title="" d:DesignHeight="800" d:DesignWidth="1104">
 
-    <Grid x:Name="RootGrid">
+    <ui:Page.Resources>
+        
+        <conv:CompletedToTextDecorationConverter x:Key="CompletedToTextDecorationConverter"/>
+        
+    </ui:Page.Resources>
+    
+        <Grid x:Name="RootGrid">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
@@ -375,28 +383,39 @@
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate>
                                     <Grid MouseEnter="Grid_MouseEnter" MouseLeave="Grid_MouseLeave" Tag="{Binding}">
-                                        <Border Background="{Binding Brush}" CornerRadius="3" Margin="2"
-                                                MouseLeftButtonDown="TaskBlock_MouseLeftButtonDown">
-                                            <Grid>
-                                                <!-- 任务内容 -->
-                                                <TextBlock Text="{Binding Name}" Margin="5" TextWrapping="Wrap"/>
-                                                <!-- 删除按钮（叉号） -->
-                                                <Button x:Name="DeleteButton"
-                                                        Content="✕" 
-                                                        Width="20" Height="20" 
-                                                        HorizontalAlignment="Right" 
-                                                        VerticalAlignment="Top" 
-                                                        Margin="2"
-                                                        Background="Transparent"
-                                                        BorderThickness="0"
-                                                        Foreground="Red"
-                                                        FontWeight="Bold"
-                                                        Visibility="Collapsed"
-                                                        Command="{Binding DataContext.RemoveTaskBlockCommand, 
-                                                            RelativeSource={RelativeSource AncestorType=ItemsControl}}"
-                                                        CommandParameter="{Binding}"/>
-                                            </Grid>
+                                        <Border Background="{Binding Brush}" CornerRadius="3" Margin="2">
+                                            <TextBlock 
+                                                Text="{Binding Name}" 
+                                                Margin="5" 
+                                                TextWrapping="Wrap"
+                                                TextDecorations="{Binding Status, Converter={StaticResource CompletedToTextDecorationConverter}}"/>
                                         </Border>
+
+                                        <StackPanel x:Name="ActionButtons" Orientation="Horizontal"
+                                                    HorizontalAlignment="Right" VerticalAlignment="Top"
+                                                    Margin="2" Visibility="Collapsed">
+
+                                            <!-- ✔ 标记完成 -->
+                                            <Button Width="24" Height="24"
+                                                      ToolTip="标记完成"
+                                                      Background="#80FFFFFF" BorderThickness="0"
+                                                      Command="{Binding DataContext.ToggleCompleteCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                                                      CommandParameter="{Binding}">
+                                                <ui:FontIcon 
+                                                    Glyph="&#xE73E;"
+                                                    FontFamily="Segoe MDL2 Assets"
+                                                    Foreground="White"/>
+                                            </Button>
+
+                                            <!-- 🗑 删除任务 -->
+                                            <Button Width="24" Height="24"
+                                                      ToolTip="删除任务"
+                                                      Background="Transparent" BorderThickness="0"
+                                                      Command="{Binding DataContext.RemoveTaskBlockCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                                                      CommandParameter="{Binding}">
+                                                <ui:FontIcon Glyph="&#xE74D;" FontSize="16" Foreground="Red"/>
+                                            </Button>
+                                        </StackPanel>
                                     </Grid>
                                 </DataTemplate>
                             </ItemsControl.ItemTemplate>
