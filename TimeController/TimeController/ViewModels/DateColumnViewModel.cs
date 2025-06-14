@@ -1,8 +1,7 @@
 ﻿using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
-using System.Windows.Data;    // 一定要添加
-using TimeController.ViewModels; // 或者你的 TaskBlock 命名空间
+using System.Windows.Data;
 
 namespace TimeController.ViewModels
 {
@@ -21,6 +20,7 @@ namespace TimeController.ViewModels
         {
             // 先给 AllDayTasksView 一个“空包装”，防止后面空引用
             AllDayTasksView = CollectionViewSource.GetDefaultView(_allDayTasks);
+            _allDayTasks.CollectionChanged += AllDayTasks_CollectionChanged;
             // 初始化一次过滤
             RefreshAllDayTasksView();
         }
@@ -32,12 +32,18 @@ namespace TimeController.ViewModels
             {
                 if (_allDayTasks != value)
                 {
+                    if (_allDayTasks != null)
+                        _allDayTasks.CollectionChanged -= AllDayTasks_CollectionChanged;
                     _allDayTasks = value;
+
                     OnPropertyChanged();
 
                     // 重新 Wrap 一下新集合
                     AllDayTasksView = CollectionViewSource.GetDefaultView(_allDayTasks);
                     OnPropertyChanged(nameof(AllDayTasksView));
+
+                    if (_allDayTasks != null)
+                        _allDayTasks.CollectionChanged += AllDayTasks_CollectionChanged;
 
                     // 更新按钮显示判断
                     OnPropertyChanged(nameof(ShouldShowMoreButton));
@@ -87,6 +93,13 @@ namespace TimeController.ViewModels
             AllDayTasksView.Refresh();
             OnPropertyChanged(nameof(ShouldShowMoreButton));
         }
+
+        private void AllDayTasks_CollectionChanged(object? sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
+        {
+            OnPropertyChanged(nameof(ShouldShowMoreButton));
+            RefreshAllDayTasksView();
+        }
+
 
         public event PropertyChangedEventHandler? PropertyChanged;
         protected void OnPropertyChanged([CallerMemberName] string name = null)

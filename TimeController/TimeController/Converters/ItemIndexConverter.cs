@@ -21,6 +21,12 @@ namespace TimeController.Converters
                 {
                     int index = itemsControl.ItemContainerGenerator.IndexFromContainer(item);
 
+                    // 若未生成容器，尝试根据数据项查找索引
+                    if (index < 0 && item is FrameworkElement fe && fe.DataContext != null)
+                    {
+                        index = itemsControl.Items.IndexOf(fe.DataContext);
+                    }
+
                     // 判断是否大于2的特殊处理
                     if (parameter?.ToString() == "gt2")
                         return index > 2;

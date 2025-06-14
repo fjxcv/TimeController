@@ -10,9 +10,9 @@
     <UserControl.Resources>
         <converters:CompletedToTextDecorationConverter x:Key="CompletedToTextDecorationConverter"/>
     </UserControl.Resources>
-    
-    <Border Background="#F0F0F0" CornerRadius="4" Margin="2" MinHeight="100">
-		<Grid>
+
+    <Border x:Name="ColumnBorder" Background="#F0F0F0" CornerRadius="4" Margin="2" MinHeight="100">
+        <Grid>
 			<Grid.RowDefinitions>
 				<RowDefinition Height="Auto"/>
 				<RowDefinition Height="Auto"/>
@@ -46,10 +46,19 @@
                                     Margin="2">
                                 <TextBlock Text="{Binding Name}"
                                              Margin="8,4"
-                                             TextWrapping="Wrap"
-                                             Foreground="#333333"
-                                             FontWeight="Medium"
-                                             TextDecorations="{Binding Status, Converter={StaticResource CompletedToTextDecorationConverter}}"/>
+                                           TextWrapping="Wrap"
+                                           Foreground="#333333"
+                                           FontWeight="Medium"
+                                           TextDecorations="{Binding Status, Converter={StaticResource CompletedToTextDecorationConverter}}">
+                                    <TextBlock.ToolTip>
+                                        <ToolTip>
+                                            <StackPanel>
+                                                <TextBlock Text="{Binding Name}" FontWeight="Bold" Margin="0,0,0,4"/>
+                                                <TextBlock Text="{Binding Note}" FontStyle="Italic" Foreground="#666666" TextWrapping="Wrap" MaxWidth="200"/>
+                                            </StackPanel>
+                                        </ToolTip>
+                                    </TextBlock.ToolTip>
+                                </TextBlock>
                             </Border>
 
                             <!-- 浮动按钮组 -->
@@ -120,19 +129,42 @@
 						</Style.Triggers>
 					</Style>
 				</ItemsControl.ItemContainerStyle>
-			</ItemsControl>
+            </ItemsControl>
 
-			<!-- 展开/折叠按钮 -->
-			<Button Grid.Row="1" HorizontalAlignment="Center"
-					VerticalAlignment="Bottom"
-					Margin="0,2,0,0"
-					Command="{Binding DataContext.ToggleColumnExpandCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
-					CommandParameter="{Binding Index}"
-					Visibility="{Binding ShouldShowMoreButton, Converter={StaticResource BoolToVisibility}}">
-				<Button.Content>
-					<TextBlock Text="{Binding IsExpanded, Converter={StaticResource ExpandedToSymbolConverter}}" />
-				</Button.Content>
-				<Button.Style>
+            <!-- Popup showing additional task details -->
+            <!--<Popup x:Name="TaskPopup"
+                               PlacementTarget="{Binding ElementName=ColumnBorder}"
+                               Placement="Bottom"
+                               HorizontalOffset="20"
+                               VerticalOffset="8"
+                               AllowsTransparency="True"
+                               StaysOpen="False"
+                               PopupAnimation="Fade"
+                               Closed="TaskPopup_Closed">
+                <Border Background="#CCFFFFFF" CornerRadius="6" Padding="8">
+                    <Border.Effect>
+                        <DropShadowEffect BlurRadius="8" ShadowDepth="0" Opacity="0.25"/>
+                    </Border.Effect>
+                    <ItemsControl ItemsSource="{Binding AllDayTasks}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding Name}" Margin="2,0"/>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </Border>
+            </Popup>-->
+
+            <!-- 展开/折叠按钮 -->
+            <Button x:Name="ExpandButton" Grid.Row="1" HorizontalAlignment="Center"
+                                        VerticalAlignment="Bottom"
+                                        Margin="0,2,0,0"
+                                        Click="ExpandButton_Click"
+                                        Visibility="{Binding ShouldShowMoreButton, Converter={StaticResource BoolToVisibility}}">
+                <Button.Content>
+                    <TextBlock Text="{Binding IsExpanded, Converter={StaticResource ExpandedToSymbolConverter}}" />
+                </Button.Content>
+                <Button.Style>
 					<Style TargetType="Button">
 						<Setter Property="Background" Value="Transparent"/>
 						<Setter Property="BorderThickness" Value="0"/>

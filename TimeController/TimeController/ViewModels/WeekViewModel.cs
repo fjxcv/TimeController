@@ -575,7 +575,7 @@ namespace TimeController.ViewModels
         }
 
         //任务块类
-        public class TaskBlock
+        public class TaskBlock : INotifyPropertyChanged
         {
             public string Name { get; set; }
             public string Note { get; set; }

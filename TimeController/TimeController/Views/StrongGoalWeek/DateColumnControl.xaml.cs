@@ -3,6 +3,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
+using System.Windows.Controls.Primitives;
 using TimeController.ViewModels;
 
 namespace TimeController.Views.StrongGoalWeek
@@ -52,6 +53,28 @@ namespace TimeController.Views.StrongGoalWeek
             }
 
             e.Handled = true;
+        }
+
+        private void ExpandButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (DataContext is DateColumnViewModel vm)
+            {
+                var weekView = this.FindAncestor<WeekView>();
+                if (weekView?.DataContext is WeekViewModel wvm)
+                {
+                    wvm.ToggleColumnExpandCommand.Execute(vm.Index);
+                }
+
+
+            }
+        }
+
+        private void TaskPopup_Closed(object? sender, EventArgs e)
+        {
+            if (DataContext is DateColumnViewModel vm)
+            {
+                vm.IsExpanded = false;
+            }
         }
 
         // 辅助方法，用于查找父控件
