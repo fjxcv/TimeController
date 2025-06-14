@@ -897,7 +897,7 @@ namespace TimeController.ViewModels
         }
 
         // 切换展开状态的命令
-        public ICommand ToggleColumnExpandCommand { get; }
+        public ICommand ToggleColumnExpandCommand { get; private set; }
 
         // 切换某一列的展开状态
         // 切换某一列的展开状态
