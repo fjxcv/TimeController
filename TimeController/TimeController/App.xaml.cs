@@ -5,26 +5,25 @@ using System.Windows;
 using Microsoft.EntityFrameworkCore;
 using TimeController.Services;
 using TimeController.ViewModels;
+using DevExpress.XtraReports.Design;
 
 namespace TimeController
 {
     public partial class App : Application
     {
         public static IHost AppHost { get; private set; }
+
         public static IServiceProvider Services { get; private set; }
 
         protected override async void OnStartup(StartupEventArgs e)
         {
             base.OnStartup(e);
 
-            // 直接使用 AppHost.Services
-            Services = AppHost.Services;
-
-            var taskService = Services.GetRequiredService<ITaskService>();
-            var navService = Services.GetRequiredService<INavigationService>();
+            var taskService = AppHost.Services.GetRequiredService<ITaskService>();
+            var navService = AppHost.Services.GetRequiredService<INavigationService>();
 
             //获取 DbContext 实例，确保数据库使用迁移初始化
-            var db = Services.GetRequiredService<TaskDbContext>();
+            var db = AppHost.Services.GetRequiredService<TaskDbContext>();
             db.Database.Migrate();
 
             //重置开发数据
@@ -32,7 +31,6 @@ namespace TimeController
 
             // 打开主窗口
             var mainWindow = new MainWindow();
-            mainWindow.Show();
 
             // 提醒复盘
             _ = Task.Run(async () =>
@@ -43,7 +41,9 @@ namespace TimeController
                     await ReviewReminderService.TryShowReviewReminderAsync(taskService, navService);
                 });
             });
+
         }
+
 
         public App()
         {
@@ -55,7 +55,6 @@ namespace TimeController
                         options.UseSqlite("Data Source=task.db");
                     });
 
-                    services.AddTransient<WeekViewModel>();
                     services.AddScoped<ITaskService, TaskService>();
                     services.AddSingleton<INavigationService, NavigationService>();
 
@@ -67,6 +66,17 @@ namespace TimeController
                 .Build();
 
             AppHost.Start();
+        }
+
+        protected override void OnExit(ExitEventArgs e)
+        {
+            // 保存应用程序数据
+            if (Properties.Contains("SemesterStartDate"))
+            {
+                Console.WriteLine($"保存学期开始日期: {Properties["SemesterStartDate"]}");
+            }
+
+            base.OnExit(e);
         }
     }
 }

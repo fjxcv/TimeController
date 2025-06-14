@@ -11,7 +11,7 @@ using TimeController.Models;
 using TimeController.Services;
 using OfficeOpenXml;
 using TimeController.Views.StrongGoalWeek;
-
+using TimeController;
 
 
 namespace TimeController.ViewModels
@@ -87,6 +87,7 @@ namespace TimeController.ViewModels
             DownloadTemplateCommand = new RelayCommand(_ => DownloadTemplate(), _ => !IsImporting);
             OpenHelpCommand = new RelayCommand(_ => OpenHelp());
         }
+        
 
         private async void ImportFromUrl()
         {
@@ -166,6 +167,36 @@ namespace TimeController.ViewModels
                 {
                     IsImporting = false;
                 }
+            }
+        }
+
+        // 手动添加课程
+        public async Task<bool> AddCourseByHand(Course course)
+        {
+            if (course == null)
+                throw new ArgumentNullException(nameof(course));
+
+            try
+            {
+                // 保存课程到数据库
+                await _dbService.SaveCourses(new List<Course> { course }, SemesterStartDate);
+
+                // 更新导入状态
+                ImportStatus = "已添加课程";
+
+                // 标记已导入课程
+                _hasImportedCourses = true;
+
+                // 触发事件通知已保存课程及开学日期
+                CoursesSavedWithStartDate?.Invoke(SemesterStartDate);
+
+                return true;
+            }
+            catch (Exception)
+            {
+                // 发生异常时返回失败
+                ImportStatus = "添加课程失败";
+                return false;
             }
         }
 

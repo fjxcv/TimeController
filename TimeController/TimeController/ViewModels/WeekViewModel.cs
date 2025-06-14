@@ -165,17 +165,15 @@ namespace TimeController.ViewModels
             return taskModel;
         }
 
+
         /// <summary>
         /// 一步完成课程的添加和保存
         /// </summary>
-        public async Task<TaskModel> AddAndSaveCourse(Course course)
+        public async Task<List<TaskModel>> AddAndSaveCourse(Course course)
         {
             // 1. 转换为任务模型
             TaskModel taskModel = ConvertCourseToTaskModel(course);
 
-            // 设置为当前周的日期，而不是使用默认日期
-            DateTime monday = GetCurrentWeekMonday();
-            taskModel.PlannedDate = monday.AddDays(taskModel.WeekDay);
             // 2. 保存到数据库
             if (_taskService != null)
             {
@@ -189,8 +187,10 @@ namespace TimeController.ViewModels
             // 4. 刷新当前视图
             LoadTasksForCurrentWeek();
 
-            return taskModel;
+            // 5. 返回包含单个任务模型的列表
+            return new List<TaskModel> { taskModel };
         }
+
 
 
         /// <summary>
@@ -223,7 +223,9 @@ namespace TimeController.ViewModels
                 _ => 0
             };
         }
-        //导入改
+
+
+        
         private DateTime? _semesterStartDate;
 
         public DateTime? SemesterStartDate
@@ -234,11 +236,27 @@ namespace TimeController.ViewModels
                 if (_semesterStartDate != value)
                 {
                     _semesterStartDate = value;
+
+                    // 当设置学期开始日期时，同时更新App.Current.Properties
+                    if (value.HasValue)
+                    {
+                        App.Current.Properties["SemesterStartDate"] = value.Value.ToString("yyyy-MM-dd");
+                        Console.WriteLine($"更新学期开始日期: {value.Value:yyyy-MM-dd}");
+                    }
+                    else
+                    {
+                        if (App.Current.Properties.Contains("SemesterStartDate"))
+                        {
+                            App.Current.Properties.Remove("SemesterStartDate");
+                        }
+                    }
+
                     OnPropertyChanged();
                     UpdateSemesterWeekText(); // 更新学期周数文本
                 }
             }
         }
+
 
         //导入改
         private string _semesterWeekText = "";
@@ -410,15 +428,51 @@ namespace TimeController.ViewModels
             // 非强制添加模式下，先检查时间冲突
             if (!forceAdd && !task.IsAllDay && task.StartTime.HasValue && task.EndTime.HasValue)
             {
-                var (hasConflict, conflicts) = CheckTimeConflicts(task);
+                Console.WriteLine($"开始检查任务冲突: {task.Name}, 日期: {task.PlannedDate:yyyy-MM-dd}");
 
-                if (hasConflict)
+                // 检查与任务的冲突
+                var (hasTaskConflict, taskConflicts) = CheckTimeConflicts(task);
+
+                // 检查与课程的冲突
+                var (hasCourseConflict, courseConflicts) = CheckCourseConflicts(task);
+
+                // 合并冲突列表
+                var allConflicts = taskConflicts.Concat(courseConflicts).ToList();
+
+                if (allConflicts.Any())
                 {
-                    // 通知View层处理冲突
-                    ConflictDetected?.Invoke(task, conflicts);
-                    return; // 不继续执行添加，等待用户决定
+                    // 确保有订阅者再触发事件
+                    if (ConflictDetected != null)
+                    {
+                        // 通知View层处理冲突
+                        ConflictDetected(task, allConflicts);
+                        return; // 不继续执行添加，等待用户决定
+                    }
+                    else
+                    {
+                        Console.WriteLine("警告: ConflictDetected 事件没有订阅者!");
+                        // 如果没有订阅者，可以显示一个对话框询问用户
+                        var result = MessageBox.Show(
+                            $"任务 '{task.Name}' 与当前时间段内的 {allConflicts.Count} 个任务冲突。\n是否继续添加并删除冲突任务?",
+                            "时间冲突",
+                            MessageBoxButton.YesNo,
+                            MessageBoxImage.Warning);
+
+                        if (result == MessageBoxResult.Yes)
+                        {
+                            // 用户确认继续，处理冲突
+                            await HandleConflictAndAddTask(task, allConflicts);
+                            return;
+                        }
+                        else
+                        {
+                            // 用户取消
+                            return;
+                        }
+                    }
                 }
             }
+
 
             // 无冲突或强制添加，执行正常的添加流程
             Tasks.Add(task);
@@ -455,7 +509,6 @@ namespace TimeController.ViewModels
                         }
                     }
                 }
-
             }
             OnPropertyChanged(nameof(TimedTaskBlocks));
             OnPropertyChanged(nameof(AllDayTaskBlocks));
@@ -475,33 +528,162 @@ namespace TimeController.ViewModels
             TimedTaskBlocksView.Refresh();
         }
 
-
-        // 处理冲突：删除冲突任务并添加新任务
+        // 处理任务与任务冲突、课程与任务冲突
         public async Task HandleConflictAndAddTask(TaskModel newTask, List<TaskBlock> conflicts)
         {
-            // 先删除所有冲突的任务
+            using (_taskService?.BeginTransaction())
+            {
+                try
+                {
+                    var taskConflicts = conflicts.Where(c => !c.IsCourse).ToList();
+                    var courseConflicts = conflicts.Where(c => c.IsCourse).ToList();
+
+                    await ProcessTaskConflicts(taskConflicts);
+                    ProcessCourseConflicts(newTask, courseConflicts);
+                    await AddNewTaskWithRefresh(newTask);
+
+                    _taskService?.CommitTransaction();
+                }
+                catch (Exception ex)
+                {
+                    _taskService?.RollbackTransaction();
+                    HandleError(ex);
+                    await ReloadTasks();
+                }
+            }
+        }
+
+
+
+        // 添加错误处理方法
+        private void HandleError(Exception ex)
+        {
+            Console.WriteLine($"处理冲突时出错: {ex.Message}\n{ex.StackTrace}");
+            MessageBox.Show($"处理冲突时出错: {ex.Message}", "错误", MessageBoxButton.OK, MessageBoxImage.Error);
+        }
+
+        // 添加任务重新加载方法
+        private async Task ReloadTasks()
+        {
+            await Task.Delay(100); // 短暂延迟以确保数据库操作完成
+            LoadTasksForCurrentWeek();
+        }
+
+
+        private async Task ProcessTaskConflicts(List<TaskBlock> conflicts)
+        {
             foreach (var conflict in conflicts)
             {
-                // 从UI集合移除
-                TaskBlocks.Remove(conflict);
+                var removed = TaskBlocks.FirstOrDefault(b => b.Id == conflict.Id);
+                if (removed != null) TaskBlocks.Remove(removed);
 
-                // 找到对应的TaskModel并从数据库删除
+                if (conflict.IsAllDay && conflict.Column >= 0 && conflict.Column < 7)
+                {
+                    var allDayList = AllDayTaskBlocksPerDay[conflict.Column];
+                    var toRemove = allDayList.FirstOrDefault(b => b.Id == conflict.Id);
+                    if (toRemove != null) allDayList.Remove(toRemove);
+                }
+
                 var taskToRemove = Tasks.FirstOrDefault(t => t.Id == conflict.Id);
-                if (taskToRemove != null)
+                if (taskToRemove != null && _taskService != null)
                 {
                     Tasks.Remove(taskToRemove);
-                    if (_taskService != null)
+                    await _taskService.DeleteTaskAsync(taskToRemove);
+                    Debug.WriteLine($"Deleted conflicting task: {taskToRemove.Id}");
+                }
+            }
+        }
+
+        private void ProcessCourseConflicts(TaskModel newTask, List<TaskBlock> conflicts)
+        {
+            if (conflicts.Any())
+            {
+                var conflictNames = string.Join(", ", conflicts.Select(c => c.Name));
+                newTask.Note = $"{(newTask.Note ?? "").Trim()}\n[与课程冲突: {conflictNames}]";
+                Debug.WriteLine($"Course conflicts detected: {conflictNames}");
+            }
+        }
+
+        private async Task AddNewTaskWithRefresh(TaskModel task)
+        {
+            Tasks.Add(task);
+            if (_taskService != null) await _taskService.UpdateTaskAsync(task);
+
+            // 刷新UI
+            var monday = GetCurrentWeekMonday();
+            if (task.PlannedDate >= monday && task.PlannedDate <= monday.AddDays(6))
+            {
+                AddTaskToView(task);
+
+                if (task.IsAllDay)
+                {
+                    int col = (task.PlannedDate - monday).Days;
+                    if (col >= 0 && col < 7)
                     {
-                        await _taskService.DeleteTaskAsync(taskToRemove);
+                        var addedBlock = TaskBlocks.FirstOrDefault(b => b.Id == task.Id);
+                        if (addedBlock != null)
+                        {
+                            AllDayTaskBlocksPerDay[col].Add(addedBlock);
+                            DateColumns[col].RefreshAllDayTasksView();
+                        }
                     }
                 }
             }
 
-            // 然后以强制模式添加新任务
-            AddTask(newTask, true);
-            TimedTaskBlocksView.Refresh(); // 强制刷新视图
+            TimedTaskBlocksView.Refresh();
             OnPropertyChanged(nameof(AllDayTaskBlocks));
+            OnPropertyChanged(nameof(ShouldShowMoreButtonForColumn));
         }
+
+        // 检查与课程的冲突
+        public (bool hasConflict, List<TaskBlock> conflicts) CheckCourseConflicts(TaskModel newTask)
+        {
+            var conflicts = new List<TaskBlock>();
+
+            if (newTask.StartTime.HasValue && newTask.EndTime.HasValue && newTask.StartTime.Value < newTask.EndTime.Value)
+            {
+                // 计算本周一
+                DateTime monday = CurrentDate.Date;
+                while (monday.DayOfWeek != DayOfWeek.Monday)
+                    monday = monday.AddDays(-1);
+
+                int column = (newTask.PlannedDate - monday).Days;
+
+                // 只检查有效列范围
+                if (column >= 0 && column <= 6)
+                {
+                    // 添加调试日志
+                    Console.WriteLine($"检查课程冲突 - 任务: {newTask.Name}, 日期: {newTask.PlannedDate:yyyy-MM-dd}, 时间: {newTask.StartTime} - {newTask.EndTime}");
+
+                    // 检查课程冲突
+                    foreach (var block in CourseTaskBlocks)
+                    {
+                        if (block.Column == column)
+                        {
+                            // 跳过无效时间段
+                            if (block.StartTime >= block.EndTime)
+                            {
+                                Console.WriteLine($"跳过无效时间课程: {block.Name}, 时间: {block.StartTime} - {block.EndTime}");
+                                continue;
+                            }
+
+                            // 时间区间有重叠
+                            bool hasOverlap = !(newTask.EndTime.Value <= block.StartTime || newTask.StartTime.Value >= block.EndTime);
+
+                            if (hasOverlap)
+                            {
+                                Console.WriteLine($"检测到冲突课程: {block.Name}, 时间: {block.StartTime} - {block.EndTime}");
+                                conflicts.Add(block);
+                            }
+                        }
+                    }
+                }
+            }
+
+            Console.WriteLine($"课程冲突检测结果: 找到 {conflicts.Count} 个冲突");
+            return (conflicts.Count > 0, conflicts);
+        }
+
 
 
         private Brush GetBrushForTaskType(TaskType type)
@@ -795,24 +977,41 @@ namespace TimeController.ViewModels
 
                 int column = (newTask.PlannedDate - monday).Days;
 
-                // 检查同一天的分时任务是否有冲突
-                foreach (var block in TaskBlocks)
+                // 只检查有效列范围
+                if (column >= 0 && column <= 6)
                 {
-                    if (!block.IsAllDay && block.Column == column)
-                    {
-                        // 跳过无效时间段
-                        if (block.StartTime >= block.EndTime) continue;
+                    // 添加调试日志
+                    Console.WriteLine($"检查时间冲突 - 任务: {newTask.Name}, 日期: {newTask.PlannedDate:yyyy-MM-dd}, 时间: {newTask.StartTime} - {newTask.EndTime}");
 
-                        // 时间区间有重叠
-                        if (!(newTask.EndTime.Value <= block.StartTime || newTask.StartTime.Value >= block.EndTime))
+                    // 检查同一天的分时任务是否有冲突
+                    foreach (var block in TaskBlocks)
+                    {
+                        if (!block.IsAllDay && block.Column == column)
                         {
-                            conflicts.Add(block);
+                            // 跳过无效时间段
+                            if (block.StartTime >= block.EndTime)
+                            {
+                                Console.WriteLine($"跳过无效时间任务: {block.Name}, 时间: {block.StartTime} - {block.EndTime}");
+                                continue;
+                            }
+
+                            // 时间区间有重叠
+                            bool hasOverlap = !(newTask.EndTime.Value <= block.StartTime || newTask.StartTime.Value >= block.EndTime);
+
+                            if (hasOverlap)
+                            {
+                                Console.WriteLine($"检测到冲突任务: {block.Name}, ID: {block.Id}, 时间: {block.StartTime} - {block.EndTime}");
+                                conflicts.Add(block);
+                            }
                         }
                     }
                 }
             }
+
+            Console.WriteLine($"时间冲突检测结果: 找到 {conflicts.Count} 个冲突");
             return (conflicts.Count > 0, conflicts);
         }
+
 
 
 
@@ -822,7 +1021,7 @@ namespace TimeController.ViewModels
             CurrentDate = CurrentDate.AddDays(offset);
             LoadTasksForCurrentWeek();
         }
-        
+
         //导航栏月
         private void NavigateMonth(int offset)
         {
@@ -833,7 +1032,7 @@ namespace TimeController.ViewModels
         // 获取当前日期所在的月份
         private void UpdateMonthText()
         {
-            
+
             var month = _currentDate.Month;
             MonthText = $"{month}月份";
             OnPropertyChanged(nameof(MonthText));
@@ -899,7 +1098,6 @@ namespace TimeController.ViewModels
         // 切换展开状态的命令
         public ICommand ToggleColumnExpandCommand { get; private set; }
 
-        // 切换某一列的展开状态
         // 切换某一列的展开状态
         private void ToggleColumnExpand(int column)
         {

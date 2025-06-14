@@ -99,23 +99,87 @@ namespace TimeController.Views.StrongGoalWeek
         // 处理任务冲突
         private async void OnTaskConflictDetected(TaskModel newTask, List<WeekViewModel.TaskBlock> conflicts)
         {
-            // 构建冲突任务列表
-            var conflictNames = string.Join("\n", conflicts.Select(c => c.Name));
+            Console.WriteLine($"收到冲突检测事件 - 任务: {newTask.Name}, 冲突数: {conflicts.Count}");
+
+            // 分别获取任务和课程冲突
+            var taskConflicts = conflicts.Where(c => !c.IsCourse).ToList();
+            var courseConflicts = conflicts.Where(c => c.IsCourse).ToList();
+
+            // 构建冲突提示文本
+            string message = "";
+            if (taskConflicts.Any())
+            {
+                var taskNames = string.Join("\n", taskConflicts.Select(c => $"- {c.Name}"));
+                message += $"该时间段与以下任务冲突:\n{taskNames}\n";
+            }
+
+            if (courseConflicts.Any())
+            {
+                var courseNames = string.Join("\n", courseConflicts.Select(c => $"- {c.Name}"));
+                message += $"{(taskConflicts.Any() ? "\n还" : "")}与以下课程冲突:\n{courseNames}\n";
+            }
+
+            // 修改这里的提示文本，明确说明点击确认会删除冲突任务
+            if (taskConflicts.Any())
+            {
+                message += "\n确认后将会【删除】上述冲突的任务，是否继续?";
+            }
+            else
+            {
+                message += "\n是否仍要添加此任务?";
+            }
+
+            // 如果是课程冲突，添加特别说明
+            if (courseConflicts.Any())
+            {
+                message += "\n\n注意：添加后课程不会被删除，但会被标记为冲突。";
+            }
 
             // 弹出确认对话框
             var result = MessageBox.Show(
-                $"该时间段与以下任务冲突:\n{conflictNames}\n\n是否仍要添加?",
+                message,
                 "时间冲突",
                 MessageBoxButton.YesNo,
                 MessageBoxImage.Warning);
 
-            // 如果用户选择"是"，则删除冲突任务并添加新任务
+            // 如果用户选择"是"，则处理冲突并添加新任务
             if (result == MessageBoxResult.Yes)
             {
+                Console.WriteLine("用户确认处理冲突，开始执行HandleConflictAndAddTask");
                 var viewModel = DataContext as WeekViewModel;
-                await viewModel.HandleConflictAndAddTask(newTask, conflicts);
+                if (viewModel != null)
+                {
+                    try
+                    {
+                        await viewModel.HandleConflictAndAddTask(newTask, conflicts);
+
+                        // 如果有任务被删除，显示一个通知
+                        if (taskConflicts.Any())
+                        {
+                            MessageBox.Show(
+                                $"已删除 {taskConflicts.Count} 个冲突任务，并添加新任务：{newTask.Name}",
+                                "操作完成",
+                                MessageBoxButton.OK,
+                                MessageBoxImage.Information);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"处理冲突时出错: {ex.Message}");
+                        MessageBox.Show($"处理冲突时出错: {ex.Message}", "错误", MessageBoxButton.OK, MessageBoxImage.Error);
+                    }
+                }
+                else
+                {
+                    Console.WriteLine("错误: 找不到WeekViewModel实例");
+                }
+            }
+            else
+            {
+                Console.WriteLine("用户取消了冲突处理");
             }
         }
+
 
         //导入改1
         private void ImportSchedule_Click(object sender, RoutedEventArgs e)
@@ -174,19 +238,23 @@ namespace TimeController.Views.StrongGoalWeek
 
                 try
                 {
-                    // 需要在 WeekViewModel 中先添加 AddAndSaveCourse 方法
-                    // 如果尚未实现该方法，将在下面提供实现
-                    await _viewModel.AddAndSaveCourse(newCourse);
+                    // 添加并保存课程
+                    var addedTasks = await _viewModel.AddAndSaveCourse(newCourse);
 
                     // 显示成功消息
-                    //MessageBox.Show($"成功添加课程：{newCourse.Name}", "添加成功", MessageBoxButton.OK, MessageBoxImage.Information);
+                    if (addedTasks.Count > 0)
+                    {
+                        MessageBox.Show($"成功添加课程：{newCourse.Name}\n上课周次：{newCourse.WeekPattern}",
+                            "添加成功", MessageBoxButton.OK, MessageBoxImage.Information);
+                    }
                 }
                 catch (Exception ex)
                 {
-                    //MessageBox.Show($"添加课程失败：{ex.Message}", "错误", MessageBoxButton.OK, MessageBoxImage.Error);
+                    MessageBox.Show($"添加课程失败：{ex.Message}", "错误", MessageBoxButton.OK, MessageBoxImage.Error);
                 }
             }
         }
+
 
         // 供 DateColumnControl 调用的方法
         public void OnTaskBlockClicked(object sender, MouseButtonEventArgs e)

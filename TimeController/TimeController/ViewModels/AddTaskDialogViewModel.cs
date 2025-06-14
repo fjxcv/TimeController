@@ -13,6 +13,48 @@ namespace TimeController.ViewModels
         public RelayCommand SaveCommand { get; }
 
         public TaskModel Task { get; } = new TaskModel();
+        // 添加周次模式相关属性
+        private string _weekPattern = "1";
+        public string WeekPattern
+        {
+            get => _weekPattern;
+            set
+            {
+                _weekPattern = value;
+                OnPropertyChanged();
+                ValidateWeekPattern();
+            }
+        }
+
+        private bool _isWeekPatternValid = true;
+        public bool IsWeekPatternValid
+        {
+            get => _isWeekPatternValid;
+            set
+            {
+                if (_isWeekPatternValid != value)
+                {
+                    _isWeekPatternValid = value;
+                    OnPropertyChanged();
+                    // 更新保存按钮状态
+                    (SaveCommand as RelayCommand)?.RaiseCanExecuteChanged();
+                }
+            }
+        }
+
+        private string _weekPatternError;
+        public string WeekPatternError
+        {
+            get => _weekPatternError;
+            set
+            {
+                _weekPatternError = value;
+                OnPropertyChanged();
+                OnPropertyChanged(nameof(HasWeekPatternError));
+            }
+        }
+
+        public bool HasWeekPatternError => !string.IsNullOrEmpty(WeekPatternError);
 
         public AddTaskDialogViewModel(DateTime? defaultTime = null)
         {
@@ -55,8 +97,16 @@ namespace TimeController.ViewModels
         public string Name
         {
             get => Task.Name;
-            set { Task.Name = value; OnPropertyChanged(); }
+            set
+            {
+                Task.Name = value;
+                OnPropertyChanged();
+                // 更新表单有效性
+                UpdateFormValidity();
+            }
         }
+
+
 
         private string? _note;
         public string? Note
@@ -123,7 +173,7 @@ namespace TimeController.ViewModels
         {
             if (Task.StartTime.HasValue && Task.EndTime.HasValue)
             {
-                if (Task.StartTime < Task.EndTime)
+                if (Task.StartTime.Value < Task.EndTime.Value)
                 {
                     IsTimeValid = true;
                     TimeError = null;
@@ -136,11 +186,107 @@ namespace TimeController.ViewModels
             }
             else
             {
-                TimeError = null;
+                // 处理一个或两个时间为空的情况
                 IsTimeValid = true;
+                TimeError = null;
             }
+
+            // 更新总体表单有效性
+            UpdateFormValidity();
         }
 
+
+        private void ValidateWeekPattern()
+        {
+            if (string.IsNullOrWhiteSpace(WeekPattern))
+            {
+                IsWeekPatternValid = false;
+                WeekPatternError = "周次不能为空";
+            }
+            else
+            {
+                // 检查格式：可以是单个数字、逗号分隔的数字列表或者用-连接的范围
+                bool isValid = true;
+                string error = null;
+
+                try
+                {
+                    // 解析周次
+                    ParseWeekPattern(WeekPattern);
+                }
+                catch (Exception ex)
+                {
+                    isValid = false;
+                    error = "周次格式不正确，请使用数字、逗号或连字符，例如：1、1,3,5 或 1-10";
+                }
+
+                IsWeekPatternValid = isValid;
+                WeekPatternError = error;
+            }
+
+            // 更新总体表单有效性，而不是直接修改IsTimeValid
+            UpdateFormValidity();
+        }
+
+        // 解析周次模式，返回包含所有周次的集合
+        public static HashSet<int> ParseWeekPattern(string pattern)
+        {
+            var weeks = new HashSet<int>();
+
+            if (string.IsNullOrWhiteSpace(pattern))
+                return weeks;
+
+            var parts = pattern.Split(',');
+            foreach (var part in parts)
+            {
+                if (part.Contains("-"))
+                {
+                    var range = part.Split('-');
+                    if (range.Length == 2 && int.TryParse(range[0], out int start) && int.TryParse(range[1], out int end))
+                    {
+                        for (int i = start; i <= end; i++)
+                        {
+                            weeks.Add(i);
+                        }
+                    }
+                    else
+                    {
+                        throw new FormatException("周次范围格式不正确");
+                    }
+                }
+                else if (int.TryParse(part, out int week))
+                {
+                    weeks.Add(week);
+                }
+                else
+                {
+                    throw new FormatException("周次必须是数字");
+                }
+            }
+
+            return weeks;
+        }
+
+        // 更新总体表单有效性
+        private void UpdateFormValidity()
+        {
+            IsFormValid = IsTimeValid && IsWeekPatternValid;
+        }
+
+        private bool _isFormValid = true;
+        public bool IsFormValid
+        {
+            get => _isFormValid;
+            set
+            {
+                if (_isFormValid != value)
+                {
+                    _isFormValid = value;
+                    OnPropertyChanged();
+                    (SaveCommand as RelayCommand)?.RaiseCanExecuteChanged();
+                }
+            }
+        }
 
         private bool _isTimeValid = true;
         public bool IsTimeValid

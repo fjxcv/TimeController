@@ -104,7 +104,30 @@
 						 Width="270"
 						 HorizontalAlignment="Left"
 						 />
-			</StackPanel>
+
+                <!-- 周次选择 -->
+                <TextBlock Text="上课周次:"
+					Margin="0,5,0,2"
+					FontWeight="Medium"/>
+                <Grid Margin="0,0,0,10" Width="270" HorizontalAlignment="Left">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+                    <TextBox Grid.Row="0"
+						Text="{Binding WeekPattern, UpdateSourceTrigger=PropertyChanged}"
+						HorizontalAlignment="Stretch"
+						ToolTip="输入格式：1 或 1,3,5 或 1-10 表示第几周有课"/>
+                    <!-- 周次错误提示 -->
+                    <TextBlock Grid.Row="1"
+						Text="{Binding WeekPatternError}"
+						Foreground="Red"
+						FontSize="12"
+						Margin="0,4,0,0"
+						Visibility="{Binding HasWeekPatternError, Converter={StaticResource BoolToVisibility}}"/>
+                </Grid>
+
+            </StackPanel>
 		</ScrollViewer>
 
 		<Grid Grid.Row="2" Margin="0,15,0,0">
@@ -117,10 +140,11 @@
 			<Button Grid.Column="1" Content="取消"
                     Margin="0,0,10,0" Padding="15,5"
                     Click="CancelButton_Click"/>
-			<Button Grid.Column="2" Content="添加"
-                    Padding="15,5" Click="AddButton_Click"
-                    IsDefault="True"
-                    IsEnabled="{Binding IsTimeValid}"/>
-		</Grid>
+            <Button Grid.Column="2" Content="添加"
+				Padding="15,5" Click="AddButton_Click"
+				IsDefault="True"
+				IsEnabled="{Binding IsFormValid}"/>
+
+        </Grid>
 	</Grid>
 </Window>

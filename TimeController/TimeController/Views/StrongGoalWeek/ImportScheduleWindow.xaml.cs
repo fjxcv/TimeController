@@ -3,7 +3,6 @@ using System.Diagnostics;
 using TimeController.ViewModels;
 using System.Windows.Controls;
 using TimeController.Models;
-using TimeController.ViewModels;
 using TimeController.Views.StrongGoalWeek;
 
 namespace TimeController.Views.StrongGoalWeek
@@ -35,6 +34,39 @@ namespace TimeController.Views.StrongGoalWeek
                 });
             };
         }
+
+        // 手动添加课程
+        private async void AddCourse_Click(object sender, RoutedEventArgs e)
+        {
+            // 获取当前周视图的开学日期
+            DateTime semesterStartDate = _viewModel.SemesterStartDate;
+
+            // 正确创建添加课程窗口，提供必要的参数
+            var addCourseWindow = new AddCourseWindow(semesterStartDate)
+            {
+                Owner = Window.GetWindow(this)
+            };
+
+            // 显示窗口并处理结果
+            if (addCourseWindow.ShowDialog() == true && addCourseWindow.ResultCourse != null)
+            {
+                // 获取添加的课程
+                var newCourse = addCourseWindow.ResultCourse;
+
+                try
+                {
+                    // 添加并保存课程，不再弹出提示
+                    await _viewModel.AddCourseByHand(newCourse);
+                }
+                catch
+                {
+                    // 失败时也不做任何提示
+                }
+            }
+        }
+
+
+
 
         // 通过链接导入
         private void Import_Click(object sender, RoutedEventArgs e)

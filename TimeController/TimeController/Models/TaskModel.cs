@@ -93,6 +93,7 @@ namespace TimeController.Models
         public TimeSpan? EndTime { get; set; }
 
 
+
         private MyTaskStatus _status = MyTaskStatus.Pending;
         public MyTaskStatus Status
         {

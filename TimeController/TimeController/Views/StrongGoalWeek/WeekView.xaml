@@ -50,18 +50,12 @@
             </StackPanel>
 
             <Button Grid.Column="2"
-                Content="添加课表" 
-                Margin="0,0,16,0"
-                Padding="16,8"
-                Click="AddCourse_Click"/>
-
-            <Button Grid.Column="3"
                     Content="导入课表" 
                     Margin="0,0,16,0"
                     Padding="16,8"
                     Click="ImportSchedule_Click"/>
 
-            <Button Grid.Column="4"
+            <Button Grid.Column="3"
                     Content="进入复盘" 
                     Padding="16,8"/>
         </Grid>
