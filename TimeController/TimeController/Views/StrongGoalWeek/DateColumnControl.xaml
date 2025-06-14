@@ -19,7 +19,10 @@
                 <Setter Property="Background" Value="#F0F0F0"/>
                 <Style.Triggers>
                     <DataTrigger Binding="{Binding IsToday}" Value="True">
-                        <Setter Property="Background" Value="#E6F7FF"/>
+                        <!-- 当日期为今天时，将全天任务格子的背景和边框设为醒目的蓝色 -->
+                        <Setter Property="Background" Value="#CCE4FF"/>
+                        <Setter Property="BorderBrush" Value="#1890FF"/>
+                        <Setter Property="BorderThickness" Value="1"/>
                     </DataTrigger>
                 </Style.Triggers>
             </Style>
