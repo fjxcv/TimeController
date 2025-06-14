@@ -43,17 +43,19 @@ namespace TimeController.Services
             DateTime monday = referenceDate.Date;
             while (monday.DayOfWeek != DayOfWeek.Monday)
                 monday = monday.AddDays(-1);
-
+            DateTime sunday = monday.AddDays(6);
+            // 返回该周的课程任务
+            return await _context.Task
+                .Where(t => t.IsCourseTask && t.PlannedDate >= monday && t.PlannedDate <= sunday)
+                .ToListAsync();
+        }
         public IDisposable BeginTransaction()
         {
             _currentTransaction = _context.Database.BeginTransaction();
             return _currentTransaction;
         }
 
-            // 返回该周的课程任务
-            return await _context.Task
-                .Where(t => t.IsCourseTask && t.PlannedDate >= monday && t.PlannedDate <= sunday)
-                .ToListAsync();
+            
         public void CommitTransaction()
         {
             _currentTransaction?.Commit();
