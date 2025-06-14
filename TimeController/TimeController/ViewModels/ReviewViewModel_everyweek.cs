@@ -14,6 +14,7 @@ using LiveChartsCore.SkiaSharpView;
 using LiveChartsCore.SkiaSharpView.Painting;
 using SkiaSharp;
 using System.Collections.Specialized;
+using System.Windows.Documents;
 
 namespace TimeController.ViewModels
 {
