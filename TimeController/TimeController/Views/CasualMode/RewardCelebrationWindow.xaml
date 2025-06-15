@@ -1,0 +1,117 @@
+<Window x:Class="TimeController.Views.CasualMode.RewardCelebrationWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:uiControls="clr-namespace:iNKORE.UI.WPF.Modern.Controls;assembly=iNKORE.UI.WPF.Modern"
+        xmlns:vm="clr-namespace:TimeController.ViewModels"
+        mc:Ignorable="d"
+        Title="奖励时刻" Height="350" Width="400" 
+        WindowStartupLocation="CenterScreen"
+        ResizeMode="NoResize"
+        WindowStyle="None"
+        AllowsTransparency="True" Background="Transparent"
+        Loaded="Window_Loaded">
+
+    <Window.Resources>
+        <!-- 圆角按钮样式 -->
+        <Style x:Key="RoundedButtonStyle" TargetType="Button">
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border
+              Background="{TemplateBinding Background}"
+              CornerRadius="8"
+              BorderThickness="0">
+                            <ContentPresenter
+                HorizontalAlignment="Center"
+                VerticalAlignment="Center"/>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </Window.Resources>
+
+    <Grid>
+        <!-- 全屏烟花画布 -->
+        <Canvas x:Name="FullScreenFireworksCanvas"
+                Background="Transparent"
+                IsHitTestVisible="False"/>
+
+        <!-- 奖励弹窗 Border -->
+        <Border CornerRadius="20"
+                Background="#E6F2ED"
+                BorderThickness="1"
+                BorderBrush="#B2D8C8"
+                HorizontalAlignment="Center"
+                VerticalAlignment="Center">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="35"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+
+                <Image Grid.Row="0"
+                       Width="40" Height="40"
+                       Margin="0,20,0,0"
+                       HorizontalAlignment="Center"
+                       VerticalAlignment="Top"
+                       Source="pack://application:,,,/TimeController;component/Resources/fire1.png"
+                       Stretch="Uniform"/>
+
+                <TextBlock Grid.Row="1"
+                           Text="恭喜你点亮了本周所有的努力格子!"
+                           FontSize="28"
+                           FontWeight="Bold"
+                           Foreground="#2E8B57"
+                           TextAlignment="Center"
+                           TextWrapping="Wrap"
+                           Margin="0,37,0,0"
+                           Grid.RowSpan="2"/>
+
+                <TextBlock Grid.Row="3"
+                           Text="一周的用心，现在是你的奖励时刻~"
+                           FontSize="16"
+                           Foreground="#696969"
+                           TextAlignment="Center"
+                           TextWrapping="Wrap"
+                           Margin="0,2,0,0"/>
+
+                <!-- 显示最终选中的奖励任务 -->
+                <Button Grid.Row="4"
+                        Width="200"
+                        Height="50"
+                        Margin="0,0,0,20"
+                        HorizontalAlignment="Center"
+                        Background="#B2D8C8"
+                        Style="{StaticResource RoundedButtonStyle}">
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center" HorizontalAlignment="Center">
+                        <Image Source="pack://application:,,,/TimeController;component/Resources/reward.png" Width="24" Height="24" Margin="0,0,10,0" VerticalAlignment="Center"/>
+                        <TextBlock Text="{Binding FinalRewardTask.Title, FallbackValue='未选择奖励'}"
+                                 FontSize="20"
+                                 FontWeight="SemiBold"
+                                 Foreground="#2E8B57"/>
+                    </StackPanel>
+                </Button>
+
+                <!-- 领取按钮 -->
+                <Button x:Name="ClaimRewardButton"
+                        Grid.Row="5"
+                        Content="立即领取"
+                        Width="130"
+                        Height="40"
+                        Margin="0,0,0,20"
+                        HorizontalAlignment="Center"
+                        Background="#6A9DD1"
+                        Foreground="White"
+                        Style="{StaticResource RoundedButtonStyle}"
+                        Click="ClaimRewardButton_Click"/>
+            </Grid>
+        </Border>
+    </Grid>
+</Window>

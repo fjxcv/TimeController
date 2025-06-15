@@ -1,12 +1,24 @@
-﻿using System.Windows;
+﻿using System;
+using System.Collections.Generic;
+using System.Globalization;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Data;
+using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
+using System.Windows.Media.Imaging;
+using System.Windows.Navigation;
+using System.Windows.Shapes;
 using TimeController.ViewModels;
 using Page = iNKORE.UI.WPF.Modern.Controls.Page;
 using TimeController.Models;
 using System.ComponentModel;
 using System.Windows.Threading;
+using System.Windows.Media.Animation;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace TimeController.Views.CasualMode
@@ -14,33 +26,43 @@ namespace TimeController.Views.CasualMode
     /// <summary>
     /// CasualModeView.xaml 的交互逻辑
     /// </summary>
-    public partial class CasualModeView : Page
 
+
+    public partial class CasualModeView : Page
     {
+        private Random _rand = new Random();
+        private bool _isRewardWindowCurrentlyShowing = false;
+        private DateTime _lastRewardCelebrationShownTime = DateTime.MinValue;
+        private readonly TimeSpan _minTimeBetweenCelebrations = TimeSpan.FromSeconds(2);
+        private bool _isSubscribed = false; // 添加订阅状态标志
+        private CasualModeViewModel? _viewModel;
 
         public CasualModeView()
         {
             InitializeComponent();
-            DataContext = App.Services.GetRequiredService<CasualModeViewModel>();
+            _viewModel = App.Services.GetRequiredService<CasualModeViewModel>();
+            DataContext = _viewModel;
             RewardPopup.Opened += RewardPopup_Opened;
+            
+            // 订阅奖励事件
+            _viewModel.OnShowRewardCelebration += HandleShowRewardCelebration;
+            
+            // 订阅页面卸载事件，用于清理
+            this.Unloaded += CasualModeView_Unloaded;
+        }
 
-            // ViewModel的属性变化，处理View层的UI操作
-            if (DataContext is CasualModeViewModel vm)
+        private void CasualModeView_Unloaded(object sender, RoutedEventArgs e)
+        {
+            // 取消订阅事件
+            if (_viewModel != null)
             {
-                vm.PropertyChanged += ViewModel_PropertyChanged;
-                vm.Modules.CollectionChanged += Modules_CollectionChanged;
-                // 为初始加载的模块订阅属性变化
-                foreach (var module in vm.Modules)
-                {
-                    module.PropertyChanged += Module_PropertyChanged;
-                }
+                _viewModel.OnShowRewardCelebration -= HandleShowRewardCelebration;
             }
-
         }
 
         private void RewardPopup_Opened(object? sender, EventArgs e)
         {
-            //确保弹窗完全打开
+            // 确保弹窗完全打开并设置焦点，不播放烟花和音效
             Dispatcher.BeginInvoke(DispatcherPriority.Input, new Action(() =>
             {
                 if (RewardTaskInput != null)
@@ -82,12 +104,25 @@ namespace TimeController.Views.CasualMode
         {
             if (DataContext is CasualModeViewModel vm)
             {
-                if (e.PropertyName == nameof(CasualModeViewModel.IsRewardPopupOpen))
-                {
-
-                }
             }
         }
+
+        private void HandleShowRewardCelebration()
+        {
+            if (_isRewardWindowCurrentlyShowing)
+            {
+                return;
+            }
+
+            _isRewardWindowCurrentlyShowing = true;
+            var window = new RewardCelebrationWindow(_viewModel);
+            window.Closed += (s, e) => 
+            {
+                _isRewardWindowCurrentlyShowing = false;
+            };
+            window.ShowDialog();
+        }
+        
         //双击编辑后是空任务点击别处就直接删除
         private void CurrentEditingTextBox_LostFocus(object sender, RoutedEventArgs e)
         {
@@ -100,7 +135,7 @@ namespace TimeController.Views.CasualMode
                     {
                         vm.EndEditTaskCommand.Execute(_currentEditingTaskModel);
                     }
-                }  
+                }
                
                 if (_currentEditingTextBox != null)
                 {

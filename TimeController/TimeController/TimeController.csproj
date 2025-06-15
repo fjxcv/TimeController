@@ -11,6 +11,15 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="Resources\fire1.png" />
+    <None Remove="Resources\fire2.png" />
+    <None Remove="Resources\fire3.png" />
+    <None Remove="Resources\fire4.png" />
+    <None Remove="Resources\fireworks.wav" />
+    <None Remove="Resources\reward.png" />
+  </ItemGroup>
+
+  <ItemGroup>
     <None Remove="appsettings.json" />
   </ItemGroup>
 
@@ -45,9 +54,19 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Folder Include="ViewModels\Converters\" />
     <Folder Include="Views\Components\" />
     <Folder Include="Styles\" />
     <Folder Include="Assets\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Resource Include="Resources\fire1.png" />
+    <Resource Include="Resources\fire2.png" />
+    <Resource Include="Resources\fire3.png" />
+    <Resource Include="Resources\fire4.png" />
+    <Resource Include="Resources\fireworks.wav" />
+    <Resource Include="Resources\reward.png" />
   </ItemGroup>
 
 </Project>
