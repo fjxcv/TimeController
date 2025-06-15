@@ -5,6 +5,8 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:uiControls="clr-namespace:iNKORE.UI.WPF.Modern.Controls;assembly=iNKORE.UI.WPF.Modern"
         xmlns:vm="clr-namespace:TimeController.ViewModels"
+        xmlns:converters="clr-namespace:TimeController.Converters"
+        
         mc:Ignorable="d"
         Title="奖励时刻" Height="350" Width="400" 
         WindowStartupLocation="CenterScreen"
@@ -31,6 +33,14 @@
                 </Setter.Value>
             </Setter>
         </Style>
+
+        <Style x:Key="RewardPopupStyle" TargetType="Popup">
+            <Setter Property="AllowsTransparency" Value="True"/>
+            <Setter Property="PopupAnimation" Value="Fade"/>
+        </Style>
+        
+        <converters:NotNullToBoolConverter x:Key="NotNullToBoolConverter"/>
+        
     </Window.Resources>
 
     <Grid>
@@ -83,23 +93,117 @@
                            TextWrapping="Wrap"
                            Margin="0,0,0,0"/>
 
-                <!-- 显示最终选中的奖励任务 -->
+                <!-- 1. 打开 Popup 的按钮 -->
                 <Button Grid.Row="4"
-                        Width="200"
-                        Height="50"
+                        Width="200" Height="50"
                         Margin="0,0,0,20"
                         HorizontalAlignment="Center"
                         Background="#B2D8C8"
-                        Style="{StaticResource RoundedButtonStyle}">
+                        Style="{StaticResource RoundedButtonStyle}"
+                        Command="{Binding OpenRewardPopupCommand}">
                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center" HorizontalAlignment="Center">
-                        <Image Source="pack://application:,,,/TimeController;component/Resources/reward.png" Width="24" Height="24" Margin="0,0,10,0" VerticalAlignment="Center"/>
+                        <Image Source="pack://application:,,,/TimeController;component/Resources/reward.png"
+           Width="24" Height="24" Margin="0,0,10,0"/>
                         <TextBlock Text="{Binding FinalRewardTask.Title, FallbackValue='未选择奖励'}"
-                                 FontSize="20"
-                                 FontWeight="SemiBold"
-                                 Foreground="#2E8B57"/>
+               FontSize="20" FontWeight="SemiBold" Foreground="#2E8B57"/>
                     </StackPanel>
                 </Button>
 
+                <!-- 2. 奖励选择弹窗 -->
+                <Popup x:Name="RewardPopup"
+                       Style="{StaticResource RewardPopupStyle}"
+                       IsOpen="{Binding IsRewardPopupOpen, Mode=TwoWay}"
+                       StaysOpen="False"
+                       Focusable="True"
+                       FocusManager.IsFocusScope="True"
+                       HorizontalAlignment="Center" VerticalAlignment="Center">
+
+                    <Border Background="White"
+                              BorderBrush="#E0E0E0"
+                              BorderThickness="1"
+                              CornerRadius="8"
+                              Width="320" Height="360">
+                        <Grid Margin="8">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <!-- 标题 -->
+                                <RowDefinition Height="*"/>
+                                <!-- 列表 -->
+                                <RowDefinition Height="Auto"/>
+                                <!-- 新增输入 -->
+                                <RowDefinition Height="Auto"/>
+                                <!-- 确认/取消 -->
+                            </Grid.RowDefinitions>
+
+                            <!-- 标题 -->
+                            <TextBlock Grid.Row="0"
+                                     Text="请选择本周奖励"
+                                     FontSize="16" FontWeight="Bold"
+                                     Margin="4"/>
+
+                            <!-- 单选 ListView -->
+                            <ListView Grid.Row="1"
+                                        ItemsSource="{Binding RewardTasks}"
+                                        SelectedItem="{Binding TempSelectedRewardTask}"
+                                        Margin="0,8"
+                                        SelectionMode="Single">
+                                <ListView.ItemTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding Title}"
+                                                   Padding="6"
+                                                   FontSize="14"/>
+                                    </DataTemplate>
+                                </ListView.ItemTemplate>
+                            </ListView>
+
+                            <!-- 新增一行 -->
+                            <StackPanel Grid.Row="2" Orientation="Horizontal" Margin="0,8">
+                                <Grid Width="200" Height="28">
+                                    <!-- 真正的 TextBox -->
+                                    <TextBox x:Name="RewardTaskInput"
+                                               Text="{Binding NewRewardTaskText, UpdateSourceTrigger=PropertyChanged}"
+                                               Background="Transparent"
+                                               BorderBrush="#E0E0E0"
+                                               Padding="4"/>
+
+                                    <!-- 占位提示用的 TextBlock，TextBox 为空时显示 -->
+                                    <TextBlock Text="输入新奖励，按回车添加"
+                                                 Foreground="#AAA"
+                                                 Margin="6,0,0,0"
+                                                 VerticalAlignment="Center"
+                                                 IsHitTestVisible="False">
+                                        <TextBlock.Style>
+                                            <Style TargetType="TextBlock">
+                                                <Setter Property="Visibility" Value="Collapsed"/>
+                                                <Style.Triggers>
+                                                    <!-- Text 为空 或 Null 时显示 -->
+                                                    <DataTrigger Binding="{Binding Text, ElementName=RewardTaskInput}" Value="">
+                                                        <Setter Property="Visibility" Value="Visible"/>
+                                                    </DataTrigger>
+                                                    <DataTrigger Binding="{Binding Text, ElementName=RewardTaskInput}" Value="{x:Null}">
+                                                        <Setter Property="Visibility" Value="Visible"/>
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </TextBlock.Style>
+                                    </TextBlock>
+                                </Grid>
+                            </StackPanel>
+
+                            <!-- 确认 / 取消 -->
+                            <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,12,0,0">
+                                <Button Content="取消"
+                                        Width="80" Margin="0,0,12,0"
+                                        Command="{Binding CloseRewardPopupCommand}"/>
+                                <Button Content="确认"
+                                        Width="80"
+                                        IsEnabled="{Binding TempSelectedRewardTask, Converter={StaticResource NotNullToBoolConverter}}"
+                                        Command="{Binding ConfirmRewardSelectionCommand}"/>
+                            </StackPanel>
+                        </Grid>
+                    </Border>
+                </Popup>
+                
                 <!-- 领取按钮 -->
                 <Button x:Name="ClaimRewardButton"
                         Grid.Row="5"
