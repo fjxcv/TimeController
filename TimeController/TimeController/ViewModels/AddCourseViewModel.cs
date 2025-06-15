@@ -24,8 +24,14 @@ namespace TimeController.ViewModels
         public string Name
         {
             get => Course.Name;
-            set { Course.Name = value; OnPropertyChanged(); }
+            set
+            {
+                Course.Name = value;
+                OnPropertyChanged();
+                OnPropertyChanged(nameof(IsFormValid)); // 添加这行
+            }
         }
+
 
         public string DayOfWeek
         {
@@ -55,6 +61,22 @@ namespace TimeController.ViewModels
                 ValidateWeekPattern();
             }
         }
+
+        /// <summary>
+        /// 表示表单是否有效的属性，用于绑定提交按钮的启用状态
+        /// </summary>
+        public bool IsFormValid
+        {
+            get
+            {
+                // 表单有效需要满足：
+                // 1. 课程名称不为空
+                // 2. 时间范围有效
+                // 3. 周次格式有效
+                return !string.IsNullOrWhiteSpace(Name) && IsTimeValid && IsWeekPatternValid;
+            }
+        }
+
 
         // TimePicker绑定的属性
         public DateTime? StartTimeWrapper
@@ -185,6 +207,7 @@ namespace TimeController.ViewModels
                 {
                     _isTimeValid = value;
                     OnPropertyChanged();
+                    OnPropertyChanged(nameof(IsFormValid));
                 }
             }
         }
@@ -199,7 +222,7 @@ namespace TimeController.ViewModels
                 {
                     _isWeekPatternValid = value;
                     OnPropertyChanged();
-                    OnPropertyChanged(nameof(IsTimeValid)); // 周次验证会影响整体验证
+                    OnPropertyChanged(nameof(IsFormValid));
                 }
             }
         }

@@ -4,10 +4,11 @@
         xmlns:ui="http://schemas.inkore.net/lib/ui/wpf/modern" 
         ui:WindowHelper.UseModernWindowStyle="True"
         ui:WindowHelper.SystemBackdropType="Mica"
-        Title="导入课表" Height="400" Width="380" WindowStartupLocation="CenterOwner">
+        Title="导入课表" Height="450" Width="380" WindowStartupLocation="CenterOwner">
 
     <Grid Margin="20">
         <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
@@ -20,7 +21,7 @@
                    Margin="0,0,0,10" HorizontalAlignment="Center"/>
 
         <!-- 日期选择 -->
-        <Grid Grid.Row="1" Margin="0,0,0,15">
+        <Grid Grid.Row="1" Margin="0,0,0,10">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="Auto"/>
                 <ColumnDefinition Width="*"/>
@@ -35,11 +36,30 @@
                         FirstDayOfWeek="Monday"/>
         </Grid>
 
+        <!-- 学期周数设置 -->
+        <Grid Grid.Row="2" Margin="0,0,0,15">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+
+            <TextBlock Grid.Column="0" Text="学期周数:" 
+                       VerticalAlignment="Center" 
+                       FontWeight="SemiBold" Margin="0,0,10,0"/>
+
+            <ui:NumberBox Grid.Column="1" Name="SemesterWeeksBox"
+                          Value="{Binding SemesterWeeks}"
+                          Minimum="1" Maximum="30" 
+                          SmallChange="1" LargeChange="5"
+                          SpinButtonPlacementMode="Inline"
+                          ValidationMode="InvalidInputOverwritten"/>
+        </Grid>
+
         <!-- 导入选项 -->
-        <StackPanel Grid.Row="2" VerticalAlignment="Center" >
+        <StackPanel Grid.Row="3" VerticalAlignment="Center" >
             <!-- 手动添加课程 -->
             <Button HorizontalAlignment="Stretch" Height="40" Margin="0,5,0,5"
-        Click="AddCourse_Click">
+                    Click="AddCourse_Click">
                 <StackPanel Orientation="Horizontal">
                     <TextBlock Text="手动添加课程" VerticalAlignment="Center"/>
                 </StackPanel>
@@ -49,7 +69,7 @@
             <Button Command="{Binding ImportFromFileCommand}" 
                     HorizontalAlignment="Stretch" Height="40" Margin="0,5,0,5">
                 <StackPanel Orientation="Horizontal">
-                    <TextBlock Text="从Excel或CSV文件导入" VerticalAlignment="Center"/>
+                    <TextBlock Text="文件导入课程" VerticalAlignment="Center"/>
                 </StackPanel>
             </Button>
 
@@ -57,7 +77,7 @@
             <Button Command="{Binding ImportFromUrlCommand}" 
                     HorizontalAlignment="Stretch" Height="40" Margin="0,5,0,5">
                 <StackPanel Orientation="Horizontal">
-                    <TextBlock Text="从教务系统链接导入" VerticalAlignment="Center"/>
+                    <TextBlock Text="教务导入课程" VerticalAlignment="Center"/>
                 </StackPanel>
             </Button>
 
@@ -71,7 +91,7 @@
         </StackPanel>
 
         <!-- 状态栏 -->
-        <Grid Grid.Row="3" Margin="0,15,0,0">
+        <Grid Grid.Row="4" Margin="0,15,0,0">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*"/>
                 <ColumnDefinition Width="Auto"/>
@@ -87,7 +107,7 @@
         </Grid>
 
         <!-- 确保遮罩使用正确的转换器 -->
-        <Grid Grid.RowSpan="4" 
+        <Grid Grid.RowSpan="5" 
             Background="#80000000" 
             Visibility="{Binding IsImporting, Converter={StaticResource BoolToVisibility}}">
             <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">

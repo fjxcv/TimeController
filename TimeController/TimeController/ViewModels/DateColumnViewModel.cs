@@ -74,6 +74,11 @@ namespace TimeController.ViewModels
             }
         }
 
+<<<<<<< HEAD
+=======
+        public bool ShouldShowMoreButton => AllDayTasks?.Count > 2;
+
+>>>>>>> a5523a6 (临时保存：切换到自己分支之前的未完成工作)
         public bool IsExpanded
         {
             get => _isExpanded;
@@ -90,7 +95,20 @@ namespace TimeController.ViewModels
         // 在 DateColumnViewModel.cs 中添加
         public void RefreshAllDayTasksView()
         {
+<<<<<<< HEAD
             OnPropertyChanged(nameof(AllDayTasks));
+=======
+            if (AllDayTasksView == null) return;
+
+            AllDayTasksView.Filter = item =>
+            {
+                var block = item as WeekViewModel.TaskBlock;
+                if (block == null) return false;
+                int idx = AllDayTasks.IndexOf(block);
+                return idx < 2 || IsExpanded;
+            };
+            AllDayTasksView.Refresh();
+>>>>>>> a5523a6 (临时保存：切换到自己分支之前的未完成工作)
             OnPropertyChanged(nameof(ShouldShowMoreButton));
         }
 

@@ -67,7 +67,6 @@ namespace TimeController.Views.StrongGoalWeek
 
 
 
-
         // 通过链接导入
         private void Import_Click(object sender, RoutedEventArgs e)
         {

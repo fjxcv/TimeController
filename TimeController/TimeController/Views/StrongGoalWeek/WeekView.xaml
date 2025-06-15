@@ -7,8 +7,13 @@
         xmlns:local="clr-namespace:TimeController.Views.StrongGoalWeek"
         mc:Ignorable="d" 
         Title="" d:DesignHeight="800" d:DesignWidth="1104">
+<<<<<<< HEAD
 
     <Grid x:Name="RootGrid">
+=======
+    
+        <Grid x:Name="RootGrid">
+>>>>>>> a5523a6 (临时保存：切换到自己分支之前的未完成工作)
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
@@ -45,6 +50,7 @@
                     VerticalAlignment="Center" 
                     Margin="24,0,8,0"
                     Foreground="#0078D4"
+                    FontSize="13"
                     FontWeight="SemiBold"
                     Visibility="{Binding SemesterWeekText, Converter={StaticResource StringToVisibilityConverter}}"/>
             </StackPanel>
@@ -275,41 +281,73 @@
                             </ItemsControl.ItemContainerStyle>
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate>
-                                    <Border Background="#E6F7FF" BorderBrush="#1890FF" BorderThickness="1" CornerRadius="3" Margin="2"
-                                            MouseLeftButtonDown="TaskBlock_MouseLeftButtonDown">
-                                        <Grid>
-                                            <Grid.RowDefinitions>
-                                                <RowDefinition Height="Auto"/>
-                                                <RowDefinition Height="Auto"/>
-                                                <RowDefinition Height="Auto"/>
-                                            </Grid.RowDefinitions>
+                                    <Grid MouseEnter="Grid_MouseEnter" MouseLeave="Grid_MouseLeave" Background="Transparent" Tag="{Binding}">
+                                        <Border Background="{Binding Brush}" 
+                                            BorderBrush="{Binding BorderBrush}" 
+                                            BorderThickness="{Binding BorderThickness}"
+                                            CornerRadius="{Binding CornerRadius}"
+                                            Margin="2" 
+                                            MouseLeftButtonDown="TaskBlock_MouseLeftButtonDown">        
+                                            <Grid Margin="8,6">
+                                                <Grid.RowDefinitions>
+                                                    <RowDefinition Height="Auto"/>
+                                                    <RowDefinition Height="Auto"/>
+                                                    <RowDefinition Height="Auto"/>
+                                                    <RowDefinition Height="Auto"/>
+                                                </Grid.RowDefinitions>
 
-                                            <!-- 课程名称和时间 -->
-                                            <StackPanel Grid.Row="0" Orientation="Vertical">
-                                                <TextBlock Text="{Binding Name}" 
-                                                    FontWeight="Bold" Margin="5,3,5,1" 
-                                                    TextWrapping="Wrap" 
-                                                    Foreground="#0078D4"/>
-                                                <TextBlock Margin="5,0,5,2"  FontSize="11" Foreground="#333333">
-                                                    <Run Text="{Binding StartTime, Converter={StaticResource TimeSpanToStringConverter}}"/>
-                                                    <Run Text=" - "/>
-                                                    <Run Text="{Binding EndTime, Converter={StaticResource TimeSpanToStringConverter}}"/>
-                                                </TextBlock>
-                                            </StackPanel>
+                                                <!-- 课程名称-->
+                                                <TextBlock Grid.Row="0" 
+                                                    Text="{Binding Name}" 
+                                                    FontWeight="SemiBold"
+                                                    FontSize="12"
+                                                    Foreground="#0078D4"
+                                                    Margin="0,0,0,1"/>      
 
-                                            <!-- 教师和教室信息 -->
-                                            <StackPanel Grid.Row="2" Orientation="Vertical" Margin="5,0,5,3">
-                                                <TextBlock FontSize="11" TextWrapping="Wrap">
-                                                <Run Text="教师: "/>
-                                                <Run Text="{Binding Note, Converter={StaticResource NoteToTeacherConverter}}"/>
+                                                <!-- 课程时间 -->
+                                                <TextBlock Grid.Row="1" 
+                                                    Margin="0,0,0,1"
+                                                    FontSize="11">
+                                                    <Run Text="{Binding StartTime, StringFormat='{}{0:hh\\:mm}'}" />
+                                                    <Run Text=" - " />
+                                                    <Run Text="{Binding EndTime, StringFormat='{}{0:hh\\:mm}'}" />  
                                                 </TextBlock>
-                                                <TextBlock FontSize="11" TextWrapping="Wrap">
-                                                <Run Text="教室: "/>
-                                                <Run Text="{Binding Note, Converter={StaticResource NoteToLocationConverter}}"/>
-                                                </TextBlock>
-                                            </StackPanel>
-                                        </Grid>
-                                    </Border>
+
+                                                <!-- 教师信息 -->
+                                                <TextBlock Grid.Row="2" 
+                                                    Text="{Binding Note, Converter={StaticResource NoteToTeacherDisplayConverter}}" 
+                                                    FontSize="11"/> 
+
+                                                <!-- 教室信息 -->
+                                                <TextBlock Grid.Row="3" 
+                                                    Text="{Binding Note, Converter={StaticResource NoteToLocationDisplayConverter}}" 
+                                                    FontSize="11"/>     
+                                            </Grid>
+                                        </Border>
+
+                                        <!-- 与普通任务相似的删除按钮 -->
+                                        <StackPanel x:Name="ActionButtons"
+                                            Panel.ZIndex="10"            
+                                            Orientation="Horizontal"
+                                            HorizontalAlignment="Right"
+                                            VerticalAlignment="Top"
+                                            Margin="4"
+                                            Visibility="Collapsed"> 
+                                            <!-- 删除课程按钮 -->
+                                            <Button Width="26" Height="26"
+                                                Padding="0"
+                                                Background="#CCFFFFFF"
+                                                BorderThickness="0"
+                                                Command="{Binding DataContext.RemoveTaskBlockCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                                                CommandParameter="{Binding}">
+                                                <TextBlock 
+                                                    FontFamily="Segoe MDL2 Assets" 
+                                                    Text="&#xE74D;"
+                                                    FontSize="20" 
+                                                    Foreground="#333333"/>  
+                                            </Button>
+                                        </StackPanel>
+                                    </Grid>
                                 </DataTemplate>
                             </ItemsControl.ItemTemplate>
                         </ItemsControl>
@@ -366,6 +404,7 @@
                             </ItemsControl.ItemContainerStyle>
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate>
+<<<<<<< HEAD
                                     <Grid MouseEnter="Grid_MouseEnter" MouseLeave="Grid_MouseLeave" Tag="{Binding}">
                                         <Border Background="{Binding Brush}" CornerRadius="3" Margin="2"
                                                 MouseLeftButtonDown="TaskBlock_MouseLeftButtonDown">
@@ -387,6 +426,59 @@
                                                         Command="{Binding DataContext.RemoveTaskBlockCommand, 
                                                             RelativeSource={RelativeSource AncestorType=ItemsControl}}"
                                                         CommandParameter="{Binding}"/>
+=======
+                                    <Grid MouseEnter="Grid_MouseEnter" MouseLeave="Grid_MouseLeave" MouseLeftButtonDown="TaskBlock_MouseLeftButtonDown"
+                                        Background="Transparent" Tag="{Binding}">
+                                        <!-- 任务块背景 -->
+                                        <Border Background="{Binding Brush}"
+                                                CornerRadius="3"
+                                                Margin="2">
+                                            <Grid>
+                                                <Grid.RowDefinitions>
+                                                    <RowDefinition Height="Auto"/>
+                                                    <RowDefinition Height="Auto"/>
+                                                </Grid.RowDefinitions>
+
+                                                <!-- 任务名称 -->
+                                                <TextBlock Grid.Row="0" 
+                                                     Text="{Binding Name}"
+                                                     Margin="8,4,8,4"
+                                                     TextTrimming="CharacterEllipsis"
+                                                     TextWrapping="NoWrap"
+                                                     Foreground="#333333"
+                                                     FontWeight="Medium"
+                                                     TextDecorations="{Binding Status, Converter={StaticResource CompletedToTextDecorationConverter}}"/>    
+
+                                                <!-- 详情面板 - 初始隐藏 -->
+                                                <StackPanel Grid.Row="1" 
+                                                      x:Name="TaskDetailsPanel" 
+                                                      Visibility="Collapsed" 
+                                                      Margin="8,0,8,4"> 
+                                                    <!-- 备注 -->
+                                                    <TextBlock Text="{Binding Note}" 
+                                                         TextWrapping="Wrap" 
+                                                         Foreground="#555555"
+                                                         FontSize="11"
+                                                         Margin="0,2"
+                                                         Visibility="{Binding Note, Converter={StaticResource StringToVisibilityConverter}}"/>
+
+                                                    <!-- 时间 -->
+                                                    <StackPanel Orientation="Horizontal" Margin="0,2">
+                                                        <TextBlock Text="时间: " FontSize="11" Foreground="#555555"/>
+                                                        <TextBlock FontSize="11" Foreground="#555555">
+                                                            <Run Text="{Binding StartTime, StringFormat='{}{0:hh\\:mm}'}"/>
+                                                            <Run Text=" - "/>
+                                                            <Run Text="{Binding EndTime, StringFormat='{}{0:hh\\:mm}'}"/>   
+                                                        </TextBlock>
+                                                    </StackPanel>
+
+                                                    <!-- 类型 -->
+                                                    <StackPanel Orientation="Horizontal" Margin="0,2">
+                                                        <TextBlock Text="类型: " FontSize="11" Foreground="#555555"/>
+                                                        <TextBlock Text="{Binding Type}" FontSize="11" Foreground="#555555"/>
+                                                    </StackPanel>
+                                                </StackPanel>
+>>>>>>> a5523a6 (临时保存：切换到自己分支之前的未完成工作)
                                             </Grid>
                                         </Border>
                                     </Grid>
@@ -405,6 +497,17 @@
                     Width="40" Height="40"
                     Visibility="Collapsed"
                     Click="AddTaskButton_Click"/>
+
+            <!-- 添加任务详情卡片 -->
+            <Border x:Name="TaskDetailsCard" Visibility="Collapsed" 
+                Background="#fffbc7" CornerRadius="4" Padding="3"
+                BorderBrush="#fffbc7" BorderThickness="1">
+                <StackPanel>
+                    <TextBlock x:Name="CardNoteText" TextWrapping="Wrap" Margin="0,0,0,2" FontSize="13"/>
+                    <TextBlock x:Name="CardTypeText" Margin="0,0,0,2" FontSize="13"/>
+                    <TextBlock x:Name="CardTimeText" FontSize="13"/>
+                </StackPanel>
+            </Border>
         </Canvas>
     </Grid>
 </ui:Page>

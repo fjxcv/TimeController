@@ -231,6 +231,30 @@ namespace TimeController.Services
             await _context.SaveChangesAsync();
         }
 
+        public async Task DeleteAllCourseInstancesAsync(TaskModel courseTask)
+        {
+            if (!courseTask.IsCourseTask)
+                return; // 如果不是课程任务，则不执行操作
+
+            // 从课程名称和Note（包含教师和地点信息）标识相同的课程
+            string courseName = courseTask.Name;
+            string courseNote = courseTask.Note;
+            int weekDay = courseTask.WeekDay;
+
+            // 查找所有拥有相同名称、Note和星期几的课程任务
+            var allInstancesOfCourse = await _context.Task
+                .Where(t => t.IsCourseTask
+                       && t.Name == courseName
+                       && t.Note == courseNote
+                       && t.WeekDay == weekDay)
+                .ToListAsync();
+
+            Console.WriteLine($"找到 {allInstancesOfCourse.Count} 个相同的课程实例");
+
+            // 从数据库中删除所有这些课程实例
+            _context.Task.RemoveRange(allInstancesOfCourse);
+            await _context.SaveChangesAsync();
+        }
 
 
         public async Task<List<TaskModel>> GetTasksForDateRange(DateTime startDate, DateTime endDate)

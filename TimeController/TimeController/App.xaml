@@ -15,7 +15,7 @@
             <converters:BoolToHiddenConverter x:Key="BoolToHiddenConverter" />
             <converters:BooleanToAngleConverter x:Key="BooleanToAngleConverter" />
             <converters:BoolToVisibilityConverter x:Key="BoolToVisibility" />
-            <converters:ItemIndexConverter x:Key="IndexConverter"/>
+            <converters:IndexConverter x:Key="IndexConverter"/>
             <converters:BoolToStringConverter x:Key="BoolToStringConverter"/>
             <converters:ColumnToVisibilityConverter x:Key="ColumnToVisibilityConverter"/>
             <converters:BoolToColorConverter x:Key="BoolToColorConverter"/>
@@ -24,6 +24,9 @@
             <converters:NoteToLocationConverter x:Key="NoteToLocationConverter"/>
             <converters:ExpandedToSymbolConverter x:Key="ExpandedToSymbolConverter"/>
             <converters:TimeSpanToStringConverter x:Key="TimeSpanToStringConverter"/>
+            <converters:NoteToTeacherDisplayConverter x:Key="NoteToTeacherDisplayConverter" />
+            <converters:NoteToLocationDisplayConverter x:Key="NoteToLocationDisplayConverter" />
+            <converters:CompletedToTextDecorationConverter x:Key="CompletedToTextDecorationConverter"/>
 
         </ResourceDictionary>
     </Application.Resources>
