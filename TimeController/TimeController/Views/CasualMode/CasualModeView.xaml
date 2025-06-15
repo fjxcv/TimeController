@@ -92,6 +92,11 @@
             <Setter Property="FontSize" Value="18"/>
             <Setter Property="FontWeight" Value="Normal"/>
             <Setter Property="Foreground" Value="Black"/>
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding IsCompleted}" Value="True">
+                    <Setter Property="TextDecorations" Value="Strikethrough"/>
+                </DataTrigger>
+            </Style.Triggers>
         </Style>
     </ui:Page.Resources>
 
@@ -720,15 +725,7 @@
                                                            Command="{Binding DataContext.StartEditTaskCommand, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ui:Page}}}"
                                                            CommandParameter="{Binding}"/>
                                         </TextBlock.InputBindings>
-                                        <TextBlock.Style>
-                                            <Style TargetType="TextBlock">
-                                                <Style.Triggers>
-                                                    <DataTrigger Binding="{Binding IsCompleted}" Value="True">
-                                                        <Setter Property="TextDecorations" Value="Strikethrough"/>
-                                                    </DataTrigger>
-                                                </Style.Triggers>
-                                            </Style>
-                                        </TextBlock.Style>
+                                        
                                     </TextBlock>
 
                                     <!-- 编辑模式 -->

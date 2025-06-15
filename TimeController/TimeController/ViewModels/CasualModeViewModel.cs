@@ -250,6 +250,8 @@ namespace TimeController.ViewModels
                         else
                         {
                             _ = _taskService.UpdateTaskAsync(task);
+                            // 触发属性变化，确保界面同步
+                            task.Name = task.Name;
                         }
 
                         task.IsEditing = false;
@@ -548,6 +550,8 @@ namespace TimeController.ViewModels
         {
             task.IsCompleted = !task.IsCompleted;
             _ = _taskService.UpdateTaskAsync(task);
+            // 再触发一次属性变化，确保 UI 与数据库同步
+            task.IsCompleted = task.IsCompleted;
             UpdateProgress(); // 取消或恢复完成状态时
 
             // 任务完成且正在编辑，结束编辑
@@ -689,7 +693,7 @@ namespace TimeController.ViewModels
 
         }
 
-        private async Task LoadRewardsAsync()
+        public async Task LoadRewardsAsync()
         {
             var rewards = await _rewardService.GetRewardsAsync();
             foreach (var r in rewards)

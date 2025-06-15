@@ -8,6 +8,7 @@ using System.Windows.Media.Effects;
 using System.Windows.Threading;
 using TimeController.ViewModels;
 using System.Media;
+using System.Linq;
 
 namespace TimeController.Views.CasualMode
 {
@@ -39,13 +40,18 @@ namespace TimeController.Views.CasualMode
             };
         }
 
-        private void Window_Loaded(object sender, RoutedEventArgs e)
+        private async void Window_Loaded(object sender, RoutedEventArgs e)
         {
             // 确保窗口全屏显示
             WindowState = WindowState.Maximized;
             WindowStyle = WindowStyle.None;
             Topmost = true;
-            
+
+            if (!_viewModel.RewardTasks.Any())
+            {
+                await _viewModel.LoadRewardsAsync();
+            }
+
             // 播放烟花和音效
             PlayFireworksAndSound();
         }
@@ -72,6 +78,17 @@ namespace TimeController.Views.CasualMode
             // 直接关闭窗口
             this.DialogResult = true;
             this.Close();
+        }
+
+        private void RewardComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (RewardComboBox.SelectedItem is TimeController.Models.RewardModel selected)
+            {
+                foreach (var r in _viewModel.RewardTasks)
+                {
+                    r.IsClaimed = r == selected;
+                }
+            }
         }
 
         private void PlayFireworksAndSound()

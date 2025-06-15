@@ -69,8 +69,12 @@ namespace TimeController.Views.CasualMode
             }
         }
 
-        private void RewardPopup_Opened(object? sender, EventArgs e)
+        private async void RewardPopup_Opened(object? sender, EventArgs e)
         {
+            if (_viewModel != null && !_viewModel.RewardTasks.Any())
+            {
+                await _viewModel.LoadRewardsAsync();
+            }
             // 确保弹窗完全打开并设置焦点，不播放烟花和音效
             Dispatcher.BeginInvoke(DispatcherPriority.Input, new Action(() =>
             {

@@ -93,21 +93,64 @@
                            TextWrapping="Wrap"
                            Margin="0,0,0,0"/>
 
-                <!-- 1. 打开 Popup 的按钮 -->
-                <Button Grid.Row="4"
-                        Width="200" Height="50"
-                        Margin="0,0,0,20"
-                        HorizontalAlignment="Center"
-                        Background="#B2D8C8"
-                        Style="{StaticResource RoundedButtonStyle}"
-                        Command="{Binding OpenRewardPopupCommand}">
-                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center" HorizontalAlignment="Center">
-                        <Image Source="pack://application:,,,/TimeController;component/Resources/reward.png"
-           Width="24" Height="24" Margin="0,0,10,0"/>
-                        <TextBlock Text="{Binding FinalRewardTask.Title, FallbackValue='未选择奖励'}"
-               FontSize="20" FontWeight="SemiBold" Foreground="#2E8B57"/>
-                    </StackPanel>
-                </Button>
+                <!-- 1. 奖励展示或选择区域 -->
+                <Grid Grid.Row="4">
+                    <!-- 领取按钮：继承 RoundedButtonStyle 并添加可见性触发器 -->
+                    <Button x:Name="RewardButton"
+                              Width="200" Height="50"
+                              Margin="0,0,0,20"
+                              HorizontalAlignment="Center"
+                              Background="#B2D8C8"
+                              Command="{Binding OpenRewardPopupCommand}">
+                        <Button.Style>
+                            <Style TargetType="Button" BasedOn="{StaticResource RoundedButtonStyle}">
+                                <!-- 默认显示 -->
+                                <Setter Property="Visibility" Value="Visible"/>
+                                <Style.Triggers>
+                                    <!-- 没有选中奖励时隐藏按钮 -->
+                                    <DataTrigger Binding="{Binding FinalRewardTask}" Value="{x:Null}">
+                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Button.Style>
+                        <StackPanel Orientation="Horizontal"
+                                    VerticalAlignment="Center"
+                                    HorizontalAlignment="Center">
+                            <Image Source="pack://application:,,,/TimeController;component/Resources/reward.png"
+             Width="24" Height="24" Margin="0,0,10,0"/>
+                            <TextBlock Text="{Binding FinalRewardTask.Title}"
+                                         FontSize="20"
+                                         FontWeight="SemiBold"
+                                         Foreground="#2E8B57"/>
+                        </StackPanel>
+                    </Button>
+
+                    <!-- 下拉列表：继承默认 ComboBox Style 并添加可见性触发器 -->
+                    <ComboBox x:Name="RewardComboBox"
+                                ItemsSource="{Binding RewardTasks}"
+                                DisplayMemberPath="Title"
+                                SelectedItem="{Binding FinalRewardTask, Mode=TwoWay}"
+                                Width="200" Height="50"
+                                Margin="0,0,0,20"
+                                HorizontalAlignment="Center">
+                        <ComboBox.Style>
+                            <Style TargetType="ComboBox" BasedOn="{StaticResource {x:Type ComboBox}}">
+                                <!-- 默认隐藏 -->
+                                <Setter Property="Visibility" Value="Collapsed"/>
+                                <Style.Triggers>
+                                    <!-- 没有选中奖励时显示下拉 -->
+                                    <DataTrigger Binding="{Binding FinalRewardTask}" Value="{x:Null}">
+                                        <Setter Property="Visibility" Value="Visible"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </ComboBox.Style>
+                    </ComboBox>
+                </Grid>
+
+
+
 
                 <!-- 2. 奖励选择弹窗 -->
                 <Popup x:Name="RewardPopup"

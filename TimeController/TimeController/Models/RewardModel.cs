@@ -33,19 +33,6 @@ namespace TimeController.Models
             }
         }
 
-        private bool _isFinal;
-        public bool IsFinal
-        {
-            get => _isFinal;
-            set
-            {
-                if (_isFinal != value)
-                {
-                    _isFinal = value;
-                    OnPropertyChanged(nameof(IsFinal));
-                }
-            }
-        }
 
         public event PropertyChangedEventHandler? PropertyChanged;
         protected void OnPropertyChanged(string propertyName) =>

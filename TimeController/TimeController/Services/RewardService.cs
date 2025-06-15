@@ -16,11 +16,14 @@ namespace TimeController.Services
 
         public async Task<List<RewardModel>> GetRewardsAsync()
         {
+            // 返回所有奖励
             return await _context.Rewards.ToListAsync();
         }
 
         public async Task AddRewardAsync(RewardModel reward)
         {
+            // 新增一个奖励，默认 IsClaimed 为 false
+            reward.IsClaimed = false;
             await _context.Rewards.AddAsync(reward);
             await _context.SaveChangesAsync();
         }
@@ -33,29 +36,35 @@ namespace TimeController.Services
 
         public async Task<RewardModel?> GetFinalRewardAsync()
         {
-            return await _context.Rewards.FirstOrDefaultAsync(r => r.IsFinal);
+            // 把“最终奖励”改为所有已勾选(IsClaimed)的第一个
+            return await _context.Rewards
+                                 .FirstOrDefaultAsync(r => r.IsClaimed);
         }
 
         public async Task SetFinalRewardAsync(RewardModel? reward)
         {
-            // 首先，清除所有现有奖励的IsFinal标记
-            var currentFinal = await _context.Rewards.FirstOrDefaultAsync(r => r.IsFinal);
-            if (currentFinal != null)
+            // 先把之前所有的 IsClaimed 置为 false
+            var claimed = await _context.Rewards
+                                        .Where(r => r.IsClaimed)
+                                        .ToListAsync();
+            foreach (var r in claimed)
             {
-                currentFinal.IsFinal = false;
-                _context.Rewards.Update(currentFinal);
+                r.IsClaimed = false;
+                _context.Rewards.Update(r);
             }
 
-            // 如果传入了新的奖励，则设置其IsFinal标记
+            // 如果新传入了一个 reward，就把它的 IsClaimed 置 true
             if (reward != null)
             {
-                var selectedReward = await _context.Rewards.FirstOrDefaultAsync(r => r.Id == reward.Id);
-                if (selectedReward != null)
+                var selected = await _context.Rewards
+                                             .FirstOrDefaultAsync(r => r.Id == reward.Id);
+                if (selected != null)
                 {
-                    selectedReward.IsFinal = true;
-                    _context.Rewards.Update(selectedReward);
+                    selected.IsClaimed = true;
+                    _context.Rewards.Update(selected);
                 }
             }
+
             await _context.SaveChangesAsync();
         }
     }
