@@ -20,12 +20,12 @@
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
                         <Border
-              Background="{TemplateBinding Background}"
-              CornerRadius="8"
-              BorderThickness="0">
+                              Background="{TemplateBinding Background}"
+                              CornerRadius="8"
+                              BorderThickness="0">
                             <ContentPresenter
-                HorizontalAlignment="Center"
-                VerticalAlignment="Center"/>
+                                        HorizontalAlignment="Center"
+                                        VerticalAlignment="Center"/>
                         </Border>
                     </ControlTemplate>
                 </Setter.Value>

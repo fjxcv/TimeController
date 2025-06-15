@@ -713,7 +713,7 @@
                                     <CheckBox Grid.Column="0" IsChecked="{Binding IsCompleted, Mode=TwoWay}" VerticalAlignment="Center"/>
 
                                     <!-- 显示模式（默认） -->
-                                    <TextBlock Grid.Column="1" Text="{Binding Name}" Margin="0,0,0,0" VerticalAlignment="Center"
+                                    <TextBlock Grid.Column="1" Text="{Binding Name}" Margin="0,0,0,0" VerticalAlignment="Center" FontSize="18"
                                               Visibility="{Binding IsEditing, Converter={StaticResource BoolToVisibility}, ConverterParameter=False}">
                                         <TextBlock.InputBindings>
                                             <MouseBinding MouseAction="LeftDoubleClick"

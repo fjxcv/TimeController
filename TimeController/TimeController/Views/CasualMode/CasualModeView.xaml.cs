@@ -109,10 +109,9 @@ namespace TimeController.Views.CasualMode
 
         private void HandleShowRewardCelebration()
         {
+            // 如果已经在弹，就直接返回
             if (_isRewardWindowCurrentlyShowing)
-            {
                 return;
-            }
 
             var now = DateTime.Now;
             if (now - _lastRewardCelebrationShownTime < _minTimeBetweenCelebrations)
@@ -122,6 +121,7 @@ namespace TimeController.Views.CasualMode
             _lastRewardCelebrationShownTime = now;
 
             _isRewardWindowCurrentlyShowing = true;
+
             var window = new RewardCelebrationWindow(_viewModel);
             window.Closed += (s, e) => 
             {

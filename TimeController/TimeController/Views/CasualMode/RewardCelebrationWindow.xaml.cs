@@ -7,6 +7,7 @@ using System.Windows.Shapes;
 using System.Windows.Media.Effects;
 using System.Windows.Threading;
 using TimeController.ViewModels;
+using System.Media;
 
 namespace TimeController.Views.CasualMode
 {
@@ -26,19 +27,8 @@ namespace TimeController.Views.CasualMode
             // 初始化媒体播放器
             _mediaPlayer = new System.Windows.Media.MediaPlayer();
             _mediaPlayer.Volume = 1.0; // 确保音量设置
-            
 
-            // 加载音效文件
-            try
-            {
-                var uri = new Uri("pack://application:,,,/TimeController;component/Resources/fireworks.wav", UriKind.Absolute);
-                _mediaPlayer.Open(uri);
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"无法加载音效文件: {ex.Message}");
-                // 即使音效加载失败也继续显示窗口
-            }
+
             // 禁用窗口的关闭按钮
             this.Closing += (s, e) => 
             {
@@ -89,7 +79,10 @@ namespace TimeController.Views.CasualMode
             // 播放音效
             try
             {
-                _mediaPlayer.Play();
+                string filePath = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Resources", "fireworks.wav");
+                var player = new SoundPlayer(filePath);
+                player.Load();    // 同步加载
+                player.Play();    // 异步播放一次
             }
             catch (Exception ex)
             {
