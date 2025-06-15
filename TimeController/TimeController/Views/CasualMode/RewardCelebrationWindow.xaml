@@ -57,30 +57,31 @@
                 </Grid.RowDefinitions>
 
                 <Image Grid.Row="0"
-                       Width="40" Height="40"
+                       Width="50" Height="50"
                        Margin="0,20,0,0"
                        HorizontalAlignment="Center"
-                       VerticalAlignment="Top"
+                       VerticalAlignment="Stretch"
                        Source="pack://application:,,,/TimeController;component/Resources/fire1.png"
                        Stretch="Uniform"/>
 
                 <TextBlock Grid.Row="1"
-                           Text="恭喜你点亮了本周所有的努力格子!"
+                           Text="恭喜你！进度条已满，专属奖励等你领取~"
                            FontSize="28"
+                           Padding="15"
                            FontWeight="Bold"
                            Foreground="#2E8B57"
                            TextAlignment="Center"
                            TextWrapping="Wrap"
-                           Margin="0,37,0,0"
+                           Margin="0,0,0,0"
                            Grid.RowSpan="2"/>
 
                 <TextBlock Grid.Row="3"
-                           Text="一周的用心，现在是你的奖励时刻~"
-                           FontSize="16"
+                           Text="满格背后是一周的坚持，快来领奖！"
+                           FontSize="14"
                            Foreground="#696969"
                            TextAlignment="Center"
                            TextWrapping="Wrap"
-                           Margin="0,2,0,0"/>
+                           Margin="0,0,0,0"/>
 
                 <!-- 显示最终选中的奖励任务 -->
                 <Button Grid.Row="4"
@@ -105,6 +106,7 @@
                         Content="立即领取"
                         Width="130"
                         Height="40"
+                        FontSize="16"
                         Margin="0,0,0,20"
                         HorizontalAlignment="Center"
                         Background="#6A9DD1"
