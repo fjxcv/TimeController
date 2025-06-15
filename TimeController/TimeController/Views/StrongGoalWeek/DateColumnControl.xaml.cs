@@ -3,6 +3,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
+using System.Windows.Controls.Primitives;
 using TimeController.ViewModels;
 using static TimeController.ViewModels.WeekViewModel;
 
@@ -16,23 +17,21 @@ namespace TimeController.Views.StrongGoalWeek
             this.MouseLeftButtonDown += UserControl_MouseDown;
         }
 
-        private void AllDayGrid_MouseEnter(object sender, MouseEventArgs e)
+        private void Grid_MouseEnter(object sender, MouseEventArgs e)
         {
-            if (sender is Grid grid)
+            if (sender is Grid grid
+             && grid.FindName("ActionButtons") is UIElement btns)
             {
-                var button = FindVisualChild<Button>(grid, b => b.Name == "DeleteButton");
-                if (button != null)
-                    button.Visibility = Visibility.Visible;
+                btns.Visibility = Visibility.Visible;
             }
         }
 
-        private void AllDayGrid_MouseLeave(object sender, MouseEventArgs e)
+        private void Grid_MouseLeave(object sender, MouseEventArgs e)
         {
-            if (sender is Grid grid)
+            if (sender is Grid grid
+             && grid.FindName("ActionButtons") is UIElement btns)
             {
-                var button = FindVisualChild<Button>(grid, b => b.Name == "DeleteButton");
-                if (button != null)
-                    button.Visibility = Visibility.Collapsed;
+                btns.Visibility = Visibility.Collapsed;
             }
         }
 
@@ -119,6 +118,28 @@ namespace TimeController.Views.StrongGoalWeek
             }
 
             e.Handled = true;
+        }
+
+        private void ExpandButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (DataContext is DateColumnViewModel vm)
+            {
+                var weekView = this.FindAncestor<WeekView>();
+                if (weekView?.DataContext is WeekViewModel wvm)
+                {
+                    wvm.ToggleColumnExpandCommand.Execute(vm.Index);
+                }
+
+
+            }
+        }
+
+        private void TaskPopup_Closed(object? sender, EventArgs e)
+        {
+            if (DataContext is DateColumnViewModel vm)
+            {
+                vm.IsExpanded = false;
+            }
         }
 
         // 辅助方法，用于查找父控件

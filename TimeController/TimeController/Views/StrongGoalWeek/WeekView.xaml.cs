@@ -19,6 +19,8 @@ using TimeController.Models;
 using TimeController.Services;
 using TimeController.ViewModels;
 using Page = iNKORE.UI.WPF.Modern.Controls.Page;
+using MessageBox = iNKORE.UI.WPF.Modern.Controls.MessageBox;
+using static TimeController.ViewModels.WeekViewModel;
 
 namespace TimeController.Views.StrongGoalWeek
 {
@@ -37,12 +39,13 @@ namespace TimeController.Views.StrongGoalWeek
             try
             {
                 // 从服务容器获取 TaskService
-                var taskService = App.Services.GetRequiredService<ITaskService>();
+                _viewModel = App.Services.GetRequiredService<WeekViewModel>();
 
                 DataContext = _viewModel;
 
                 // 初始化视图模型和事件处理
                 InitializeViewModel();
+                InitializeEvents();
 
                 // 初次加载时更新页面日期块
                 UpdateDateDisplay(_viewModel.CurrentDate);
@@ -50,11 +53,7 @@ namespace TimeController.Views.StrongGoalWeek
                 // 强制初始加载
                 _viewModel.LoadTasksForCurrentWeek();
 
-<<<<<<< HEAD
-                InitializeEvents();
-=======
 
->>>>>>> a5523a6 (临时保存：切换到自己分支之前的未完成工作)
             }
             catch (Exception ex)
             {
@@ -408,99 +407,6 @@ namespace TimeController.Views.StrongGoalWeek
             toolTip.IsOpen = false;
         }
 
-<<<<<<< HEAD
-
-        //左击任务块显示详细信息
-        private void TaskBlock_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
-        {
-            try // 添加异常处理
-            {
-                // 确保sender是Border
-                if (!(sender is Border border)) return;
-
-                // 确保DataContext是TaskBlock
-                if (!(border.DataContext is TimeController.ViewModels.WeekViewModel.TaskBlock task)) return;
-
-                // 关闭已有的Popup
-                if (_taskDetailPopup != null)
-                {
-                    _taskDetailPopup.IsOpen = false;
-                    _taskDetailPopup = null;
-                }
-
-                // 获取当前周的周一日期
-                var vm = DataContext as WeekViewModel;
-                if (vm == null) return;
-
-                // 检查是否为课程任务 - 简化判断逻辑
-                bool isCourse = vm.CourseTaskBlocks.Contains(task);
-
-                // 如果是课程，不显示任何信息
-                if (isCourse)
-                {
-                    e.Handled = true; // 标记事件已处理
-                    return; // 直接返回，不显示任何弹出信息
-                }
-
-                var currentDate = vm.CurrentDate;
-                DateTime monday = currentDate.Date;
-                while (monday.DayOfWeek != DayOfWeek.Monday)
-                {
-                    monday = monday.AddDays(-1);
-                }
-
-                // 根据任务的列索引计算对应的日期
-                DateTime taskDate = monday.AddDays(task.Column);
-
-                // 构建详细信息（仅针对非课程任务）
-                string detail = $"备注：{task.Note ?? ""}\n类型：{task.Type}\n";
-                if (task.IsAllDay)
-                {
-                    // 全天任务显示日期
-                    detail += $"时间：{taskDate:yyyy年M月d日 (dddd)}";
-                }
-                else if (task.StartTime != TimeSpan.Zero || task.EndTime != TimeSpan.Zero)
-                {
-                    // 分时任务显示时间
-                    detail += $"时间：{task.StartTime:hh\\:mm} - {task.EndTime:hh\\:mm}";
-                }
-
-                // 创建Popup内容
-                var popupContent = new Border
-                {
-                    Background = Brushes.LightYellow,
-                    BorderBrush = Brushes.Gray,
-                    BorderThickness = new Thickness(1),
-                    CornerRadius = new CornerRadius(6),
-                    Padding = new Thickness(8),
-                    Child = new TextBlock
-                    {
-                        Text = detail,
-                        Foreground = Brushes.DarkSlateGray,
-                        FontSize = 14,
-                        TextWrapping = TextWrapping.Wrap
-                    }
-                };
-
-                // 创建Popup
-                _taskDetailPopup = new Popup
-                {
-                    Child = popupContent,
-                    PlacementTarget = border,
-                    Placement = PlacementMode.Mouse,
-                    StaysOpen = false, // 点击外部自动关闭
-                    AllowsTransparency = true,
-                    IsOpen = true
-                };
-
-                e.Handled = true; // 标记事件已处理
-            }
-            catch (Exception ex)
-            {
-                // 记录异常，但不中断应用程序
-                Console.WriteLine($"显示任务详情时发生异常: {ex.Message}");
-                MessageBox.Show($"显示任务详情时发生错误: {ex.Message}", "错误", MessageBoxButton.OK, MessageBoxImage.Error);
-=======
         public void UpdateCardPositionForElement(FrameworkElement element)
         {
             if (element != null)
@@ -631,7 +537,6 @@ namespace TimeController.Views.StrongGoalWeek
         }
 
 
-
         // 关闭详情卡片时，如果点击的不是卡片本身或其子元素，则隐藏卡片
         public void CloseTaskDetailsCardIfOutside(DependencyObject clickedElement)
         {
@@ -645,7 +550,6 @@ namespace TimeController.Views.StrongGoalWeek
                 {
                     CloseTaskDetailsCard();
                 }
->>>>>>> a5523a6 (临时保存：切换到自己分支之前的未完成工作)
             }
         }
 
@@ -722,6 +626,9 @@ namespace TimeController.Views.StrongGoalWeek
                 // 关键：设置任务的日期
                 if (_clickedDate.HasValue)
                     task.PlannedDate = _clickedDate.Value.Date;
+
+                // 强管理模式任务
+                task.Mode = TaskMode.Strong;
 
                 System.Diagnostics.Debug.WriteLine($"新任务日期: {task.PlannedDate}");
 
@@ -859,31 +766,19 @@ namespace TimeController.Views.StrongGoalWeek
 
 
 
-<<<<<<< HEAD
-        //任务删除（鼠标悬停
-=======
 
         // 悬停进来：显示按钮
->>>>>>> a5523a6 (临时保存：切换到自己分支之前的未完成工作)
         private void Grid_MouseEnter(object sender, MouseEventArgs e)
         {
-            if (sender is Grid grid)
-            {
-                var button = grid.FindName("DeleteButton") as Button;
-                if (button != null)
-                    button.Visibility = Visibility.Visible;
-            }
+            if (sender is Grid g && g.FindName("ActionButtons") is UIElement btns)
+                btns.Visibility = Visibility.Visible;
         }
 
-        //任务删除（鼠标离开
+        // 悬停离开：隐藏按钮
         private void Grid_MouseLeave(object sender, MouseEventArgs e)
         {
-            if (sender is Grid grid)
-            {
-                var button = grid.FindName("DeleteButton") as Button;
-                if (button != null)
-                    button.Visibility = Visibility.Collapsed;
-            }
+            if (sender is Grid g && g.FindName("ActionButtons") is UIElement btns)
+                btns.Visibility = Visibility.Collapsed;
         }
 
         // 全天任务鼠标进入事件

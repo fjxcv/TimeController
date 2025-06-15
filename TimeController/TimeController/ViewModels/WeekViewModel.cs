@@ -4,28 +4,26 @@ using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Windows.Input;
 using System.Windows.Media;
+using System.Linq;
 using TimeController.Models;
-using System.Windows;
-using System.Globalization;
+using Microsoft.Extensions.DependencyInjection;
 using TimeController.Services;
+using TimeController.Helpers;
 using System.Diagnostics;
-using System.Windows.Controls;
 using System.Windows.Data;
 using System.Data;
-<<<<<<< HEAD
-=======
 using System.Windows;
 using Microsoft.Windows.Input;
 using MessageBox = iNKORE.UI.WPF.Modern.Controls.MessageBox;
 using System.Threading.Tasks;
 using System.Windows.Controls;
->>>>>>> a5523a6 (临时保存：切换到自己分支之前的未完成工作)
 
 namespace TimeController.ViewModels
 {
     public class WeekViewModel : INotifyPropertyChanged
     {
         private DateTime _currentDate;
+        private readonly INavigationService _navService;
         private readonly ITaskService _taskService;
         public IEnumerable<TaskBlock> AllDayTaskBlocks => TaskBlocks.Where(t => t.IsAllDay);
         public IEnumerable<TaskBlock> TimedTaskBlocks => TaskBlocks.Where(t => !t.IsAllDay);
@@ -36,19 +34,32 @@ namespace TimeController.ViewModels
         // 课程任务块集合
         public ObservableCollection<TaskBlock> CourseTaskBlocks { get; } = new ObservableCollection<TaskBlock>();
         public ObservableCollection<DateColumnViewModel> DateColumns { get; } = new ObservableCollection<DateColumnViewModel>();
-
+        public ICommand ReviewCommand { get; }
 
         public event Action<TaskModel>? SaveRequested;
         // 添加一个确认删除的事件
         public event Func<TaskBlock, Task<bool>> DeleteConfirmationRequested;
 
-
         public ICommand RemoveTaskBlockCommand { get; private set; }
         public ICollectionView TimedTaskBlocksView { get; private set; }
 
-        public WeekViewModel(ITaskService taskService)
+        public WeekViewModel(ITaskService taskService, INavigationService navService)
         {
             _taskService = taskService;
+            _navService = navService;
+
+            ToggleColumnExpandCommand = new RelayCommand<int>(ToggleColumnExpand);
+
+            //进入复盘
+            ReviewCommand = new RelayCommand(_ =>
+            {
+                var frame = AppFrame.Instance;
+                if (frame != null)
+                {
+                    _navService.NavigateTo(frame, "Everyday");
+                }
+            });
+
             Initialize();
 
         }
@@ -60,27 +71,9 @@ namespace TimeController.ViewModels
         public ICommand NextWeekCommand { get; private set; }
         public ICommand PreviousMonthCommand { get; private set; }
         public ICommand NextMonthCommand { get; private set; }
+        public ICommand ToggleCompleteCommand { get; }
 
         public WeekViewModel()
-<<<<<<< HEAD
-        {
-            // 尝试从服务定位器获取 TaskService
-            try
-            {
-                _taskService = App.Services?.GetService(typeof(ITaskService)) as ITaskService;
-                if (_taskService == null)
-                {
-                    Console.WriteLine("警告: 未能从服务容器获取任务服务，尝试创建本地实例...");
-
-                    // 或者在这里创建临时的服务实例
-                    // _taskService = new TaskService(new TaskDbContext(...));
-                }
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"获取任务服务失败: {ex.Message}");
-            }
-=======
               : this(
                 // 从全局 ServiceProvider 拿到 ITaskService
                 App.AppHost.Services.GetRequiredService<ITaskService>(),
@@ -89,10 +82,7 @@ namespace TimeController.ViewModels
         {
             // 这里不用再写其它逻辑，所有初始化都在主构造里完成
         }
->>>>>>> a5523a6 (临时保存：切换到自己分支之前的未完成工作)
 
-            Initialize();
-        }
 
         private void Initialize()
         {
@@ -705,28 +695,12 @@ namespace TimeController.ViewModels
             while (monday.DayOfWeek != DayOfWeek.Monday)
                 monday = monday.AddDays(-1);
 
-<<<<<<< HEAD
-            // 添加调试输出
-            Console.WriteLine($"尝试添加任务: {task.Name}, 计划日期: {task.PlannedDate:yyyy-MM-dd}, 本周一: {monday:yyyy-MM-dd}");
-            int column = (task.PlannedDate - monday).Days;
-            if (column < 0 || column > 6) return; // 不在当前周的任务不显示
-
-            // 检查是否为课程任务
-            bool isCourse = task.Type == TaskType.学习学业 &&
-                !string.IsNullOrEmpty(task.Note) &&
-                (task.Note.Contains("教师:") || task.Note.Contains("地点:"));
-
-
-            // 如果是课程任务，则只添加到CourseTaskBlocks，不添加到普通任务
-            if (isCourse)
-=======
             // 计算任务在本周的列（0=周一，1=周二...）
             int column = (task.PlannedDate - monday).Days;
             if (column < 0 || column > 6) return; // 不在当前周的任务不显示
 
             // 检查IsCourseTask属性
             if (task.IsCourseTask)
->>>>>>> a5523a6 (临时保存：切换到自己分支之前的未完成工作)
             {
                 var courseBlock = new TaskBlock
                 {
@@ -735,15 +709,11 @@ namespace TimeController.ViewModels
                     Type = task.Type,
                     StartTime = task.StartTime ?? TimeSpan.Zero,
                     EndTime = task.EndTime ?? TimeSpan.Zero,
-<<<<<<< HEAD
-                    Brush = new SolidColorBrush(Color.FromRgb(230, 247, 255)), // 浅蓝色背景
-=======
                     // 设置蓝色背景
                     Brush = new SolidColorBrush(Color.FromRgb(204, 229, 255)),  // 浅蓝色背景 #CCE5FF
                     BorderBrush = new SolidColorBrush(Color.FromRgb(0, 120, 212)), // 蓝色边框 #0078D4
                     BorderThickness = new Thickness(1),
                     CornerRadius = new CornerRadius(4),
->>>>>>> a5523a6 (临时保存：切换到自己分支之前的未完成工作)
                     Column = column,
                     Row = task.StartTime.HasValue ? task.StartTime.Value.Hours : 0,
                     RowSpan = (!task.IsAllDay && task.StartTime.HasValue && task.EndTime.HasValue)
@@ -751,26 +721,16 @@ namespace TimeController.ViewModels
                     Id = task.Id,
                     IsCourse = true
                 };
-
                 CourseTaskBlocks.Add(courseBlock);
-                Console.WriteLine($"添加课程到CourseTaskBlocks: {task.Name}");
             }
             else
             {
-<<<<<<< HEAD
-                // 非课程任务，添加到普通任务集合
-=======
->>>>>>> a5523a6 (临时保存：切换到自己分支之前的未完成工作)
                 var taskBlock = new TaskBlock
                 {
                     Name = task.Name,
                     Note = task.Note,
                     Type = task.Type,
-<<<<<<< HEAD
-                    IsAllDay = task.IsAllDay,  // 确保设置IsAllDay属性
-=======
                     IsAllDay = task.IsAllDay,
->>>>>>> a5523a6 (临时保存：切换到自己分支之前的未完成工作)
                     StartTime = task.StartTime ?? TimeSpan.Zero,
                     EndTime = task.EndTime ?? TimeSpan.Zero,
                     Brush = GetBrushForTaskType(task.Type),
@@ -781,10 +741,6 @@ namespace TimeController.ViewModels
                     Id = task.Id,
                     IsCourse = false
                 };
-<<<<<<< HEAD
-
-=======
->>>>>>> a5523a6 (临时保存：切换到自己分支之前的未完成工作)
                 TaskBlocks.Add(taskBlock);
             }
             OnPropertyChanged(nameof(AllDayTaskBlocks));
@@ -914,7 +870,7 @@ namespace TimeController.ViewModels
             await Task.Delay(100); // 短暂延迟以确保数据库操作完成
             LoadTasksForCurrentWeek();
         }
-        
+
         // 处理任务与任务冲突
         private async Task ProcessTaskConflicts(List<TaskBlock> conflicts)
         {
@@ -1032,11 +988,6 @@ namespace TimeController.ViewModels
             return (conflicts.Count > 0, conflicts);
         }
 
-<<<<<<< HEAD
-
-
-=======
->>>>>>> a5523a6 (临时保存：切换到自己分支之前的未完成工作)
         private Brush GetBrushForTaskType(TaskType type)
         {
             switch (type)
@@ -1057,7 +1008,7 @@ namespace TimeController.ViewModels
         }
 
         //任务块类
-        public class TaskBlock
+        public class TaskBlock : INotifyPropertyChanged
         {
             public string Name { get; set; }
             public string Note { get; set; }
@@ -1077,9 +1028,25 @@ namespace TimeController.ViewModels
             public int RowSpan { get; set; } // 跨多少小时
 
             public int Id { get; set; }//Id
+
+            private MyTaskStatus _status;
+            public MyTaskStatus Status
+            {
+                get => _status;
+                set
+                {
+                    if (_status != value)
+                    {
+                        _status = value;
+                        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Status)));
+                    }
+                }
+            }
+
+            public event PropertyChangedEventHandler? PropertyChanged;
         }
 
-       
+
         //当前日期
         public DateTime CurrentDate
         {
@@ -1294,83 +1261,60 @@ namespace TimeController.ViewModels
         {
             try
             {
-                Console.WriteLine("开始加载本周任务...");
-
-                // 清空当前任务块集合
+                // 清空
                 TaskBlocks.Clear();
                 CourseTaskBlocks.Clear();
-
-                // 清空每天的全天任务集合
                 for (int i = 0; i < 7; i++)
-                {
                     AllDayTaskBlocksPerDay[i].Clear();
-                }
 
-                // 计算当前周的起止日期
+                // 周范围
                 DateTime monday = GetCurrentWeekMonday();
                 DateTime sunday = monday.AddDays(6);
 
-                Console.WriteLine($"加载周视图 - 当前周: {monday:yyyy-MM-dd} 到 {sunday:yyyy-MM-dd}");
+                // 拉数据
+                var weekTasks = await _taskService.GetTasksForDateRange(monday, sunday);
+                var courseTasks = await _taskService.GetCourseTasksForWeekAsync(CurrentDate);
+                Tasks.Clear();
+                foreach (var t in weekTasks.Concat(courseTasks))
+                    Tasks.Add(t);
 
-                // 确保我们直接从数据库获取最新数据
-                if (_taskService != null)
+                // ① 先插入分时与课程任务
+                foreach (var t in Tasks.Where(t => !t.IsAllDay))
+                    AddTaskToView(t);
+
+                // ② 再为每个全天 TaskModel 新建一个带 Brush 的 TaskBlock
+                foreach (var t in Tasks.Where(t => t.IsAllDay))
                 {
-                    // 重新从数据库加载任务，确保与数据库同步
-                    var weekTasks = await _taskService.GetTasksForDateRange(monday, sunday);
-                    var courseTasks = await _taskService.GetCourseTasksForWeekAsync(CurrentDate);
+                    int col = (t.PlannedDate - monday).Days;
+                    if (col < 0 || col > 6) continue;
 
-                    // 更新内存中的任务集合（关键修改：更新而不是追加）
-                    Tasks.Clear();
-                    foreach (var task in weekTasks.Concat(courseTasks))
+                    var allDayBlock = new TaskBlock
                     {
-                        Tasks.Add(task);
-                    }
-
-                    Console.WriteLine($"从数据库加载了 {Tasks.Count} 个任务");
-
-                    // 处理所有加载的任务
-                    foreach (var task in Tasks)
-                    {
-                        // 特殊处理课程任务
-                        if (task.IsCourseTask)
-                        {
-                            task.PlannedDate = monday.AddDays(task.WeekDay);
-                        }
-
-                        // 只添加当前周内的任务
-                        if (task.PlannedDate >= monday && task.PlannedDate <= sunday)
-                        {
-                            AddTaskToView(task);
-                        }
-                    }
-
-                    // 分组全天任务
-                    foreach (var block in TaskBlocks.Where(t => t.IsAllDay))
-                    {
-                        if (block.Column >= 0 && block.Column < 7)
-                        {
-                            AllDayTaskBlocksPerDay[block.Column].Add(block);
-                        }
-                    }
-
-                    foreach (var column in DateColumns)
-                    {
-                        column.RefreshAllDayTasksView();
-                    }
-
-                    // 通知UI更新
-                    OnPropertyChanged(nameof(TaskBlocks));
-                    OnPropertyChanged(nameof(CourseTaskBlocks));
-                    OnPropertyChanged(nameof(AllDayTaskBlocks));
-                    OnPropertyChanged(nameof(AllDayTaskBlocksPerDay));
-                    OnPropertyChanged(nameof(ShouldShowMoreButtonForColumn));
-                    OnPropertyChanged(nameof(ExpandedColumns));
-
-                    // 额外刷新一次集合视图确保UI同步
-                    TimedTaskBlocksView.Refresh();
-
-                    Console.WriteLine($"任务加载完成 - 全天任务: {TaskBlocks.Count(t => t.IsAllDay)}, 分时任务: {TaskBlocks.Count(t => !t.IsAllDay)}");
+                        Id = t.Id,
+                        Name = t.Name,
+                        Note = t.Note,
+                        Type = t.Type,
+                        Status = t.Status,
+                        IsAllDay = true,
+                        Column = col,
+                        Row = 0,
+                        RowSpan = 1,
+                        Brush = GetBrushForTaskType(t.Type)
+                    };
+                    AllDayTaskBlocksPerDay[col].Add(allDayBlock);
                 }
+
+                // ③ 刷新各列全天视图（触发折叠/展开）
+                foreach (var colVm in DateColumns)
+                    colVm.RefreshAllDayTasksView();
+
+                // ④ 刷新 UI
+                OnPropertyChanged(nameof(TaskBlocks));
+                OnPropertyChanged(nameof(CourseTaskBlocks));
+                OnPropertyChanged(nameof(AllDayTaskBlocksPerDay));
+                OnPropertyChanged(nameof(ShouldShowMoreButtonForColumn));
+                TimedTaskBlocksView.Refresh();
+
             }
             catch (Exception ex)
             {
@@ -1378,11 +1322,6 @@ namespace TimeController.ViewModels
             }
         }
 
-<<<<<<< HEAD
-
-
-=======
->>>>>>> a5523a6 (临时保存：切换到自己分支之前的未完成工作)
         // 检查分时任务时间冲突
         public (bool hasConflict, List<TaskBlock> conflicts) CheckTimeConflicts(TaskModel newTask)
         {
@@ -1518,17 +1457,16 @@ namespace TimeController.ViewModels
         // 切换某一列的展开状态
         private void ToggleColumnExpand(int column)
         {
-            if (column >= 0 && column < 7)
-            {
-                ExpandedColumns[column] = !ExpandedColumns[column];
+            if (column < 0 || column >= DateColumns.Count) return;
 
-                // 更新对应的 DateColumnViewModel
-                DateColumns[column].IsExpanded = ExpandedColumns[column];
+            // 切换展开状态
+            DateColumns[column].IsExpanded = !DateColumns[column].IsExpanded;
 
-                // 通知相关属性更新
-                OnPropertyChanged(nameof(ExpandedColumns));
-                DateColumns[column].RefreshAllDayTasksView();
-            }
+            // 刷新全天任务视图过滤
+            DateColumns[column].RefreshAllDayTasksView();
+
+            // 通知界面更新“更多”按钮的可见性
+            OnPropertyChanged(nameof(DateColumns));
         }
 
 

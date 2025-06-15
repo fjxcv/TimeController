@@ -6,13 +6,10 @@ using System.Windows.Media;
 using TimeController.Models;
 using TimeController.ViewModels;
 using iNKORE.UI.WPF.Modern.Controls;
-<<<<<<< HEAD
-=======
 using MessageBox = iNKORE.UI.WPF.Modern.Controls.MessageBox;
 using Microsoft.Extensions.DependencyInjection;
 using System.Diagnostics;
 using TimeController.Services;
->>>>>>> a5523a6 (临时保存：切换到自己分支之前的未完成工作)
 
 namespace TimeController.Views.StrongGoalWeek
 {
@@ -40,10 +37,6 @@ namespace TimeController.Views.StrongGoalWeek
         {
             try
             {
-<<<<<<< HEAD
-                System.Windows.MessageBox.Show("课程名称不能为空", "验证错误", MessageBoxButton.OK, MessageBoxImage.Warning);
-                return;
-=======
                 // 验证输入
                 if (string.IsNullOrWhiteSpace(_viewModel.Name))
                 {
@@ -151,7 +144,6 @@ namespace TimeController.Views.StrongGoalWeek
             {
                 Debug.WriteLine($"解析新课程周次时出错: {ex.Message}");
                 return conflicts; // 周次格式错误，返回空冲突列表
->>>>>>> a5523a6 (临时保存：切换到自己分支之前的未完成工作)
             }
 
             // 检查每个现有课程

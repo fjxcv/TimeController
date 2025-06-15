@@ -1,63 +1,28 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
+﻿using System.Collections.ObjectModel;
 using System.ComponentModel;
-using System.Linq;
 using System.Runtime.CompilerServices;
-using System.Text;
-using System.Threading.Tasks;
+using System.Windows.Data;
 
 namespace TimeController.ViewModels
 {
     public class DateColumnViewModel : INotifyPropertyChanged
     {
         private bool _isExpanded;
-        private string _weekDayText;
-        private string _dateText;
+        private string _weekDayText = "";
+        private string _dateText = "";
         private bool _isCurrentMonth;
-        private ObservableCollection<WeekViewModel.TaskBlock> _allDayTasks;
-        public bool ShouldShowMoreButton => AllDayTasks?.Count > 2;
+        private ObservableCollection<WeekViewModel.TaskBlock> _allDayTasks = new();
 
+        // —— 新增这一行 —— 
+        public ICollectionView AllDayTasksView { get; private set; }
 
-        public int Index { get; set; }
-
-        public string WeekDayText
+        public DateColumnViewModel()
         {
-            get => _weekDayText;
-            set
-            {
-                if (_weekDayText != value)
-                {
-                    _weekDayText = value;
-                    OnPropertyChanged();
-                }
-            }
-        }
-
-        public string DateText
-        {
-            get => _dateText;
-            set
-            {
-                if (_dateText != value)
-                {
-                    _dateText = value;
-                    OnPropertyChanged();
-                }
-            }
-        }
-
-        public bool IsCurrentMonth
-        {
-            get => _isCurrentMonth;
-            set
-            {
-                if (_isCurrentMonth != value)
-                {
-                    _isCurrentMonth = value;
-                    OnPropertyChanged();
-                }
-            }
+            // 先给 AllDayTasksView 一个“空包装”，防止后面空引用
+            AllDayTasksView = CollectionViewSource.GetDefaultView(_allDayTasks);
+            _allDayTasks.CollectionChanged += AllDayTasks_CollectionChanged;
+            // 初始化一次过滤
+            RefreshAllDayTasksView();
         }
 
         public ObservableCollection<WeekViewModel.TaskBlock> AllDayTasks
@@ -67,18 +32,30 @@ namespace TimeController.ViewModels
             {
                 if (_allDayTasks != value)
                 {
+                    if (_allDayTasks != null)
+                        _allDayTasks.CollectionChanged -= AllDayTasks_CollectionChanged;
                     _allDayTasks = value;
+
                     OnPropertyChanged();
+
+                    // 重新 Wrap 一下新集合
+                    AllDayTasksView = CollectionViewSource.GetDefaultView(_allDayTasks);
+                    OnPropertyChanged(nameof(AllDayTasksView));
+
+                    if (_allDayTasks != null)
+                        _allDayTasks.CollectionChanged += AllDayTasks_CollectionChanged;
+
+                    // 更新按钮显示判断
                     OnPropertyChanged(nameof(ShouldShowMoreButton));
+
+                    // 并且立即刷新一次过滤
+                    RefreshAllDayTasksView();
                 }
             }
         }
 
-<<<<<<< HEAD
-=======
         public bool ShouldShowMoreButton => AllDayTasks?.Count > 2;
 
->>>>>>> a5523a6 (临时保存：切换到自己分支之前的未完成工作)
         public bool IsExpanded
         {
             get => _isExpanded;
@@ -88,16 +65,22 @@ namespace TimeController.ViewModels
                 {
                     _isExpanded = value;
                     OnPropertyChanged();
+                    // 切换展开/折叠后也要刷新过滤
+                    RefreshAllDayTasksView();
                 }
             }
         }
 
-        // 在 DateColumnViewModel.cs 中添加
+        public int Index { get; set; }
+        public string WeekDayText { get => _weekDayText; set { _weekDayText = value; OnPropertyChanged(); } }
+        public string DateText { get => _dateText; set { _dateText = value; OnPropertyChanged(); } }
+        public bool IsCurrentMonth { get => _isCurrentMonth; set { _isCurrentMonth = value; OnPropertyChanged(); } }
+
+        /// <summary>
+        /// 根据 IsExpanded 切换 AllDayTasksView 的过滤器：折叠时只看前 3 条，展开时看全部
+        /// </summary>
         public void RefreshAllDayTasksView()
         {
-<<<<<<< HEAD
-            OnPropertyChanged(nameof(AllDayTasks));
-=======
             if (AllDayTasksView == null) return;
 
             AllDayTasksView.Filter = item =>
@@ -108,16 +91,18 @@ namespace TimeController.ViewModels
                 return idx < 2 || IsExpanded;
             };
             AllDayTasksView.Refresh();
->>>>>>> a5523a6 (临时保存：切换到自己分支之前的未完成工作)
             OnPropertyChanged(nameof(ShouldShowMoreButton));
         }
 
-        public event PropertyChangedEventHandler PropertyChanged;
-
-        protected void OnPropertyChanged([CallerMemberName] string name = null)
+        private void AllDayTasks_CollectionChanged(object? sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
         {
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
+            OnPropertyChanged(nameof(ShouldShowMoreButton));
+            RefreshAllDayTasksView();
         }
-    }
 
+
+        public event PropertyChangedEventHandler? PropertyChanged;
+        protected void OnPropertyChanged([CallerMemberName] string name = null)
+            => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
+    }
 }

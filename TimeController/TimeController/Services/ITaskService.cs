@@ -46,5 +46,7 @@ namespace TimeController.Services
         void CommitTransaction();
         void RollbackTransaction();
 
+        event Action<TaskModel> TaskSaved;
+
     }
 }
