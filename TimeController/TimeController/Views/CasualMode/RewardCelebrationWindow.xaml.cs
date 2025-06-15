@@ -26,16 +26,12 @@ namespace TimeController.Views.CasualMode
             // 初始化媒体播放器
             _mediaPlayer = new System.Windows.Media.MediaPlayer();
             _mediaPlayer.Volume = 1.0; // 确保音量设置
-            _mediaPlayer.MediaOpened += (s, e) =>
-            {
-                // 媒体加载成功后自动播放
-                _mediaPlayer.Play();
-            };
+            
 
             // 加载音效文件
             try
             {
-                var uri = new Uri("pack://application:,,,/TimeController;component/Resources/fireworks.mp3", UriKind.Absolute);
+                var uri = new Uri("pack://application:,,,/TimeController;component/Resources/fireworks.wav", UriKind.Absolute);
                 _mediaPlayer.Open(uri);
             }
             catch (Exception ex)

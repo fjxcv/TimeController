@@ -114,6 +114,13 @@ namespace TimeController.Views.CasualMode
                 return;
             }
 
+            var now = DateTime.Now;
+            if (now - _lastRewardCelebrationShownTime < _minTimeBetweenCelebrations)
+            {
+                return;
+            }
+            _lastRewardCelebrationShownTime = now;
+
             _isRewardWindowCurrentlyShowing = true;
             var window = new RewardCelebrationWindow(_viewModel);
             window.Closed += (s, e) => 

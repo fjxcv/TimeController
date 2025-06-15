@@ -257,6 +257,13 @@ namespace TimeController.ViewModels
                         {
                             CurrentEditingTask = null;
                         }
+
+                        // 移除输入框焦点，避免留下黑色边框
+                        Application.Current.Dispatcher.BeginInvoke(() =>
+                        {
+                            Keyboard.ClearFocus();
+                        });
+
                     }
                 }
             });

@@ -21,9 +21,8 @@
                       ShadowDepth="2"/>
 
         <!--布尔值转可见性转换器-->
-        <BooleanToVisibilityConverter x:Key="BoolToVisibility"/>
-        <local:InverseBooleanToVisibilityConverter x:Key="InverseBoolToVisibility"/>
-        <local:NullToVisibilityConverter x:Key="NullToVisibilityConverter"/>
+        <local:BoolToVisibilityConverter x:Key="BoolToVisibility"/>
+
         <!-- 按钮样式 -->
         <Style x:Key="IconButtonStyle" TargetType="Button">
             <Setter Property="Background" Value="Transparent"/>
@@ -91,7 +90,6 @@
         <!-- 给任务名用的 TextBlock 定义一个专属样式 -->
         <Style x:Key="ModuleTaskNameStyle" TargetType="TextBlock">
             <Setter Property="FontSize" Value="18"/>
-            <!-- 你想要的大小，比如 18 -->
             <Setter Property="FontWeight" Value="Normal"/>
             <Setter Property="Foreground" Value="Black"/>
         </Style>
@@ -253,7 +251,8 @@
                                         <CheckBox Grid.Column="0" 
                                                   IsChecked="{Binding IsCompleted, Mode=TwoWay}" 
                                                   VerticalAlignment="Center"/>
-                                        <TextBlock Grid.Column="1" Text="{Binding Name}" Margin="0,0,0,0" VerticalAlignment="Center" Style="{StaticResource ModuleTaskNameStyle}">
+                                        <TextBlock Grid.Column="1" Text="{Binding Name}" Margin="0,0,0,0" VerticalAlignment="Center" Style="{StaticResource ModuleTaskNameStyle}"
+                                                  Visibility="{Binding IsEditing, Converter={StaticResource BoolToVisibility}, ConverterParameter=False}">
                                             <TextBlock.InputBindings>
                                                 <MouseBinding MouseAction="LeftDoubleClick"
                                                               Command="{Binding DataContext.StartEditTaskCommand, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ui:Page}}}"
@@ -261,7 +260,7 @@
                                             </TextBlock.InputBindings>
                                         </TextBlock>
                                         
-                                        <TextBox Grid.Column="1" Text="{Binding Name, UpdateSourceTrigger=PropertyChanged}" 
+                                        <TextBox Grid.Column="1" Text="{Binding Name, UpdateSourceTrigger=PropertyChanged}" FontSize="18"
                                          Visibility="{Binding IsEditing, Converter={StaticResource BoolToVisibility}}"
                                          Margin="0,0,0,0" VerticalAlignment="Center">
                                             <TextBox.InputBindings>
@@ -366,15 +365,16 @@
                                         <CheckBox Grid.Column="0" 
                                                   IsChecked="{Binding IsCompleted, Mode=TwoWay}" 
                                                   VerticalAlignment="Center"/>
-                                        <TextBlock Grid.Column="1" Text="{Binding Name}" Margin="0,0,0,0" VerticalAlignment="Center" Style="{StaticResource ModuleTaskNameStyle}">
+                                        <TextBlock Grid.Column="1" Text="{Binding Name}" Margin="0,0,0,0" VerticalAlignment="Center" Style="{StaticResource ModuleTaskNameStyle}"
+                                                  Visibility="{Binding IsEditing, Converter={StaticResource BoolToVisibility}, ConverterParameter=False}">
                                             <TextBlock.InputBindings>
                                                 <MouseBinding MouseAction="LeftDoubleClick"
                                                               Command="{Binding DataContext.StartEditTaskCommand, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ui:Page}}}"
                                                               CommandParameter="{Binding}"/>
                                             </TextBlock.InputBindings>
                                         </TextBlock>
-                                        
-                                        <TextBox Grid.Column="1" Text="{Binding Name, UpdateSourceTrigger=PropertyChanged}" 
+
+                                        <TextBox Grid.Column="1" Text="{Binding Name, UpdateSourceTrigger=PropertyChanged}" FontSize="18"
                                          Visibility="{Binding IsEditing, Converter={StaticResource BoolToVisibility}}"
                                          Margin="0,0,0,0" VerticalAlignment="Center">
                                             <TextBox.InputBindings>
@@ -478,15 +478,16 @@
                                         <CheckBox Grid.Column="0" 
                                                   IsChecked="{Binding IsCompleted, Mode=TwoWay}" 
                                                   VerticalAlignment="Center"/>
-                                        <TextBlock Grid.Column="1" Text="{Binding Name}" Margin="0,0,0,0" VerticalAlignment="Center" Style="{StaticResource ModuleTaskNameStyle}">
+                                        <TextBlock Grid.Column="1" Text="{Binding Name}" Margin="0,0,0,0" VerticalAlignment="Center" Style="{StaticResource ModuleTaskNameStyle}"
+                                                  Visibility="{Binding IsEditing, Converter={StaticResource BoolToVisibility}, ConverterParameter=False}">
                                             <TextBlock.InputBindings>
                                                 <MouseBinding MouseAction="LeftDoubleClick"
                                                               Command="{Binding DataContext.StartEditTaskCommand, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ui:Page}}}"
                                                               CommandParameter="{Binding}"/>
                                             </TextBlock.InputBindings>
                                         </TextBlock>
-                                        
-                                        <TextBox Grid.Column="1" Text="{Binding Name, UpdateSourceTrigger=PropertyChanged}" 
+
+                                        <TextBox Grid.Column="1" Text="{Binding Name, UpdateSourceTrigger=PropertyChanged}" FontSize="18"
                                          Visibility="{Binding IsEditing, Converter={StaticResource BoolToVisibility}}"
                                          Margin="0,0,0,0" VerticalAlignment="Center">
                                             <TextBox.InputBindings>
@@ -590,15 +591,16 @@
                                         <CheckBox Grid.Column="0" 
                                                   IsChecked="{Binding IsCompleted, Mode=TwoWay}" 
                                                   VerticalAlignment="Center"/>
-                                        <TextBlock Grid.Column="1" Text="{Binding Name}" Margin="0,0,0,0" VerticalAlignment="Center" Style="{StaticResource ModuleTaskNameStyle}">
+                                        <TextBlock Grid.Column="1" Text="{Binding Name}" Margin="0,0,0,0" VerticalAlignment="Center" Style="{StaticResource ModuleTaskNameStyle}"
+                                                  Visibility="{Binding IsEditing, Converter={StaticResource BoolToVisibility}, ConverterParameter=False}">
                                             <TextBlock.InputBindings>
                                                 <MouseBinding MouseAction="LeftDoubleClick"
                                                               Command="{Binding DataContext.StartEditTaskCommand, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ui:Page}}}"
                                                               CommandParameter="{Binding}"/>
                                             </TextBlock.InputBindings>
                                         </TextBlock>
-                                        
-                                        <TextBox Grid.Column="1" Text="{Binding Name, UpdateSourceTrigger=PropertyChanged}" 
+
+                                        <TextBox Grid.Column="1" Text="{Binding Name, UpdateSourceTrigger=PropertyChanged}" FontSize="18"
                                          Visibility="{Binding IsEditing, Converter={StaticResource BoolToVisibility}}"
                                          Margin="0,0,0,0" VerticalAlignment="Center">
                                             <TextBox.InputBindings>
@@ -711,7 +713,8 @@
                                     <CheckBox Grid.Column="0" IsChecked="{Binding IsCompleted, Mode=TwoWay}" VerticalAlignment="Center"/>
 
                                     <!-- 显示模式（默认） -->
-                                    <TextBlock Grid.Column="1" Text="{Binding Name}" Margin="0,0,0,0" VerticalAlignment="Center">
+                                    <TextBlock Grid.Column="1" Text="{Binding Name}" Margin="0,0,0,0" VerticalAlignment="Center"
+                                              Visibility="{Binding IsEditing, Converter={StaticResource BoolToVisibility}, ConverterParameter=False}">
                                         <TextBlock.InputBindings>
                                             <MouseBinding MouseAction="LeftDoubleClick"
                                                            Command="{Binding DataContext.StartEditTaskCommand, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ui:Page}}}"
@@ -729,7 +732,7 @@
                                     </TextBlock>
 
                                     <!-- 编辑模式 -->
-                                    <TextBox Grid.Column="1" Text="{Binding Name, UpdateSourceTrigger=PropertyChanged}" 
+                                    <TextBox Grid.Column="1" Text="{Binding Name, UpdateSourceTrigger=PropertyChanged}" FontSize="18"
                                       Visibility="{Binding IsEditing, Converter={StaticResource BoolToVisibility}}"
                                       Margin="0,0,0,0" VerticalAlignment="Center">
                                         <TextBox.InputBindings>
