@@ -540,6 +540,11 @@ namespace TimeController.ViewModels
         {
             if (e.PropertyName == nameof(TaskModel.IsCompleted))
             {
+                if (sender is TaskModel task)
+                {
+                    _ = _taskService.UpdateTaskAsync(task);
+                }
+
                 // UI 线程调用
                 Application.Current.Dispatcher.InvokeAsync(UpdateProgress);
             }
@@ -549,9 +554,7 @@ namespace TimeController.ViewModels
         public void ToggleTask(TaskModel task)
         {
             task.IsCompleted = !task.IsCompleted;
-            _ = _taskService.UpdateTaskAsync(task);
-            // 再触发一次属性变化，确保 UI 与数据库同步
-            task.IsCompleted = task.IsCompleted;
+           
             UpdateProgress(); // 取消或恢复完成状态时
 
             // 任务完成且正在编辑，结束编辑
