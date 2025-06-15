@@ -43,20 +43,29 @@ namespace TimeController.Views.CasualMode
             _viewModel = App.Services.GetRequiredService<CasualModeViewModel>();
             DataContext = _viewModel;
             RewardPopup.Opened += RewardPopup_Opened;
-            
-            // 订阅奖励事件
-            _viewModel.OnShowRewardCelebration += HandleShowRewardCelebration;
-            
+
+            // 在 Loaded 中再订阅事件，确保不会重复
+            this.Loaded += CasualModeView_Loaded;
+
             // 订阅页面卸载事件，用于清理
             this.Unloaded += CasualModeView_Unloaded;
         }
 
+        private void CasualModeView_Loaded(object sender, RoutedEventArgs e)
+        {
+            if (!_isSubscribed && _viewModel != null)
+            {
+                _viewModel.OnShowRewardCelebration += HandleShowRewardCelebration;
+                _isSubscribed = true;
+            }
+        }
+
         private void CasualModeView_Unloaded(object sender, RoutedEventArgs e)
         {
-            // 取消订阅事件
-            if (_viewModel != null)
+            if (_isSubscribed && _viewModel != null)
             {
                 _viewModel.OnShowRewardCelebration -= HandleShowRewardCelebration;
+                _isSubscribed = false;
             }
         }
 
