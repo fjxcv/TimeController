@@ -359,6 +359,7 @@ namespace TimeController.ViewModels
             }
         }
 
+        // 下载模板
         private void DownloadTemplate()
         {
             var saveDialog = new Microsoft.Win32.SaveFileDialog
@@ -400,6 +401,7 @@ namespace TimeController.ViewModels
             }
         }
 
+        // 创建模板文件
         private void CreateTemplateFile(string filePath)
         {
             try
@@ -413,7 +415,7 @@ namespace TimeController.ViewModels
             }
         }
 
-
+        // 打开帮助文档
         private void OpenHelp()
         {
             MessageBox.Show(
