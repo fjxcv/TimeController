@@ -29,7 +29,7 @@
                         <ItemsControl.ItemTemplate>
                             <DataTemplate>
                                 <StackPanel Orientation="Horizontal">
-                                    <TextBlock Text="•" Margin="0,0,4,0"/>
+                                    <!--<TextBlock Text="•" Margin="0,0,4,0"/>-->
                                     <TextBlock Text="{Binding}" TextWrapping="Wrap"/>
                                 </StackPanel>
                             </DataTemplate>
@@ -48,7 +48,7 @@
                         <ItemsControl.ItemTemplate>
                             <DataTemplate>
                                 <StackPanel Orientation="Horizontal">
-                                    <TextBlock Text="•" Margin="0,0,4,0"/>
+                                    <!--<TextBlock Text="•" Margin="0,0,4,0"/>-->
                                     <TextBlock Text="{Binding}" TextWrapping="Wrap"/>
                                 </StackPanel>
                             </DataTemplate>
@@ -66,8 +66,8 @@
                     <ItemsControl.ItemTemplate>
                         <DataTemplate>
                             <StackPanel Orientation="Horizontal">
-                                <TextBlock Text="•"
-                                            Margin="0,0,4,0"/>
+                                <!--<TextBlock Text="•"
+                                            Margin="0,0,4,0"/>-->
                                 <TextBlock Text="{Binding}"
                                             TextWrapping="Wrap"/>
                             </StackPanel>
