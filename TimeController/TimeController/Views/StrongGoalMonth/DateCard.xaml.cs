@@ -7,6 +7,7 @@ using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using TimeController.Models;
 using System.Windows.Controls.Primitives;
+using System.Windows.Media;
 
 namespace TimeController.Views.StrongGoalMonth
 {
@@ -47,7 +48,7 @@ namespace TimeController.Views.StrongGoalMonth
             "IsExpanded",
             typeof(bool),
             typeof(DateCard),
-            new PropertyMetadata(false));
+            new PropertyMetadata(false, OnIsExpandedChanged));
 
         /// <summary>
         /// 获取或设置卡片显示的日期
@@ -144,17 +145,117 @@ namespace TimeController.Views.StrongGoalMonth
 
         private void ToggleExpand(object sender, RoutedEventArgs e)
         {
-            // 只有当 Tasks 非空且至少有一条任务时才展开
-            if (Tasks?.Any() == true)
+            try
             {
-                IsExpanded = !IsExpanded;
-                TaskPopup.IsOpen = IsExpanded;
+                if (Tasks?.Any() != true)
+                {
+                    return;
+                }
+
+                // 停止事件冒泡，防止触发其他点击事件
+                e.Handled = true;
+
+                if (!IsExpanded)
+                {
+                    // 计算弹出位置
+                    CalculatePopupPosition();
+                    
+                    // 设置动画效果
+                    TaskPopup.PopupAnimation = PopupAnimation.Fade;
+                    
+                    // 打开弹出框并更新状态
+                    TaskPopup.IsOpen = true;
+                    IsExpanded = true;
+                }
+                else
+                {
+                    // 只有通过收缩按钮才能关闭
+                    ClosePopup();
+                }
+            }
+            catch (Exception ex)
+            {
+                // 记录错误但不影响用户体验
+                System.Diagnostics.Debug.WriteLine($"ToggleExpand error: {ex.Message}");
+                ClosePopup();
+            }
+        }
+
+        private void CalculatePopupPosition()
+        {
+            //// 获取卡片在屏幕上的位置
+            //var cardPosition = CardBorder.PointToScreen(new Point(0, 0));
+            
+            //// 获取主窗口
+            //var mainWindow = Window.GetWindow(this);
+            //if (mainWindow == null) return;
+
+            //// 计算相对于主窗口的位置
+            //var windowPosition = mainWindow.PointToScreen(new Point(0, 0));
+            //var relativeX = cardPosition.X - windowPosition.X;
+            //var relativeY = cardPosition.Y - windowPosition.Y;
+
+            //// 设置弹出框位置
+            //TaskPopup.HorizontalOffset = relativeX;
+            //TaskPopup.VerticalOffset = relativeY + CardBorder.ActualHeight + 4; // 4是间距
+        }
+
+        private void ClosePopup()
+        {
+            if (TaskPopup.IsOpen)
+            {
+                TaskPopup.IsOpen = false;
             }
         }
 
         private void TaskPopup_Closed(object? sender, EventArgs e)
         {
-            IsExpanded = false;
+            // 确保弹出框确实已关闭
+            if (!TaskPopup.IsOpen)
+            {
+                // 更新展开状态
+                IsExpanded = false;
+                
+                // 可以在这里添加额外的清理逻辑
+                System.Diagnostics.Debug.WriteLine("Popup closed via collapse button, IsExpanded set to false");
+            }
+        }
+
+        // 添加属性变更通知，用于响应 IsExpanded 的变化
+        private static void OnIsExpandedChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        {
+            if (d is DateCard card)
+            {
+                // 通知属性变更，触发按钮图标更新
+                card.OnPropertyChanged(nameof(IsExpanded));
+                
+                // 可以在这里添加额外的状态同步逻辑
+                System.Diagnostics.Debug.WriteLine($"IsExpanded changed to: {e.NewValue}");
+            }
+        }
+
+        // 添加窗口大小改变事件处理
+        protected override void OnRenderSizeChanged(SizeChangedInfo sizeInfo)
+        {
+            base.OnRenderSizeChanged(sizeInfo);
+            
+            // 如果弹出框是打开的，重新计算位置
+            if (TaskPopup.IsOpen)
+            {
+                CalculatePopupPosition();
+            }
+        }
+
+        // 添加窗口位置改变事件处理
+        protected override void OnRender(DrawingContext drawingContext)
+        {
+            base.OnRender(drawingContext);
+            
+            // 如果弹出框是打开的，重新计算位置
+            if (TaskPopup.IsOpen)
+            {
+                CalculatePopupPosition();
+            }
         }
 
         /// <summary>

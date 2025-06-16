@@ -3,16 +3,14 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-             xmlns:conv="clr-namespace:TimeController.Converters"
+             xmlns:converters="clr-namespace:TimeController.Converters;assembly=TimeController"
              xmlns:uiControls="clr-namespace:iNKORE.UI.WPF.Modern.Controls;assembly=iNKORE.UI.WPF.Modern"
              mc:Ignorable="d"
              d:DesignHeight="100" d:DesignWidth="100">
 
     <UserControl.Resources>
-        <conv:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter"/>
-        <conv:CompletedToTextDecorationConverter x:Key="CompletedToTextDecorationConverter"/>
+        <BooleanToVisibilityConverter x:Key="BoolToVisibilityConverter"/>
     </UserControl.Resources>
-    
     <Border x:Name="CardBorder"
             BorderBrush="#DDDDDD"
             BorderThickness="1"
@@ -72,8 +70,7 @@
                                    TextTrimming="CharacterEllipsis"
                                    VerticalAlignment="Center"
                                    MaxWidth="{Binding ActualWidth, ElementName=CardBorder}"
-                                   ToolTip="{Binding Name}"
-                                   TextDecorations="{Binding Status, Converter={StaticResource CompletedToTextDecorationConverter}}"/>
+                                   ToolTip="{Binding Name}"/>
                     </DataTemplate>
                 </ItemsControl.ItemTemplate>
                 </ItemsControl>
@@ -97,31 +94,87 @@
             </Button>
 
 
-            <!-- Popup showing additional task details -->
+            <!-- Floating Task Panel -->
             <Popup x:Name="TaskPopup"
-           PlacementTarget="{Binding ElementName=CardBorder}"
-           Placement="AbsolutePoint"
-           HorizontalOffset="0"
-           VerticalOffset="8"
-           AllowsTransparency="True"
-           StaysOpen="False"
-           PopupAnimation="Fade"
-           DataContext="{Binding RelativeSource={RelativeSource AncestorType=UserControl}}"
-           Closed="TaskPopup_Closed">
-                <Border Background="#CCFFFFFF"
-                CornerRadius="6"
-                Padding="8">
+                   PlacementTarget="{Binding ElementName=CardBorder}"
+                   Placement="Bottom"
+                   HorizontalOffset="0"
+                   VerticalOffset="8"
+                   AllowsTransparency="True"
+                   StaysOpen="True"
+                   PopupAnimation="Fade"
+                   DataContext="{Binding RelativeSource={RelativeSource AncestorType=UserControl}}"
+                   Closed="TaskPopup_Closed">
+                <Border Background="White"
+                        CornerRadius="8"
+                        MinWidth="200"
+                        MaxWidth="300"
+                        MaxHeight="400">
                     <Border.Effect>
-                        <DropShadowEffect BlurRadius="8" ShadowDepth="0" Opacity="0.25"/>
+                        <DropShadowEffect BlurRadius="12" 
+                                        ShadowDepth="2" 
+                                        Opacity="0.2"
+                                        Direction="270"/>
                     </Border.Effect>
-                    <ItemsControl ItemsSource="{Binding Tasks}">
-                        <ItemsControl.ItemTemplate>
-                            <DataTemplate>
-                                <TextBlock Text="{Binding Name}" FontSize="12" Margin="2,0"
-                                           TextDecorations="{Binding Status, Converter={StaticResource CompletedToTextDecorationConverter}}"/>
-                            </DataTemplate>
-                        </ItemsControl.ItemTemplate>
-                    </ItemsControl>
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                        </Grid.RowDefinitions>
+                        
+                        <!-- Header -->
+                        <Border Background="#F5F5F5" 
+                                CornerRadius="8,8,0,0"
+                                Padding="12,8">
+                            <TextBlock Text="任务列表" 
+                                     FontSize="14" 
+                                     FontWeight="SemiBold"
+                                     Foreground="#333333"/>
+                        </Border>
+
+                        <!-- Task List -->
+                        <ScrollViewer Grid.Row="1" 
+                                    MaxHeight="300"
+                                    VerticalScrollBarVisibility="Auto"
+                                    Padding="12,8">
+                            <ItemsControl ItemsSource="{Binding Tasks}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Border Margin="0,4" 
+                                                Padding="8,6"
+                                                Background="#F8F8F8"
+                                                CornerRadius="4">
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                </Grid.ColumnDefinitions>
+                                                <StackPanel>
+                                                    <TextBlock Text="{Binding Name}" 
+                                                             FontSize="13"
+                                                             FontWeight="Medium"
+                                                             Foreground="#333333"/>
+                                                    <TextBlock Text="{Binding Note}" 
+                                                             FontSize="11"
+                                                             Foreground="#666666"
+                                                             TextTrimming="CharacterEllipsis"
+                                                             Margin="0,2,0,0"
+                                                             Visibility="{Binding Note, Converter={StaticResource StringToVisibilityConverter}}"/>
+                                                </StackPanel>
+                                                <TextBlock Grid.Column="1"
+                                                         Text="{Binding StartTime, StringFormat='{}{0:HH:mm}'}"
+                                                         FontSize="11"
+                                                         Foreground="#888888"
+                                                         VerticalAlignment="Center"
+                                                         Margin="8,0,0,0"
+                                                         Visibility="{Binding StartTime, Converter={StaticResource NullToVisibilityConverter}}"/>
+                                            </Grid>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </ScrollViewer>
+                    </Grid>
                 </Border>
             </Popup>
 

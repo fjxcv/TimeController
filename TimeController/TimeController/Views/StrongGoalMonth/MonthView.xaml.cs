@@ -15,7 +15,8 @@ using System.Windows.Navigation;
 using System.Windows.Shapes;
 using Page = iNKORE.UI.WPF.Modern.Controls.Page;
 using TimeController.ViewModels;
-
+using TimeController.Models;
+using System.Collections.ObjectModel;
 
 namespace TimeController.Views.StrongGoalMonth
 {
@@ -25,11 +26,32 @@ namespace TimeController.Views.StrongGoalMonth
     public partial class MonthView : Page
     {
         private MonthViewModel _viewModel;
+        private bool _hasCheckedTodayTasks = false;
+
         public MonthView()
         {
             InitializeComponent();
             _viewModel = new MonthViewModel();
             DataContext = _viewModel;
+
+            // 订阅任务提醒事件
+            _viewModel.TodayTasksFound += OnTodayTasksFound;
+        }
+
+        private void OnTodayTasksFound(object? sender, ObservableCollection<TaskModel> tasks)
+        {
+            // 使用 Dispatcher 确保在 UI 线程上显示对话框
+            Dispatcher.BeginInvoke(new Action(() =>
+            {
+                var dialog = new TodayTasksReminderDialog(tasks);
+                dialog.ShowDialog();
+            }));
+        }
+
+        protected override void OnNavigatedTo(NavigationEventArgs e)
+        {
+            base.OnNavigatedTo(e);
+            _viewModel.CheckTodayTasks();
         }
 
         private void CalendarScrollViewer_ScrollChanged(object sender, ScrollChangedEventArgs e)
@@ -59,6 +81,5 @@ namespace TimeController.Views.StrongGoalMonth
                 }
             }
         }
-
     }
 }

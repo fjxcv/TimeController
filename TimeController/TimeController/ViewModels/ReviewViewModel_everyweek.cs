@@ -158,7 +158,6 @@ namespace TimeController.ViewModels
             //清空任务
             WeeklyCompletedTasks.Clear();
             WeeklyUncompletedTasks.Clear();
-
             var weekEnd = weekStart.AddDays(7); // 半开区间 [weekStart, weekEnd)
             var tasksThisWeek = await _taskService.GetTasksForDateRange(weekStart, weekEnd);
             var allHistory = await _taskService.GetAllTasksAsync();

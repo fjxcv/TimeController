@@ -1,19 +1,15 @@
-﻿using System;
+using System;
 using System.Globalization;
 using System.Windows;
 using System.Windows.Data;
 
 namespace TimeController.Converters
 {
-    public class StringToVisibilityConverter : IValueConverter
+    public class NullToVisibilityConverter : IValueConverter
     {
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
-            if (value is string stringValue)
-            {
-                return string.IsNullOrEmpty(stringValue) ? Visibility.Collapsed : Visibility.Visible;
-            }
-            return Visibility.Collapsed;
+            return value == null ? Visibility.Collapsed : Visibility.Visible;
         }
 
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)

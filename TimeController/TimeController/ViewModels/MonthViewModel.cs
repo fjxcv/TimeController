@@ -10,6 +10,7 @@ using TimeController.Models;
 using TimeController.Views;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using System.Diagnostics;
 using static SkiaSharp.HarfBuzz.SKShaper;
 
@@ -37,12 +38,13 @@ namespace TimeController.ViewModels
         public int Year
         {
             get => _year;
-            set 
+            set
             {
                 _year = value;
                 OnPropertyChanged();
                 UpdateCalendar(); // 年份变化时更新日历
                 LoadTasksForCurrentMonth();
+                OnPropertyChanged(nameof(IsCurrentMonth)); // 通知当前月份状态变化
             }
         }
 
@@ -51,18 +53,22 @@ namespace TimeController.ViewModels
         public int Month
         {
             get => _month;
-            set 
+            set
             {
                 _month = value;
                 OnPropertyChanged();
                 UpdateCalendar(); // 月份变化时更新日历
                 LoadTasksForCurrentMonth();
+                OnPropertyChanged(nameof(IsCurrentMonth)); // 通知当前月份状态变化
             }
         }
 
+        // 是否当前月份
+        public bool IsCurrentMonth => Year == DateTime.Today.Year && Month == DateTime.Today.Month;
+
         // 年份显示文本（格式化）
         public string YearText => $"{Year}年";
-        
+
         // 月份显示文本（格式化）
         public string MonthText => $"{Month}月";
 
@@ -73,6 +79,25 @@ namespace TimeController.ViewModels
         public ICommand NextMonthCommand { get; }     // 下一月
         public ICommand ReviewCommand { get; }        // 进入复盘
         public ICommand DateClickCommand { get; }     // 日期点击
+        public ICommand GoToCurrentMonthCommand { get; } // 回到当前月份
+
+        private DateTime _currentMonth;
+        public DateTime CurrentMonth
+        {
+            get => _currentMonth;
+            set
+            {
+                if (_currentMonth != value)
+                {
+                    _currentMonth = value;
+                    OnPropertyChanged();
+                    OnCurrentMonthChanged(value);
+                }
+            }
+        }
+
+        public event EventHandler<DateTime>? CurrentMonthChanged;
+        public event EventHandler<ObservableCollection<TaskModel>>? TodayTasksFound;
 
         /// <summary>
         /// 构造函数
@@ -89,10 +114,13 @@ namespace TimeController.ViewModels
             NextMonthCommand = new RelayCommand(_ => ChangeMonth(1));
             ReviewCommand = new RelayCommand(_ => ShowReview());
             DateClickCommand = new RelayCommand(date => ShowAddTaskDialog((DateTime)date));
+            GoToCurrentMonthCommand = new RelayCommand(_ => GoToCurrentMonth());
 
             // 初始化日历
             UpdateCalendar();
             LoadTasksForCurrentMonth();
+
+            _currentMonth = DateTime.Today;
         }
 
         /// <summary>
@@ -103,7 +131,7 @@ namespace TimeController.ViewModels
             int newYear = Year + delta;
             // 检查年份范围
             if (newYear < MinYear || newYear > MaxYear) return;
-            
+
             Year = newYear;
             OnPropertyChanged(nameof(YearText)); // 通知UI更新年份显示
         }
@@ -114,7 +142,7 @@ namespace TimeController.ViewModels
         private void ChangeMonth(int delta)
         {
             int newMonth = Month + delta;
-            
+
             // 处理跨年情况
             if (newMonth < 1) // 上一年的12月
             {
@@ -134,9 +162,23 @@ namespace TimeController.ViewModels
                 }
                 else return; // 已达最大年份
             }
-            
+
             Month = newMonth;
             OnPropertyChanged(nameof(MonthText)); // 通知UI更新月份显示
+            OnPropertyChanged(nameof(YearText)); // 通知UI更新年份显示
+        }
+
+        /// <summary>
+        /// 回到当前月份
+        /// </summary>
+        private void GoToCurrentMonth()
+        {
+            var today = DateTime.Today;
+            Year = today.Year;
+            Month = today.Month;
+            OnPropertyChanged(nameof(YearText));
+            OnPropertyChanged(nameof(MonthText));
+            OnPropertyChanged(nameof(IsCurrentMonth));
         }
 
         /// <summary>
@@ -147,7 +189,7 @@ namespace TimeController.ViewModels
             CalendarDays.Clear();
             var firstDay = new DateTime(Year, Month, 1);
             int daysInMonth = DateTime.DaysInMonth(Year, Month);
-            
+
             // 第一个日期前需要的空格数
             int startOffset = ((int)firstDay.DayOfWeek + 6) % 7;
 
@@ -159,6 +201,7 @@ namespace TimeController.ViewModels
             for (int day = 1; day <= daysInMonth; day++)
                 CalendarDays.Add(new DateTime(Year, Month, day));
         }
+
         private async void LoadTasksForCurrentMonth()
         {
             TasksByDate.Clear();
@@ -233,9 +276,40 @@ namespace TimeController.ViewModels
             AddTaskToDictionary(task);
         }
 
+        private void OnCurrentMonthChanged(DateTime newMonth)
+        {
+            CurrentMonthChanged?.Invoke(this, newMonth);
+        }
+
+        public void NavigateToToday()
+        {
+            CurrentMonth = DateTime.Today;
+            CheckTodayTasks();
+        }
+
+        public async void CheckTodayTasks()
+        {
+            if (CurrentMonth.Year == DateTime.Now.Year && 
+                CurrentMonth.Month == DateTime.Now.Month)
+            {
+                var todayTasks = await GetTasksForDate(DateTime.Today);
+                if (todayTasks?.Any() == true)
+                {
+                    TodayTasksFound?.Invoke(this, todayTasks);
+                }
+            }
+        }
+
+        public async Task<ObservableCollection<TaskModel>?> GetTasksForDate(DateTime date)
+        {
+            var tasks = await _taskService.GetTasksForDateRange(date, date);
+            var strongTasks = tasks.Where(t => t.Mode == TaskMode.Strong).ToList();
+            return strongTasks.Any() ? new ObservableCollection<TaskModel>(strongTasks.OrderBy(t => t.StartTime ?? TimeSpan.Zero)) : null;
+        }
+
         // INotifyPropertyChanged 实现
         public event PropertyChangedEventHandler? PropertyChanged;
-        
+
         /// <summary>
         /// 属性变更通知方法
         /// </summary>

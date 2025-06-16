@@ -5,15 +5,12 @@ using System.Windows.Data;
 
 namespace TimeController.Converters
 {
-    public class StringToVisibilityConverter : IValueConverter
+    public class InverseBoolToVisibilityConverter : IValueConverter
     {
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
-            if (value is string stringValue)
-            {
-                return string.IsNullOrEmpty(stringValue) ? Visibility.Collapsed : Visibility.Visible;
-            }
-            return Visibility.Collapsed;
+            bool boolValue = value is bool b && b;
+            return boolValue ? Visibility.Collapsed : Visibility.Visible;
         }
 
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
@@ -21,4 +18,4 @@ namespace TimeController.Converters
             throw new NotImplementedException();
         }
     }
-} 
+}

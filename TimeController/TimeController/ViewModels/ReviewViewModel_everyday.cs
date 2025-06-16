@@ -112,6 +112,11 @@ namespace TimeController.ViewModels
             NavigateToEverydayCommand = new RelayCommand(_ => { }); // 当前页，不跳转
             NavigateToEveryweekCommand = new RelayCommand(_ => NavigateToEveryweekRequested?.Invoke());
 
+            PostponeTaskCommand = new RelayCommand<TaskModel>(PostponeTask);
+            AbandonTaskCommand = new RelayCommand<TaskModel>(AbandonTask);
+            BatchProcessCommand = new RelayCommand<object>(BatchProcess);
+
+
             ReviewReasons = new ObservableCollection<string>
             {
                 "时间安排问题",
@@ -290,6 +295,7 @@ namespace TimeController.ViewModels
             await _taskService.UpdateTaskAsync(task);
 
             LoadTasksForDate(SelectedDate ?? DateTime.Today);
+
         }
 
         private void OnTaskSaved(TaskModel task)
@@ -299,6 +305,23 @@ namespace TimeController.ViewModels
             {
                 LoadTasksForDate(current);
             }
+        }
+
+
+
+        private void PostponeTask(TaskModel task)
+        {
+            // TODO: 实现推迟任务的逻辑
+        }
+
+        private void AbandonTask(TaskModel task)
+        {
+            // TODO: 实现放弃任务的逻辑
+        }
+
+        private void BatchProcess(object parameter)
+        {
+            // TODO: 实现批量处理任务的逻辑
         }
 
         public event PropertyChangedEventHandler? PropertyChanged;

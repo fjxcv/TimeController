@@ -22,12 +22,15 @@
             <converters:BoolToStringConverter x:Key="BoolToStringConverter"/>
             <converters:ColumnToVisibilityConverter x:Key="ColumnToVisibilityConverter"/>
             <converters:BoolToColorConverter x:Key="BoolToColorConverter"/>
-            <converters:StringToVisibilityConverter x:Key="StringToVisibilityConverter"/>
             <converters:NoteToTeacherConverter x:Key="NoteToTeacherConverter"/>
             <converters:NoteToLocationConverter x:Key="NoteToLocationConverter"/>
             <converters:ExpandedToSymbolConverter x:Key="ExpandedToSymbolConverter"/>
             <converters:TimeSpanToStringConverter x:Key="TimeSpanToStringConverter"/>
+            <converters:StringToVisibilityConverter x:Key="StringToVisibilityConverter" />
+            <converters:NullToVisibilityConverter x:Key="NullToVisibilityConverter" />
+            <converters:InverseBoolToVisibilityConverter x:Key="InverseBoolToVisibilityConverter"/>
 
         </ResourceDictionary>
+
     </Application.Resources>
 </Application>

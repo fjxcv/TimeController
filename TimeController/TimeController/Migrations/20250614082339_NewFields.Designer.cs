@@ -11,8 +11,8 @@ using TimeController.Services;
 namespace TimeController.Migrations
 {
     [DbContext(typeof(TaskDbContext))]
-    [Migration("20250522064653_InitialCreate")]
-    partial class InitialCreate
+    [Migration("20250614082339_NewFields")]
+    partial class NewFields
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
