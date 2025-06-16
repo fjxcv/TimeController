@@ -17,6 +17,8 @@
         <local:AbandonEnabledConverter x:Key="AbandonEnabledConverter"/>
         <local:BoolToTimeTextConverter x:Key="BoolToTimeTextConverter"/>
         <local:CountToVisibilityConverter x:Key="CountToVisibilityConverter"/>
+        <local:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter"/>
+
 
         <!-- 卡片样式 -->
         <Style x:Key="ReviewCardStyle" TargetType="Border">
@@ -133,7 +135,7 @@
         </Grid.RowDefinitions>
 
         <!-- 顶部区域：标题 + 日期选择 -->
-        <Grid Grid.Row="0" Margin="20,10,20,0">
+        <Grid Grid.Row="0" Margin="20,10,20,10">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*"/>
                 <!-- 左：标题+日期 -->
@@ -260,7 +262,37 @@
 
                                                 <TextBlock Grid.Row="0" Text="{Binding PlannedDate, StringFormat='🗓 {0:yyyy-MM-dd}'}" FontSize="14" Margin="0,0,0,5"/>
                                                 <TextBlock Grid.Row="1" Text="{Binding Name}" FontSize="18" FontWeight="Bold" Margin="0,0,0,5"/>
-                                                <TextBlock Grid.Row="2" Text="{Binding IsAllDay, Converter={StaticResource BoolToTimeTextConverter}}" FontSize="14" Margin="0,0,0,10"/>
+                                                <!-- 1. 全天 或 “⏱ 开始时间 - ” -->
+                                                <TextBlock Grid.Row="2"
+                                                           FontSize="14" Margin="0,0,0,10">
+                                                    <TextBlock.Style>
+                                                        <Style TargetType="TextBlock">
+                                                            <Setter Property="Text" Value=""/>
+                                                            <Style.Triggers>
+                                                                <!-- 全天 -->
+                                                                <DataTrigger Binding="{Binding IsAllDay}" Value="True">
+                                                                    <Setter Property="Text" Value="🌙 全天"/>
+                                                                </DataTrigger>
+                                                                <!-- 具体开始时间 -->
+                                                                <DataTrigger Binding="{Binding IsAllDay}" Value="False">
+                                                                    <Setter Property="Text"
+                                                                            Value="{Binding StartTime, StringFormat=⏱ {0:hh\\:mm} - }"/>
+                                                                </DataTrigger>
+                                                            </Style.Triggers>
+                                                        </Style>
+                                                    </TextBlock.Style>
+                                                </TextBlock>
+
+                                                <!-- 2. 结束时间，只在非全天时可见 -->
+                                                <TextBlock Grid.Row="2"
+                                                           Text="{Binding EndTime, StringFormat={}{0:hh\\:mm}}"
+                                                           FontSize="14" Margin="74,0,0,10"> 
+                                                    <TextBlock.Visibility>
+                                                        <Binding Path="IsAllDay"
+                                                                 Converter="{StaticResource BoolToVisibilityConverter}"
+                                                                 ConverterParameter="False"/>     
+                                                    </TextBlock.Visibility>
+                                                </TextBlock>
 
                                                 <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Right">
                                                     <Button Content="{Binding Status, Converter={StaticResource PostponeTextConverter}}" Command="{Binding DataContext.ShowPostponeMenuCommand, RelativeSource={RelativeSource AncestorType=Page}}" 

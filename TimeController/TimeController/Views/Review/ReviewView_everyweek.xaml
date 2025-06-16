@@ -4,7 +4,7 @@
       xmlns:ui="http://schemas.inkore.net/lib/ui/wpf/modern"
       xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
       xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
-      xmlns:local="clr-namespace:TimeController.Views.Review"
+      xmlns:local="clr-namespace:TimeController.Helpers"
       xmlns:lvc="clr-namespace:LiveChartsCore.SkiaSharpView.WPF;assembly=LiveChartsCore.SkiaSharpView.WPF"
       mc:Ignorable="d" 
       d:DesignHeight="764" d:DesignWidth="1104"
@@ -215,12 +215,15 @@
                                            FontWeight="SemiBold"
                                            Foreground="#222"
                                            Margin="0,0,0,15"/>
-                                <TextBlock Text="{Binding Message}"
-                                           FontSize="18"
-                                           Foreground="#444"
-                                           TextWrapping="Wrap"/>
+                                    <RichTextBox local:RichTextBoxHelper.BindableDocument="{Binding FormattedMessage}"
+                                             x:Name="myRichTextBox"
+                                             FontSize="17"
+                                             Foreground="#444"
+                                             IsReadOnly="True"
+                                             BorderThickness="0"
+                                             Background="Transparent"/>
 
-                            </StackPanel>
+                                </StackPanel>
                             </Grid>
                         </Border>
                     </DataTemplate>
@@ -252,7 +255,7 @@
                                     <Border Style="{StaticResource ListItemBorderStyle}">
                                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Stretch">
                                         <TextBlock Text="{Binding Name}" Width="200" FontSize="18" Margin="20,0,0,0"/>
-                                            <TextBlock Text="{Binding StatusText}" Margin="100,0,0,0" HorizontalAlignment="Right" FontSize="18"/>
+                                            <TextBlock Text="{Binding StatusShownText}" Margin="100,0,0,0" HorizontalAlignment="Right" FontSize="18"/>
                                     </StackPanel>
                                 </Border>
                             </DataTemplate>

@@ -11,6 +11,25 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="Resources\fire1.png" />
+    <None Remove="Resources\fire2.png" />
+    <None Remove="Resources\fire3.png" />
+    <None Remove="Resources\fire4.png" />
+    <None Remove="Resources\fireworks.wav" />
+    <None Remove="Resources\reward.png" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Remove="appsettings.json" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="appsettings.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="CsvHelper" Version="33.1.0" />
     <PackageReference Include="DevExpress.Data" Version="24.2.7" />
     <PackageReference Include="DevExpress.WPF.ProjectTemplates" Version="24.2.7" />
@@ -32,12 +51,24 @@
     <PackageReference Include="Microsoft.Extensions.Hosting" Version="9.0.5" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
     <PackageReference Include="NPOI" Version="2.7.3" />
+    <PackageReference Include="OpenTK" Version="3.3.1" />
   </ItemGroup>
 
   <ItemGroup>
     <Folder Include="Views\Components\" />
     <Folder Include="Styles\" />
     <Folder Include="Assets\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Resource Include="Resources\fire1.png" />
+    <Resource Include="Resources\fire2.png" />
+    <Resource Include="Resources\fire3.png" />
+    <Resource Include="Resources\fire4.png" />
+    <Content Include="Resources\fireworks.wav">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Resource Include="Resources\reward.png" />
   </ItemGroup>
 
 </Project>

@@ -10,8 +10,11 @@
             <ResourceDictionary.MergedDictionaries>
                 <ui:ThemeResources/>
                 <ui:XamlControlsResources/>
+                <!-- 再插入默认（Light）或切换时会动态替换的自定义字典 -->
+                <ResourceDictionary Source="Themes/LightTheme.xaml"/>
             </ResourceDictionary.MergedDictionaries>
 
+            <converters:DateTasksMultiConverter x:Key="DateTasksMultiConverter"/>
             <converters:BoolToHiddenConverter x:Key="BoolToHiddenConverter" />
             <converters:BooleanToAngleConverter x:Key="BooleanToAngleConverter" />
             <converters:BoolToVisibilityConverter x:Key="BoolToVisibility" />
@@ -19,15 +22,18 @@
             <converters:BoolToStringConverter x:Key="BoolToStringConverter"/>
             <converters:ColumnToVisibilityConverter x:Key="ColumnToVisibilityConverter"/>
             <converters:BoolToColorConverter x:Key="BoolToColorConverter"/>
-            <converters:StringToVisibilityConverter x:Key="StringToVisibilityConverter"/>
             <converters:NoteToTeacherConverter x:Key="NoteToTeacherConverter"/>
             <converters:NoteToLocationConverter x:Key="NoteToLocationConverter"/>
             <converters:ExpandedToSymbolConverter x:Key="ExpandedToSymbolConverter"/>
             <converters:TimeSpanToStringConverter x:Key="TimeSpanToStringConverter"/>
+            <converters:StringToVisibilityConverter x:Key="StringToVisibilityConverter" />
+            <converters:NullToVisibilityConverter x:Key="NullToVisibilityConverter" />
+            <converters:InverseBoolToVisibilityConverter x:Key="InverseBoolToVisibilityConverter"/>
             <converters:NoteToTeacherDisplayConverter x:Key="NoteToTeacherDisplayConverter" />
             <converters:NoteToLocationDisplayConverter x:Key="NoteToLocationDisplayConverter" />
             <converters:CompletedToTextDecorationConverter x:Key="CompletedToTextDecorationConverter"/>
 
         </ResourceDictionary>
+
     </Application.Resources>
 </Application>

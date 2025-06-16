@@ -537,6 +537,7 @@ namespace TimeController.Views.StrongGoalWeek
         }
 
 
+
         // 关闭详情卡片时，如果点击的不是卡片本身或其子元素，则隐藏卡片
         public void CloseTaskDetailsCardIfOutside(DependencyObject clickedElement)
         {
@@ -878,6 +879,18 @@ namespace TimeController.Views.StrongGoalWeek
             }
         }
 
+        private void TodayButton_Click(object sender, RoutedEventArgs e)
+        {
+            _viewModel.CurrentDate = DateTime.Today;
+
+            int todayIndex = _viewModel.DateColumns.ToList().FindIndex(c => c.IsToday);
+            if (todayIndex >= 0)
+            {
+                HighlightColumn(todayIndex);
+                double colWidth = WeekContentGrid.ActualWidth / 7;
+                TimeTasksScrollViewer.ScrollToHorizontalOffset(colWidth * todayIndex);
+            }
+        }
 
     }
 

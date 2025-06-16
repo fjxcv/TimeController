@@ -3,30 +3,184 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:converters="clr-namespace:TimeController.Converters;assembly=TimeController"
+             xmlns:uiControls="clr-namespace:iNKORE.UI.WPF.Modern.Controls;assembly=iNKORE.UI.WPF.Modern"
              mc:Ignorable="d"
              d:DesignHeight="100" d:DesignWidth="100">
+
+    <UserControl.Resources>
+        <BooleanToVisibilityConverter x:Key="BoolToVisibilityConverter"/>
+    </UserControl.Resources>
     <Border x:Name="CardBorder"
-            BorderBrush="Gray"
+            BorderBrush="#DDDDDD"
             BorderThickness="1"
             CornerRadius="8"
+            Margin="4"
             Cursor="Hand"
             MouseLeftButtonUp="Border_MouseLeftButtonUp">
         <Border.Style>
             <Style TargetType="Border">
-                <Setter Property="Background" Value="White"/>
+                <Setter Property="Background" Value="#F8F8F8"/>
+                <Setter Property="Effect">
+                    <Setter.Value>
+                        <DropShadowEffect BlurRadius="6" ShadowDepth="0" Opacity="0.1"/>
+                    </Setter.Value>
+                </Setter>
                 <Style.Triggers>
                     <DataTrigger Binding="{Binding IsToday, RelativeSource={RelativeSource AncestorType=UserControl}}" Value="True">
-                        <Setter Property="Background" Value="#FFEBEBEB"/> 
+                        <Setter Property="Background" Value="#CCE4FF"/>
                     </DataTrigger>
+
+                    <Trigger Property="IsMouseOver" Value="True">
+                        <Setter Property="Background" Value="#E4E4E4"/>
+                    </Trigger>
+                    
                 </Style.Triggers>
             </Style>
         </Border.Style>
         <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
             <TextBlock x:Name="DateText"
                       HorizontalAlignment="Center"
                       VerticalAlignment="Top"
                       Margin="0,5,0,0"
                       FontSize="20"/>
+
+            <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Height="60">
+                <ItemsControl
+                          ItemsSource="{Binding DisplayedTasks, RelativeSource={RelativeSource AncestorType=UserControl}}">
+                
+                <ItemsControl.ItemContainerStyle>
+                    <Style TargetType="ContentPresenter">
+                        <Setter Property="HorizontalAlignment" Value="Center"/>
+                        <Setter Property="VerticalAlignment" Value="Center"/>
+                    </Style>
+                </ItemsControl.ItemContainerStyle>
+                
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <TextBlock Text="{Binding Name}"
+                                   FontSize="12"
+                                   Margin="2,0"
+                                   TextWrapping="NoWrap"
+                                   TextTrimming="CharacterEllipsis"
+                                   VerticalAlignment="Center"
+                                   MaxWidth="{Binding ActualWidth, ElementName=CardBorder}"
+                                   ToolTip="{Binding Name}"/>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </ScrollViewer>
+            <Button Grid.Row="2"
+                    Margin="0,2,0,2"
+                    Background="Transparent"
+                    BorderThickness="0"
+                    Click="ToggleExpand"
+                    Visibility="{Binding HasMoreTasks, RelativeSource={RelativeSource AncestorType=UserControl}, Converter={StaticResource BoolToVisibilityConverter}}">
+                <Button.Style>
+                    <Style TargetType="Button">
+                        <Setter Property="Content" Value="&#x25BC;"/>
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding IsExpanded, RelativeSource={RelativeSource AncestorType=UserControl}}" Value="True">
+                                <Setter Property="Content" Value="&#x25B2;"/>
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </Button.Style>
+            </Button>
+
+
+            <!-- Floating Task Panel -->
+            <Popup x:Name="TaskPopup"
+                   PlacementTarget="{Binding ElementName=CardBorder}"
+                   Placement="Bottom"
+                   HorizontalOffset="0"
+                   VerticalOffset="8"
+                   AllowsTransparency="True"
+                   StaysOpen="True"
+                   PopupAnimation="Fade"
+                   DataContext="{Binding RelativeSource={RelativeSource AncestorType=UserControl}}"
+                   Closed="TaskPopup_Closed">
+                <Border Background="White"
+                        CornerRadius="8"
+                        MinWidth="200"
+                        MaxWidth="300"
+                        MaxHeight="400">
+                    <Border.Effect>
+                        <DropShadowEffect BlurRadius="12" 
+                                        ShadowDepth="2" 
+                                        Opacity="0.2"
+                                        Direction="270"/>
+                    </Border.Effect>
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                        </Grid.RowDefinitions>
+                        
+                        <!-- Header -->
+                        <Border Background="#F5F5F5" 
+                                CornerRadius="8,8,0,0"
+                                Padding="12,8">
+                            <TextBlock Text="任务列表" 
+                                     FontSize="14" 
+                                     FontWeight="SemiBold"
+                                     Foreground="#333333"/>
+                        </Border>
+
+                        <!-- Task List -->
+                        <ScrollViewer Grid.Row="1" 
+                                    MaxHeight="300"
+                                    VerticalScrollBarVisibility="Auto"
+                                    Padding="12,8">
+                            <ItemsControl ItemsSource="{Binding Tasks}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Border Margin="0,4" 
+                                                Padding="8,6"
+                                                Background="#F8F8F8"
+                                                CornerRadius="4">
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                </Grid.ColumnDefinitions>
+                                                <StackPanel>
+                                                    <TextBlock Text="{Binding Name}" 
+                                                             FontSize="13"
+                                                             FontWeight="Medium"
+                                                             Foreground="#333333"/>
+                                                    <TextBlock Text="{Binding Note}" 
+                                                             FontSize="11"
+                                                             Foreground="#666666"
+                                                             TextTrimming="CharacterEllipsis"
+                                                             Margin="0,2,0,0"
+                                                             Visibility="{Binding Note, Converter={StaticResource StringToVisibilityConverter}}"/>
+                                                </StackPanel>
+                                                <TextBlock Grid.Column="1"
+                                                         Text="{Binding StartTime, StringFormat='{}{0:HH:mm}'}"
+                                                         FontSize="11"
+                                                         Foreground="#888888"
+                                                         VerticalAlignment="Center"
+                                                         Margin="8,0,0,0"
+                                                         Visibility="{Binding StartTime, Converter={StaticResource NullToVisibilityConverter}}"/>
+                                            </Grid>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </ScrollViewer>
+                    </Grid>
+                </Border>
+            </Popup>
+
+
         </Grid>
     </Border>
+    
+    
 </UserControl>

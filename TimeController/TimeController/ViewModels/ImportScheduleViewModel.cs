@@ -13,6 +13,7 @@ using OfficeOpenXml;
 using TimeController.Views.StrongGoalWeek;
 using TimeController;
 
+using MessageBox = iNKORE.UI.WPF.Modern.Controls.MessageBox;
 
 namespace TimeController.ViewModels
 {
@@ -268,6 +269,8 @@ namespace TimeController.ViewModels
         //传递学期开始日期和周数
         public event Action<DateTime, int> SemesterInfoUpdated;
 
+        // 在 ImportScheduleViewModel.cs 中修改 ProcessImportedCourses 方法
+
         private async Task ProcessImportedCourses(List<Course> courses)
         {
             if (courses.Count == 0)
@@ -313,6 +316,33 @@ namespace TimeController.ViewModels
                 courses.RemoveAll(c => string.IsNullOrWhiteSpace(c.Name) || c.StartTime >= c.EndTime);
             }
 
+            // 检查是否已存在课程
+            bool hasExistingCourses = false;
+            try
+            {
+                var existingCourses = await _taskService.GetAllCourseTasksAsync();
+                hasExistingCourses = existingCourses.Count > 0;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"检查现有课程时出错: {ex.Message}");
+            }
+
+            // 如果存在课程，提示用户选择替换还是添加
+            bool replaceCourses = false;
+            if (hasExistingCourses)
+            {
+                var result = MessageBox.Show(
+                    "检测到系统中已有课程数据，是否要替换现有课表？\n\n" +
+                    "• 点击\"是\"：删除所有现有课程，仅保留新导入的课程\n" +
+                    "• 点击\"否\"：保留现有课程，将新课程添加到现有课表中",
+                    "课表导入确认",
+                    MessageBoxButton.YesNo,
+                    MessageBoxImage.Question);
+
+                replaceCourses = (result == MessageBoxResult.Yes);
+            }
+
             // 保存有效课程时，同时保存学期周数
             ImportStatus = "正在保存课程...";
             try
@@ -323,6 +353,18 @@ namespace TimeController.ViewModels
                     {
                         try
                         {
+                            // 如果选择替换，先删除所有现有课程
+                            if (replaceCourses && hasExistingCourses)
+                            {
+                                var existingCourses = await _taskService.GetAllCourseTasksAsync();
+                                foreach (var courseTask in existingCourses)
+                                {
+                                    await _taskService.DeleteTaskAsync(courseTask);
+                                }
+                                Console.WriteLine($"已删除所有现有课程 ({existingCourses.Count} 个)");
+                            }
+
+                            // 保存新课程
                             await _dbService.SaveCourses(courses, SemesterStartDate);
                             _dbService.TaskService.CommitTransaction();
 
@@ -338,10 +380,11 @@ namespace TimeController.ViewModels
                     }
                 });
 
-                // 成功消息中也显示学期周数信息
-                MessageBox.Show($"成功导入 {courses.Count} 门课程！\n开学日期: {SemesterStartDate:yyyy年M月d日}\n学期周数: {SemesterWeeks}周",
+                // 根据操作类型显示不同的成功消息
+                string operationMessage = replaceCourses ? "替换" : "添加";
+                MessageBox.Show($"成功{operationMessage} {courses.Count} 门课程！\n开学日期: {SemesterStartDate:yyyy年M月d日}\n学期周数: {SemesterWeeks}周",
                     "导入成功", MessageBoxButton.OK, MessageBoxImage.Information);
-                ImportStatus = $"已导入 {courses.Count} 门课程";
+                ImportStatus = $"已{operationMessage} {courses.Count} 门课程";
 
                 _hasImportedCourses = true;
 
@@ -358,6 +401,7 @@ namespace TimeController.ViewModels
                 ImportStatus = "保存失败";
             }
         }
+
 
         // 下载模板
         private void DownloadTemplate()
@@ -428,7 +472,8 @@ namespace TimeController.ViewModels
                 "     第4列：结束时间（格式如9:40）\n" +
                 "     第5列：上课地点\n" +
                 "     第6列：教师姓名\n\n" +
-                "3. 您可以下载模板文件作为参考\n\n" ,
+                "3. 您可以下载模板文件作为参考\n\n" +
+                "4. 使用模板文件导入时填写说明需删除\n\n",
                 "导入帮助",
                 MessageBoxButton.OK,
                 MessageBoxImage.Information);

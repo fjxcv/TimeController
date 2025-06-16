@@ -11,8 +11,8 @@ using TimeController.Services;
 namespace TimeController.Migrations
 {
     [DbContext(typeof(TaskDbContext))]
-    [Migration("20250521080612_AddPostponeSupport")]
-    partial class AddPostponeSupport
+    [Migration("20250612065146_Sync")]
+    partial class Sync
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -25,6 +25,9 @@ namespace TimeController.Migrations
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
+
+                    b.Property<DateTime?>("AbandonedAt")
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("Category")
                         .HasColumnType("TEXT");
@@ -41,13 +44,13 @@ namespace TimeController.Migrations
                     b.Property<bool>("IsCompleted")
                         .HasColumnType("INTEGER");
 
+                    b.Property<bool>("IsCourseTask")
+                        .HasColumnType("INTEGER");
+
                     b.Property<bool>("IsEditing")
                         .HasColumnType("INTEGER");
 
                     b.Property<bool>("IsReminderEnabled")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<bool>("IsSelected")
                         .HasColumnType("INTEGER");
 
                     b.Property<string>("Mode")
@@ -67,6 +70,9 @@ namespace TimeController.Migrations
                     b.Property<DateTime?>("PostponeDate")
                         .HasColumnType("TEXT");
 
+                    b.Property<DateTime?>("PostponedAt")
+                        .HasColumnType("TEXT");
+
                     b.Property<int>("PostponedCount")
                         .HasColumnType("INTEGER");
 
@@ -84,9 +90,12 @@ namespace TimeController.Migrations
                         .IsRequired()
                         .HasColumnType("TEXT");
 
+                    b.Property<int>("WeekDay")
+                        .HasColumnType("INTEGER");
+
                     b.HasKey("Id");
 
-                    b.ToTable("Tasks");
+                    b.ToTable("Task");
                 });
 #pragma warning restore 612, 618
         }

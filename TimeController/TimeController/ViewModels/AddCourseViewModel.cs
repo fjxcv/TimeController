@@ -166,7 +166,7 @@ namespace TimeController.ViewModels
             if (string.IsNullOrWhiteSpace(pattern))
                 return weeks;
 
-            var parts = pattern.Split(',');
+            var parts = pattern.Split(new char[] { ',', '，' }, StringSplitOptions.RemoveEmptyEntries);
             foreach (var part in parts)
             {
                 if (part.Contains("-"))

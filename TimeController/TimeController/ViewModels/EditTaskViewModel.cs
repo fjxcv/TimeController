@@ -45,7 +45,7 @@ namespace TimeController.ViewModels
                 OnPropertyChanged();
                 OnPropertyChanged(nameof(IsTimeSelectionEnabled));
                 UpdateTimePeriodHint(); // 更新时间段提示，全天任务不显示时间段提示
-            }
+        }
         }
         public bool IsReminderEnabled
         {
@@ -111,6 +111,7 @@ namespace TimeController.ViewModels
             get => Task.StartTime.HasValue ? DateTime.Today + Task.StartTime.Value : null;
             set
             {
+                _startTimeWrapper = value;
                 Task.StartTime = value?.TimeOfDay;
                 OnPropertyChanged();
 
@@ -138,6 +139,7 @@ namespace TimeController.ViewModels
             get => Task.EndTime.HasValue ? DateTime.Today + Task.EndTime.Value : null;
             set
             {
+                _endTimeWrapper = value;
                 Task.EndTime = value?.TimeOfDay;
                 OnPropertyChanged();
                 Debug.WriteLine($"【时间段提示】EndTime改变为{value?.TimeOfDay}");

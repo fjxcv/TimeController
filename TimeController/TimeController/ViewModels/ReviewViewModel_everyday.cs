@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows;
 using System.ComponentModel;
 using System.Collections.ObjectModel;
 using System.Windows.Input;
@@ -95,8 +96,9 @@ namespace TimeController.ViewModels
             IsEverydayPage = true;
             _taskService = taskService;
 
-            //调试用
-            _ = ResetDataForDevelopment();
+//#if DEBUG
+//            _ = ResetDataForDevelopment();
+//#endif
 
             CompletedTasks = new ObservableCollection<TaskModel>();
             UncompletedTasks = new ObservableCollection<TaskModel>();
@@ -125,10 +127,20 @@ namespace TimeController.ViewModels
                 "不明确"
             };
 
+            // 订阅带参事件
+            App.TaskChanged += newTask =>
+            {
+                // 刷新：用新任务的 PlannedDate
+                var dateToLoad = newTask.PlannedDate.Date;
+                System.Windows.Application.Current.Dispatcher.Invoke(() =>
+                {
+                    Debug.WriteLine($"{dateToLoad:yyyy-MM-dd} 刷新复盘");
+                    LoadTasksForDate(dateToLoad);
+                });
+            };
 
+            // 初始化待办任务
             SelectedDate = DateTime.Today;
-
-            LoadTasksForDate(DateTime.Today);
 
         }
 
@@ -145,7 +157,12 @@ namespace TimeController.ViewModels
             UncompletedTasks.Clear();
 
             // 从数据库或服务中获取指定日期的任务
-            var tasks = await _taskService.GetTasksForDate(date);
+            var allTasks = await _taskService.GetTasksForDate(date);
+
+            // 过滤出强管理任务
+            var tasks = allTasks
+                .Where(t => t.Mode == TaskMode.Strong)
+                .ToList();
 
             //调试！！！！
             System.Diagnostics.Debug.WriteLine($"任务加载数: {tasks.Count}");
@@ -173,14 +190,17 @@ namespace TimeController.ViewModels
             TodayPendingTasks = new ObservableCollection<TaskModel>(
                 tasks.Where(t =>
                     (t.Status == MyTaskStatus.Pending || t.Status == MyTaskStatus.Postponed) &&
-                    t.PlannedDate.Date == date.Date));       //只要PlannedDate == date，就显示
+                    t.PlannedDate.Date == today));      //只要PlannedDate == date，就显示
 
 
             // 获取所有 pending 任务
             var allPending = await _taskService.GetAllPendingTasksAsync();
 
             OverduePendingTasks = new ObservableCollection<TaskModel>(
-                allPending.Where(t => t.Status == MyTaskStatus.Pending && t.PlannedDate.Date < today));
+                allPending
+                  .Where(t => t.Mode == TaskMode.Strong
+                           && t.Status == MyTaskStatus.Pending
+                           && t.PlannedDate.Date < today));
 
             OnPropertyChanged(nameof(PendingTasksCount));
 
@@ -215,8 +235,10 @@ namespace TimeController.ViewModels
             var (task, reason) = param;
             task.Reason = reason;
             task.Status = MyTaskStatus.Abandoned;
+            task.MarkAbandoned(DateTime.Now);
 
             await _taskService.UpdateTaskAsync(task);
+            LoadTasksForDate(SelectedDate ?? DateTime.Today);
 
         }
 
@@ -259,10 +281,15 @@ namespace TimeController.ViewModels
 
             var newDate = dialog.SelectedDate.Value;
 
+            // 记录推迟历史戳
+            task.PostponedAt = DateTime.Now;
+
+            task.PostponedCount += 1;
+
+            // 更新到新日期
             task.PostponeDate = newDate;
             task.PlannedDate = newDate;
-
-            // 把已推迟的当成全新的“未完成”任务来处理
+            // —— 关键：第一次推迟也把状态设为 Pending，这样它就会被 TodayPendingTasks 包括进来 —— 
             task.Status = MyTaskStatus.Pending;
 
             await _taskService.UpdateTaskAsync(task);
@@ -271,6 +298,14 @@ namespace TimeController.ViewModels
 
         }
 
+        private void OnTaskSaved(TaskModel task)
+        {
+            var current = SelectedDate ?? DateTime.Today;
+            if (task.PlannedDate.Date == current.Date)
+            {
+                LoadTasksForDate(current);
+            }
+        }
 
 
 

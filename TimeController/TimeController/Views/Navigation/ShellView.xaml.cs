@@ -10,21 +10,12 @@ using TimeController.Helpers;
 using Microsoft.Extensions.DependencyInjection;
 using TimeController.ViewModels;
 using MessageBox = iNKORE.UI.WPF.Modern.Controls.MessageBox;
+using TimeController.Views.SettingsInfo;
 
 namespace TimeController.Views.Navigation
 {
     public partial class ShellView : System.Windows.Controls.UserControl
     {
-
-        //private readonly INavigationService _navigationService;
-
-        // 预先创建页面实例
-        public CasualModeView Page_CasualMode = new CasualModeView();
-        public WeekView Page_WeekView = new WeekView();
-        public MonthView Page_MonthView = new MonthView();
-        //public ReviewView_everyday Page_Review;
-        //public SettingsView Page_Settings = new SettingsView();
-        //public AboutView Page_About = new AboutView();
 
         public ShellView()
         {
@@ -32,9 +23,7 @@ namespace TimeController.Views.Navigation
 
             AppFrame.Instance = this.ContentFrame;
 
-            //_navigationService = new NavigationService(ContentFrame);
-
-            // 设置默认选中项
+            // 设置默认打开咸鱼模式
             NavigationView_Root.SelectedItem = NavigationViewItem_CasualMode;
 
         }
@@ -43,97 +32,75 @@ namespace TimeController.Views.Navigation
         //导航栏
         private void NavigationView_SelectionChanged(NavigationView sender, NavigationViewSelectionChangedEventArgs args)
         {
-            var item = sender.SelectedItem as NavigationViewItem;
-            Page page = null;
 
-            if (item == NavigationViewItem_CasualMode)
+            // —— 离开“设置”前，检查是否有未保存改动 —— 
+            if (ContentFrame.Content is SettingsPage settingsPage
+                && settingsPage.DataContext is SettingsPageViewModel vm
+                && vm.IsDirty)
             {
-                page = Page_CasualMode;
-            }
-            else if (item == NavigationViewItem_WeekView)
-            {
-                page = Page_WeekView;
-            }
-            else if (item == NavigationViewItem_MonthView)
-            {
-                page = Page_MonthView;
-            }
-            else if (item == NavigationViewItem_Review_everyday)
-            {
-                var taskService = App.AppHost.Services.GetRequiredService<ITaskService>();
+                var res = MessageBox.Show(
+                    "当前设置尚未保存，是否先保存？",
+                    "未保存的设置",
+                    MessageBoxButton.YesNoCancel,
+                    MessageBoxImage.Warning,
+                    MessageBoxResult.Cancel);
 
-                var vm = new ReviewViewModel_everyday(taskService);
-
-                vm.NavigateToEveryweekRequested += () =>
+                if (res == MessageBoxResult.Cancel)
                 {
-                    var nav = App.AppHost.Services.GetRequiredService<INavigationService>();
-                    nav.NavigateTo(AppFrame.Instance!, "Everyweek");
-                };
-
-                page = new ReviewView_everyday(vm);
-
-                ContentFrame.Navigate(page);
-                NavigationView_Root.Header = page.Title;
-                return;
-            }
-            else if (item == NavigationViewItem_Settings)
-            {
-                //page = Page_Settings;
-            }
-            else if (item == NavigationViewItem_About)
-            {
-                //page = Page_About;
+                    // 取消导航，保持选中“设置”
+                    NavigationView_Root.SelectedItem = NavigationViewItem_Settings;
+                    return;
+                }
+                else if (res == MessageBoxResult.Yes)
+                {
+                    // 执行保存
+                    vm.SaveCommand.Execute(null);
+                }
+                // No：直接丢弃改动继续导航
             }
 
-            if (page != null)
+            // —— 真正的导航分支 —— 
+            var item = sender.SelectedItem as NavigationViewItem;
+            Page page = item?.Tag?.ToString() switch
             {
-                NavigationView_Root.Header = page.Title;
-                ContentFrame.Navigate(page);
-            }
+                "CasualMode" => GetPage<CasualModeView>(),
+                "WeekView" => GetPage<WeekView>(),
+                "MonthView" => GetPage<MonthView>(),
+                "Review" => CreateReviewPage(),   // Review 需要特殊逻辑
+                "settings" => GetPage<SettingsPage>(),
+                "about" => GetPage<AboutPage>(),
+                _ => GetPage<CasualModeView>()
+            };
+
+            NavigateTo(page);
         }
 
-        //public void NavigateTo(string viewKey)
-        //{
-        //    switch (viewKey)
-        //    {
-        //        case "Everyday":
-        //            {
-        //                var taskService = App.AppHost.Services.GetRequiredService<ITaskService>();
-        //                var page = new ReviewView_everyday(taskService);
-        //                var vm = App.AppHost.Services.GetRequiredService<ReviewViewModel_everyday>();
+        // 简化一个方法：从 DI 容器里拿 Page 实例
+        private T GetPage<T>() where T : Page
+        {
+            return App.AppHost.Services.GetRequiredService<T>();
+        }
 
-        //                vm.IsEverydayPage = true; //默认每日复盘按钮亮
-        //                vm.NavigateToEveryweekRequested += () =>
-        //                {
-        //                    NavigateTo("Everyweek");
-        //                };
+        // ReviewPage 有事件回调，所以单独写个创建方法
+        private ReviewView_everyday CreateReviewPage()
+        {
+            var taskSvc = App.AppHost.Services.GetRequiredService<ITaskService>();
+            var vm = new ReviewViewModel_everyday(taskSvc);
+            vm.NavigateToEveryweekRequested += () =>
+            {
+                var nav = App.AppHost.Services.GetRequiredService<INavigationService>();
+                nav.NavigateTo(AppFrame.Instance!, "Everyweek");
+            };
+            return new ReviewView_everyday(vm);
+        }
 
-        //                page.DataContext = vm;
-        //                ContentFrame.Navigate(page);
-        //                break;
-        //            }
-
-        //        case "Everyweek":
-        //            {
-        //                var vm = App.AppHost.Services.GetRequiredService<ReviewViewModel_everyweek>();
-        //                vm.IsEverydayPage = false;
-
-        //                vm.NavigateToEverydayRequested += () =>
-        //                {
-        //                    NavigateTo("Everyday");
-        //                };
-
-        //                var page = new ReviewView_everyweek(vm);
-        //                ContentFrame.Navigate(page);
-        //                break;
-        //            }
-
-        //        default:
-        //            throw new ArgumentException($"Unknown view key: {viewKey}");
-        //    }
-        //}
-
-
+        // 实际导航到页面，并更新标题
+        private void NavigateTo(Page page)
+        {
+            ContentFrame.Navigate(page);
+            NavigationView_Root.Header = page.Title;
+        }
 
     }
+
 }

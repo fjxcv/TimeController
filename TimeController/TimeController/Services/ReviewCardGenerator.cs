@@ -17,7 +17,7 @@ namespace TimeController.Services
         /// <param name="taskHistory">全部历史任务（用于判断连续推迟）</param>
         /// 
 
-        public List<ReviewCardModel> GenerateCards(List<TaskModel> tasksThisWeek, List<TaskModel> taskHistory)
+        public List<ReviewCardModel> GenerateCards(List<TaskModel> tasksThisWeek,List<TaskModel> taskHistory,DateTime weekStart,DateTime weekEnd)
         {
             var cards = new List<ReviewCardModel>();
 
@@ -25,7 +25,7 @@ namespace TimeController.Services
             cards.Add(GenerateCompletionRateCard(tasksThisWeek));
 
             // 卡片 2：重复推迟提示
-            cards.Add(GenerateRepeatedPostponeCard(tasksThisWeek, taskHistory));
+            cards.Add(GenerateRepeatedPostponeCard(taskHistory, weekStart, weekEnd));
 
             // 卡片 3:任务分配策略建议
             cards.Add(GenerateTaskDistributionCard(tasksThisWeek));
@@ -68,51 +68,31 @@ namespace TimeController.Services
             return new ReviewCardModel(icon, title, message, CardAccentHelper.GetAccentColor(title));
         }
 
-        private ReviewCardModel GenerateRepeatedPostponeCard(List<TaskModel> tasksThisWeek, List<TaskModel> taskHistory)
+        private ReviewCardModel GenerateRepeatedPostponeCard(List<TaskModel> history,DateTime weekStart,DateTime weekEnd)
         {
-            var icon = "📦";
-            var title = "重复推迟的任务";
-            string message;
-
-            // 找出本周被推迟的任务
-            var postponedTasks = tasksThisWeek
-                .Where(t => t.Status == MyTaskStatus.Postponed)
-                .ToList();
-
-            // 字典：任务名 -> 推迟次数（最近 N 次）
+            var icon = "🔁";
+            var title = "多次推迟提示";
             var repeated = new List<string>();
 
-            foreach (var task in postponedTasks)
+            // 1. 先筛出本周的所有任务
+            var tasksThisWeek = history
+                .Where(t =>
+                    t.PlannedDate >= weekStart &&
+                    t.PlannedDate < weekEnd)
+                .ToList();
+
+            // 2. 找出本周被推迟次数 >= 2 的那些
+            foreach (var task in tasksThisWeek)
             {
-                var sameNameHistory = taskHistory
-                    .Where(t => t.Name == task.Name)
-                    .OrderByDescending(t => t.PlannedDate)
-                    .Take(5)
-                    .ToList();
-
-                int consecutivePostpone = 0;
-                foreach (var h in sameNameHistory)
+                if (task.PostponedCount >= 2)
                 {
-                    if (h.Status == MyTaskStatus.Postponed)
-                        consecutivePostpone++;
-                    else
-                        break; // 中断就不算连续
-                }
-
-                if (consecutivePostpone >= 2)
-                {
-                    repeated.Add($"{task.Name}（已连续推迟 {consecutivePostpone} 次）");
+                    repeated.Add($"{task.Name}（本周已推迟{task.PostponedCount}次）");
                 }
             }
-
-            if (repeated.Any())
-            {
-                message = string.Join("\n", repeated);
-            }
-            else
-            {
-                message = "本周没有任务被连续推迟，干得漂亮！";
-            }
+            // 3. 生成提示信息
+            var message = repeated.Any()
+                ? string.Join("\n", repeated)
+                : "本周没有任务被多次推迟，干得漂亮！";
 
             return new ReviewCardModel(icon, title, message, CardAccentHelper.GetAccentColor(title));
         }

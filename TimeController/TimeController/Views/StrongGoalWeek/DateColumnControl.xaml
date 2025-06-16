@@ -7,7 +7,24 @@
              xmlns:converters="clr-namespace:TimeController.Converters"
              mc:Ignorable="d">
 
+    <UserControl.Resources>
+        <SolidColorBrush x:Key="SystemAccentBrushLight" Color="#B3E5FC"/>
+        <converters:CompletedToTextDecorationConverter x:Key="CompletedToTextDecorationConverter"/>
+    </UserControl.Resources>
+
     <Border x:Name="ColumnBorder" Background="#F0F0F0" CornerRadius="4" Margin="2" MinHeight="100">
+        <Border.Style>
+            <Style TargetType="Border">
+                <Setter Property="Background" Value="#F0F0F0"/>
+                <Style.Triggers>
+                    <DataTrigger Binding="{Binding IsToday}" Value="True">
+                        <Setter Property="Background" Value="#CCE4FF"/>
+                        <Setter Property="BorderBrush" Value="#1890FF"/>
+                        <Setter Property="BorderThickness" Value="1"/>
+                    </DataTrigger>
+                </Style.Triggers>
+            </Style>
+        </Border.Style>
         <Grid>
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto"/>
@@ -19,13 +36,16 @@
             <!-- 日期标题 -->
             <StackPanel Grid.Row="0" HorizontalAlignment="Center" VerticalAlignment="Center">
                 <TextBlock Text="{Binding WeekDayText}" HorizontalAlignment="Center"/>
-                <TextBlock x:Name="DateTextBlock" Text="{Binding DateText}" 
-                           HorizontalAlignment="Center" FontSize="16" FontWeight="Bold"
+                <TextBlock x:Name="DateTextBlock"
+                           Text="{Binding DateText}"
+                           HorizontalAlignment="Center"
+                           FontSize="16"
+                           FontWeight="Bold"
                            Foreground="{Binding IsCurrentMonth, Converter={StaticResource BoolToColorConverter}}"/>
             </StackPanel>
 
             <!-- 全天任务列表 -->
-            <ItemsControl Grid.Row="1" Margin="2,2,2,2" 
+            <ItemsControl Grid.Row="1" Margin="2"
                           ItemsSource="{Binding AllDayTasksView}">
                 <ItemsControl.ItemsPanel>
                     <ItemsPanelTemplate>
@@ -34,14 +54,16 @@
                 </ItemsControl.ItemsPanel>
                 <ItemsControl.ItemTemplate>
                     <DataTemplate>
-                        <Grid MouseEnter="Grid_MouseEnter" MouseLeave="Grid_MouseLeave" MouseLeftButtonDown="TaskBlock_MouseLeftButtonDown"
-                                Background="Transparent" Tag="{Binding}">
-                            <!-- 任务块背景 -->
+                        <Grid MouseEnter="Grid_MouseEnter"
+                              MouseLeave="Grid_MouseLeave"
+                              MouseLeftButtonDown="TaskBlock_MouseLeftButtonDown"
+                              Background="Transparent"
+                              Tag="{Binding}">
                             <Border Background="{Binding Brush}"
                                     CornerRadius="3"
                                     Margin="2">
                                 <TextBlock Text="{Binding Name}"
-                                             Margin="8,4"
+                                           Margin="8,4"
                                            TextWrapping="Wrap"
                                            Foreground="#333333"
                                            FontWeight="Medium"
@@ -56,10 +78,9 @@
                                     </TextBlock.ToolTip>
                                 </TextBlock>
                             </Border>
-
                             <!-- 浮动按钮组 -->
                             <StackPanel x:Name="ActionButtons"
-                                        Panel.ZIndex="10"            
+                                        Panel.ZIndex="10"
                                         Orientation="Horizontal"
                                         HorizontalAlignment="Right"
                                         VerticalAlignment="Top"
@@ -67,49 +88,34 @@
                                         Visibility="Collapsed">
                                 <!-- 标记完成 -->
                                 <Button Width="19" Height="19"
-                                          Padding="0"
-                                          Background="#CCFFFFFF"
-                                          BorderThickness="0"
-                                          Margin="4,0,5,0"
-                                          Command="{Binding DataContext.ToggleCompleteCommand, RelativeSource={RelativeSource AncestorType=ui:Page}}"
-                                          CommandParameter="{Binding}">
-                                    <TextBlock 
-                                          FontFamily="Segoe MDL2 Assets" 
-                                          Text="&#xE73E;"
-                                          FontSize="20" 
-                                          Foreground="#333333"/>
+                                        Padding="0"
+                                        Background="#CCFFFFFF"
+                                        BorderThickness="0"
+                                        Margin="4,0,5,0"
+                                        Command="{Binding DataContext.ToggleCompleteCommand, RelativeSource={RelativeSource AncestorType=ui:Page}}"
+                                        CommandParameter="{Binding}">
+                                    <TextBlock FontFamily="Segoe MDL2 Assets" Text="&#xE73E;" FontSize="20" Foreground="#333333"/>
                                 </Button>
-
                                 <!-- 删除任务 -->
                                 <Button Width="19" Height="19"
-                                          Padding="0"
-                                          Background="#CCFFFFFF"
-                                          BorderThickness="0"
-                                          Command="{Binding DataContext.RemoveTaskBlockCommand,
-                                                    RelativeSource={RelativeSource AncestorType=ui:Page}}"
-                                          CommandParameter="{Binding}">
-                                    <TextBlock 
-                                          FontFamily="Segoe MDL2 Assets" 
-                                          Text="&#xE74D;"
-                                          FontSize="20" 
-                                          Foreground="#333333"/>
+                                        Padding="0"
+                                        Background="#CCFFFFFF"
+                                        BorderThickness="0"
+                                        Command="{Binding DataContext.RemoveTaskBlockCommand, RelativeSource={RelativeSource AncestorType=ui:Page}}"
+                                        CommandParameter="{Binding}">
+                                    <TextBlock FontFamily="Segoe MDL2 Assets" Text="&#xE74D;" FontSize="20" Foreground="#333333"/>
                                 </Button>
                             </StackPanel>
                         </Grid>
                     </DataTemplate>
                 </ItemsControl.ItemTemplate>
-
                 <ItemsControl.ItemContainerStyle>
                     <Style TargetType="ContentPresenter">
                         <Setter Property="Visibility" Value="Visible"/>
                         <Style.Triggers>
                             <!-- 第三个及以上的任务只有在展开状态下才显示 -->
-                            <DataTrigger Binding="{Binding RelativeSource={RelativeSource Self}, 
-                         Converter={StaticResource IndexConverter}, ConverterParameter=gt1}" 
-                         Value="True">
-                                <Setter Property="Visibility" Value="{Binding DataContext.IsExpanded, 
-                         RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type UserControl}}, 
-                         Converter={StaticResource BoolToVisibility}}"/>
+                            <DataTrigger Binding="{Binding RelativeSource={RelativeSource Self}, Converter={StaticResource IndexConverter}, ConverterParameter=gt1}" Value="True">
+                                <Setter Property="Visibility" Value="{Binding DataContext.IsExpanded, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type UserControl}}, Converter={StaticResource BoolToVisibility}}"/>
                             </DataTrigger>
                         </Style.Triggers>
                     </Style>
@@ -117,7 +123,9 @@
             </ItemsControl>
 
             <!-- 展开/折叠按钮 -->
-            <Button x:Name="ExpandButton" Grid.Row="1" HorizontalAlignment="Center"
+            <Button x:Name="ExpandButton"
+                    Grid.Row="1"
+                    HorizontalAlignment="Center"
                     VerticalAlignment="Bottom"
                     Margin="0,2,0,0"
                     Click="ExpandButton_Click"

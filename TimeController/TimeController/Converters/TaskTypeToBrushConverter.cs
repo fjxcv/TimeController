@@ -15,11 +15,11 @@ namespace TimeController.Converters
                 return type switch
                 {
                     TaskType.学习学业 => new SolidColorBrush(Colors.LightBlue),
-                    TaskType.自我提升 => new SolidColorBrush(Colors.LightGreen),
-                    TaskType.项目实践任务 => new SolidColorBrush(Colors.LightPink),
-                    TaskType.日常任务 => new SolidColorBrush(Colors.LightYellow),
-                    TaskType.其它 => new SolidColorBrush(Colors.LightGray),
-                    _ => new SolidColorBrush(Colors.MediumPurple)
+    TaskType.自我提升 => new SolidColorBrush(Colors.LightGreen),
+    TaskType.项目实践任务 => new SolidColorBrush(Colors.LightPink),
+    TaskType.日常任务 => new SolidColorBrush(Colors.LightYellow),
+    TaskType.其它 => new SolidColorBrush(Colors.LightGray),
+    _ => new SolidColorBrush(Colors.MediumPurple)
                 };
             }
             return new SolidColorBrush(Colors.LightGray);
@@ -30,4 +30,4 @@ namespace TimeController.Converters
             throw new NotImplementedException();
         }
     }
-}
+} 

@@ -200,6 +200,7 @@ namespace TimeController.Services
             return _currentTransaction;
         }
 
+            
         public void CommitTransaction()
         {
             _currentTransaction?.Commit();
@@ -214,6 +215,7 @@ namespace TimeController.Services
 
         public async Task<List<TaskModel>> GetTasksForDate(DateTime date)
         {
+
             // 取出当天零点到次日零点之间的所有任务
             var start = date.Date;
             var end = start.AddDays(1);
@@ -225,6 +227,7 @@ namespace TimeController.Services
                 )
                 .ToListAsync();
         }
+
 
         public async Task DeleteTaskAsync(TaskModel task)
         {
@@ -285,6 +288,10 @@ namespace TimeController.Services
             _context.Task.Update(task);
             await _context.SaveChangesAsync();
 
+            TaskSaved?.Invoke(task);
+
+            Debug.WriteLine("🛎️ TaskSaved.Invoke 已调用完毕");
+
             //调试输出
             Debug.WriteLine($"[更新任务] {task.Name}, 状态={task.Status}, 计划时间={task.PlannedDate:yyyy-MM-dd}");
         }
@@ -297,7 +304,8 @@ namespace TimeController.Services
         }
 
 
-        //种子数据
+
+        // 种子数据
         public async Task ResetTaskDataAsync()
         {
             // 清空旧数据
@@ -307,56 +315,95 @@ namespace TimeController.Services
 
             var today = DateTime.Today;
             var tasks = new List<TaskModel>
-            {
-                new TaskModel
-                {
-                    Name = "完成项目文档",
-                    Status = MyTaskStatus.Completed,
-                    PlannedDate = today,
-                    IsAllDay = true
-                },
-                new TaskModel
-                {
-                    Name = "代码审查",
-                    Status = MyTaskStatus.Pending,
-                    PlannedDate = today,
-                    IsAllDay = false,
-                    StartTime = TimeSpan.FromHours(14),
-                    EndTime = TimeSpan.FromHours(15),
+    {
+        // 已完成
+        new TaskModel {
+            Name = "完成项目文档",
+            Status = MyTaskStatus.Completed,
+            PlannedDate = today,
+            IsAllDay = true,
+            Mode = TaskMode.Strong,
+            IsReminderEnabled = true
+        },
+        new TaskModel {
+            Status = MyTaskStatus.Completed,
+            PlannedDate = today.AddDays(-1),
+            IsAllDay = false,
+            StartTime = TimeSpan.FromHours(10),
+            EndTime   = TimeSpan.FromHours(11),
+            Mode = TaskMode.Strong
+        },
 
-                },
-                new TaskModel
-                {
-                    Name = "项目进度汇报",
-                    Status = MyTaskStatus.Pending,
-                    PlannedDate = today.AddDays(-3),
-                    IsAllDay = true
-                },
+        // 未完成（Pending）
+        new TaskModel {
+            Name = "代码审查",
+            Status = MyTaskStatus.Pending,
+            PlannedDate = today,
+            IsAllDay = false,
+            StartTime = TimeSpan.FromHours(14),
+            EndTime   = TimeSpan.FromHours(15),
+            Mode = TaskMode.Strong
+        },
+        new TaskModel {
+            Name = "明日需求评审",
+            Status = MyTaskStatus.Pending,
+            PlannedDate = today.AddDays(1),
+            IsAllDay = false,
+            StartTime = TimeSpan.FromHours(16),
+            EndTime   = TimeSpan.FromHours(17),
+            Mode = TaskMode.Strong
+        },
+        new TaskModel {
+            Name = "学习英语词汇",
+            Status = MyTaskStatus.Pending,
+            PlannedDate = today,
+            IsAllDay = true,
+            Mode = TaskMode.Strong
+        },
 
-                // 被推迟的任务
-                new TaskModel
-                {
-                    Name = "复习数学",
-                    Status = MyTaskStatus.Postponed,
-                    PlannedDate = today.AddDays(-2),
-                    Reason = "时间安排问题",  // 来自预设列表
-                    PostponeDate = today.AddDays(2) // 模拟未来推迟
-                },
+        // —— 已推迟 ——
+        new TaskModel {
+            Name = "复习数学",
+            Status = MyTaskStatus.Postponed,
+            PlannedDate = today.AddDays(-2),
+            Reason = "时间安排问题",
+            PostponeDate = today.AddDays(2),
+            PostponedAt = today.AddDays(-2).AddHours(9),
+            Mode = TaskMode.Strong
+        },
+        new TaskModel {
+            Name = "读《设计模式》",
+            Status = MyTaskStatus.Postponed,
+            PlannedDate = today.AddDays(-3),
+            Reason = "外部干扰",
+            PostponeDate = today.AddDays(3),
+            PostponedAt = today.AddDays(-3).AddHours(15),
+            Mode = TaskMode.Strong
+        },
 
-                // 被放弃的任务
-                new TaskModel
-                {
-                    Name = "练习钢琴",
-                    Status = MyTaskStatus.Abandoned,
-                    PlannedDate = today.AddDays(-1),
-                    Reason = "动机缺失" // 来自预设列表
-                }
-            };
+        // —— 已放弃 ——
+        new TaskModel {
+            Name = "练习钢琴",
+            Status = MyTaskStatus.Abandoned,
+            PlannedDate = today.AddDays(-1),
+            Reason = "动机缺失",
+            AbandonedAt = today.AddDays(-1).AddHours(20),
+            Mode = TaskMode.Strong
+        },
+        new TaskModel {
+            Name = "周末远足",
+            Status = MyTaskStatus.Abandoned,
+            PlannedDate = today.AddDays(2),
+            Reason = "外部干扰",
+            AbandonedAt = today.AddDays(0).AddHours(18),
+            Mode = TaskMode.Strong
+        }
+    };
 
             _context.Task.AddRange(tasks);
             await _context.SaveChangesAsync();
-
         }
+
 
 
 

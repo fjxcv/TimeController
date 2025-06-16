@@ -11,6 +11,7 @@ namespace TimeController.ViewModels
         private string _weekDayText = "";
         private string _dateText = "";
         private bool _isCurrentMonth;
+        private bool _isToday;
         private ObservableCollection<WeekViewModel.TaskBlock> _allDayTasks = new();
 
         // —— 新增这一行 —— 
@@ -70,6 +71,21 @@ namespace TimeController.ViewModels
                 }
             }
         }
+
+        // IsToday 属性
+        public bool IsToday
+        {
+            get => _isToday;
+            set
+            {
+                if (_isToday != value)
+                {
+                    _isToday = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
+
 
         public int Index { get; set; }
         public string WeekDayText { get => _weekDayText; set { _weekDayText = value; OnPropertyChanged(); } }

@@ -17,11 +17,52 @@ namespace TimeController.Migrations
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "9.0.5");
 
+            modelBuilder.Entity("TimeController.Models.RewardModel", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("IsClaimed")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Rewards");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            IsClaimed = false,
+                            Title = "吃顿好的"
+                        },
+                        new
+                        {
+                            Id = 2,
+                            IsClaimed = false,
+                            Title = "看想看的电影"
+                        },
+                        new
+                        {
+                            Id = 3,
+                            IsClaimed = false,
+                            Title = "放纵玩一天"
+                        });
+                });
+
             modelBuilder.Entity("TimeController.Models.TaskModel", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
+
+                    b.Property<DateTime?>("AbandonedAt")
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("Category")
                         .HasColumnType("TEXT");
@@ -64,6 +105,9 @@ namespace TimeController.Migrations
                     b.Property<DateTime?>("PostponeDate")
                         .HasColumnType("TEXT");
 
+                    b.Property<DateTime?>("PostponedAt")
+                        .HasColumnType("TEXT");
+
                     b.Property<int>("PostponedCount")
                         .HasColumnType("INTEGER");
 
@@ -86,7 +130,7 @@ namespace TimeController.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Tasks");
+                    b.ToTable("Task");
                 });
 #pragma warning restore 612, 618
         }
