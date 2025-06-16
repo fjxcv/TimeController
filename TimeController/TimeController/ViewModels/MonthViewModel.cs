@@ -10,6 +10,7 @@ using TimeController.Models;
 using TimeController.Views;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace TimeController.ViewModels
 {
@@ -78,6 +79,24 @@ namespace TimeController.ViewModels
         public ICommand DateClickCommand { get; }     // 日期点击
         public ICommand GoToCurrentMonthCommand { get; } // 回到当前月份
 
+        private DateTime _currentMonth;
+        public DateTime CurrentMonth
+        {
+            get => _currentMonth;
+            set
+            {
+                if (_currentMonth != value)
+                {
+                    _currentMonth = value;
+                    OnPropertyChanged();
+                    OnCurrentMonthChanged(value);
+                }
+            }
+        }
+
+        public event EventHandler<DateTime>? CurrentMonthChanged;
+        public event EventHandler<ObservableCollection<TaskModel>>? TodayTasksFound;
+
         /// <summary>
         /// 构造函数
         /// </summary>
@@ -98,6 +117,8 @@ namespace TimeController.ViewModels
             // 初始化日历
             UpdateCalendar();
             LoadTasksForCurrentMonth();
+
+            _currentMonth = DateTime.Today;
         }
 
         /// <summary>
@@ -240,6 +261,37 @@ namespace TimeController.ViewModels
                 return;
 
             AddTaskToDictionary(task);
+        }
+
+        private void OnCurrentMonthChanged(DateTime newMonth)
+        {
+            CurrentMonthChanged?.Invoke(this, newMonth);
+        }
+
+        public void NavigateToToday()
+        {
+            CurrentMonth = DateTime.Today;
+            CheckTodayTasks();
+        }
+
+        public async void CheckTodayTasks()
+        {
+            if (CurrentMonth.Year == DateTime.Now.Year && 
+                CurrentMonth.Month == DateTime.Now.Month)
+            {
+                var todayTasks = await GetTasksForDate(DateTime.Today);
+                if (todayTasks?.Any() == true)
+                {
+                    TodayTasksFound?.Invoke(this, todayTasks);
+                }
+            }
+        }
+
+        public async Task<ObservableCollection<TaskModel>?> GetTasksForDate(DateTime date)
+        {
+            var tasks = await _taskService.GetTasksForDateRange(date, date);
+            var strongTasks = tasks.Where(t => t.Mode == TaskMode.Strong).ToList();
+            return strongTasks.Any() ? new ObservableCollection<TaskModel>(strongTasks.OrderBy(t => t.StartTime ?? TimeSpan.Zero)) : null;
         }
 
         // INotifyPropertyChanged 实现

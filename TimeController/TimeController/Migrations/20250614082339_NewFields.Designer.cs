@@ -11,7 +11,7 @@ using TimeController.Services;
 namespace TimeController.Migrations
 {
     [DbContext(typeof(TaskDbContext))]
-    [Migration("20250611091243_NewFields")]
+    [Migration("20250614082339_NewFields")]
     partial class NewFields
     {
         /// <inheritdoc />

@@ -25,7 +25,7 @@ namespace TimeController.Services
 
 
         //种子数据
-        Task ResetTaskDataAsync();
+        //Task ResetTaskDataAsync();
 
         Task DeleteTaskAsync(TaskModel task);
 
