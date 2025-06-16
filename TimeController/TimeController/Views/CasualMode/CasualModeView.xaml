@@ -16,11 +16,12 @@
 
         <!-- 卡片阴影效果 -->
         <DropShadowEffect x:Key="CardShadow"
-                      Color="#20000000"
-                      BlurRadius="8"
-                      ShadowDepth="2"/>
+                          Color="#22000000"
+                          BlurRadius="10"
+                          ShadowDepth="2"
+                          Direction="270"/>
 
-        <!--布尔值转可见性转换器-->
+            <!--布尔值转可见性转换器-->
         <local:BoolToVisibilityConverter x:Key="BoolToVisibility"/>
 
         <!-- 按钮样式 -->
@@ -232,7 +233,7 @@
                 </Grid.ColumnDefinitions>
 
                 <!-- 自我滋养 -->
-                <Border Grid.Row="0" Grid.Column="0" Background="#EEEEEE" Margin="8">
+                <Border Grid.Row="0" Grid.Column="0" Background="#eef4de" Margin="8" CornerRadius="8" Effect="{StaticResource CardShadow}">
                     <Border.InputBindings>
                         <MouseBinding MouseAction="LeftClick"
                                       Command="{Binding ToggleInputVisibilityCommand}"
@@ -346,7 +347,7 @@
                 </Border>
 
                 <!-- 创造表达 -->
-                <Border Grid.Row="0" Grid.Column="1" Background="#EEEEEE" Margin="8">
+                <Border Grid.Row="0" Grid.Column="1" Background="#f7efd7" Margin="8" CornerRadius="8" Effect="{StaticResource CardShadow}">
                     <Border.InputBindings>
                         <MouseBinding MouseAction="LeftClick"
                                       Command="{Binding ToggleInputVisibilityCommand}"
@@ -459,7 +460,7 @@
                 </Border>
 
                 <!-- 生活杂务 -->
-                <Border Grid.Row="1" Grid.Column="0" Background="#EEEEEE" Margin="8">
+                <Border Grid.Row="1" Grid.Column="0" Background="#d5dbf3" Margin="8" CornerRadius="8" Effect="{StaticResource CardShadow}">
                     <Border.InputBindings>
                         <MouseBinding MouseAction="LeftClick"
                                       Command="{Binding ToggleInputVisibilityCommand}"
@@ -572,7 +573,7 @@
                 </Border>
 
                 <!-- 人际连接 -->
-                <Border Grid.Row="1" Grid.Column="1" Background="#EEEEEE" Margin="8">
+                <Border Grid.Row="1" Grid.Column="1" Background="#d3f3ff" Margin="8" CornerRadius="8" Effect="{StaticResource CardShadow}">
                     <Border.InputBindings>
                         <MouseBinding MouseAction="LeftClick"
                                       Command="{Binding ToggleInputVisibilityCommand}"
@@ -694,95 +695,147 @@
             </Grid.RowDefinitions>
 
             <!-- 长期备忘 -->
-            <Border Grid.Row="0" Background="#EEEEEE" Padding="16" Margin="0,0,0,16">
+            <Border Grid.Row="0" Padding="0" Margin="0,0,0,16">
                 <Border.InputBindings>
                     <MouseBinding MouseAction="LeftClick"
                                   Command="{Binding ToggleInputVisibilityCommand}"
                                   CommandParameter="{Binding Modules[4]}"/>
                 </Border.InputBindings>
-                <Grid>
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="*"/>
-                    </Grid.RowDefinitions>
-                    <TextBlock Text="长期备忘" FontSize="20" FontWeight="Bold" VerticalAlignment="Top" HorizontalAlignment="center" Margin="0,0,0,0"/>
-                    <ListView Grid.Row="1" ItemsSource="{Binding Modules[4].Tasks}" Margin="10,10,10,10" Background="Transparent" BorderThickness="0">
-                        <ListView.ItemTemplate>
-                            <DataTemplate>
-                                <Grid>
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="30"/>
-                                        <ColumnDefinition Width="*"/>
-                                        <ColumnDefinition Width="Auto"/>
-                                    </Grid.ColumnDefinitions>
-                                    <CheckBox Grid.Column="0" IsChecked="{Binding IsCompleted, Mode=TwoWay}" VerticalAlignment="Center"/>
 
-                                    <!-- 显示模式（默认） -->
-                                    <TextBlock Grid.Column="1" Text="{Binding Name}" Margin="0,0,0,0" VerticalAlignment="Center" FontSize="18"
-                                              Visibility="{Binding IsEditing, Converter={StaticResource BoolToVisibility}, ConverterParameter=False}">
-                                        <TextBlock.InputBindings>
-                                            <MouseBinding MouseAction="LeftDoubleClick"
-                                                           Command="{Binding DataContext.StartEditTaskCommand, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ui:Page}}}"
-                                                           CommandParameter="{Binding}"/>
-                                        </TextBlock.InputBindings>
-                                        
-                                    </TextBlock>
+                <Border
+                        Background="White"
+                        CornerRadius="8"
+                        Padding="10"
+                        Effect="{StaticResource CardShadow}"
+                        Margin="10">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                        </Grid.RowDefinitions>
 
-                                    <!-- 编辑模式 -->
-                                    <TextBox Grid.Column="1" Text="{Binding Name, UpdateSourceTrigger=PropertyChanged}" FontSize="18"
-                                      Visibility="{Binding IsEditing, Converter={StaticResource BoolToVisibility}}"
-                                      Margin="0,0,0,0" VerticalAlignment="Center">
-                                        <TextBox.InputBindings>
-                                            <KeyBinding Key="Enter"
-                                                         Command="{Binding DataContext.EndEditTaskCommand, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ui:Page}}}"
-                                                         CommandParameter="{Binding}"/>
-                                        </TextBox.InputBindings>
-                                    </TextBox>
+                        <TextBlock
+                                Text="长期备忘"
+                                FontSize="20"
+                                FontWeight="Bold"
+                                VerticalAlignment="Top"
+                                HorizontalAlignment="Center"
+                                Margin="0,0,0,0"/>
 
-                                    <!-- 删除按钮 -->
-                                    <Button Grid.Column="2" Content="×" Width="20" Height="20" Margin="10,0,0,0"
-                                             Command="{Binding DataContext.DeleteTaskCommand, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ui:Page}}}"
-                                             CommandParameter="{Binding}">
-                                        <Button.Style>
-                                            <Style TargetType="Button" BasedOn="{StaticResource IconButtonStyle}">
-                                                <Setter Property="Visibility" Value="Collapsed"/>
-                                                <Setter Property="FontSize" Value="18"/>
-                                                <Style.Triggers>
-                                                    <DataTrigger Binding="{Binding IsMouseOver, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ListViewItem}}}" Value="True">
-                                                        <Setter Property="Visibility" Value="Visible"/>
-                                                    </DataTrigger>
-                                                </Style.Triggers>
-                                            </Style>
-                                        </Button.Style>
-                                    </Button>
+                        <ListView
+                                Grid.Row="1"
+                                ItemsSource="{Binding Modules[4].Tasks}"
+                                Margin="0,10,0,10"
+                                Background="Transparent"
+                            
+                                BorderThickness="0">
+                            <ListView.ItemTemplate>
+                                <DataTemplate>
+                                    <Border
+                                            Background="White"
+                                            CornerRadius="6"
+                                            Padding="8"
+                                            Margin="0,4">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="30"/>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                            </Grid.ColumnDefinitions>
 
-                                    <!-- 悬停时显示编辑提示 -->
-                                    <Grid.Style>
-                                        <Style TargetType="Grid">
-                                            <Style.Triggers>
-                                                <Trigger Property="IsMouseOver" Value="True">
-                                                    <Setter Property="ToolTip" Value="双击编辑"/>
-                                                </Trigger>
-                                            </Style.Triggers>
-                                        </Style>
-                                    </Grid.Style>
-                                </Grid>
-                            </DataTemplate>
-                        </ListView.ItemTemplate>
-                    </ListView>
-                    <!-- 输入框 -->
-                    <Grid Grid.Row="1" Margin="10,0,10,10" VerticalAlignment="Bottom" Visibility="{Binding Modules[4].IsInputVisible, Converter={StaticResource BoolToVisibility}}">
-                        <TextBox Text="{Binding Modules[4].NewTaskText, UpdateSourceTrigger=PropertyChanged}"
-                                 Tag="{Binding Modules[4]}"
-                                 Margin="0,0,0,0">
-                            <TextBox.InputBindings>
-                                <KeyBinding Key="Enter"
-                                            Command="{Binding DataContext.AddTaskCommand, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ui:Page}}}"
-                                            CommandParameter="{Binding Tag, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type TextBox}}}"/>
-                            </TextBox.InputBindings>
-                        </TextBox>
+                                            <CheckBox
+                                                    Grid.Column="0"
+                                                    IsChecked="{Binding IsCompleted, Mode=TwoWay}"
+                                                    VerticalAlignment="Center"/>
+
+                                            <!-- 显示模式（默认） -->
+                                            <TextBlock
+                                                    Grid.Column="1"
+                                                    Text="{Binding Name}"
+                                                    FontSize="18"
+                                                    VerticalAlignment="Center"
+                                                    Visibility="{Binding IsEditing, Converter={StaticResource BoolToVisibility}, ConverterParameter=False}">
+                                                <TextBlock.InputBindings>
+                                                    <MouseBinding
+                                                                MouseAction="LeftDoubleClick"
+                                                                Command="{Binding DataContext.StartEditTaskCommand, RelativeSource={RelativeSource AncestorType=ui:Page}}"
+                                                                CommandParameter="{Binding}"/>
+                                                </TextBlock.InputBindings>
+                                            </TextBlock>
+
+                                            <!-- 编辑模式 -->
+                                            <TextBox
+                                                    Grid.Column="1"
+                                                    Text="{Binding Name, UpdateSourceTrigger=PropertyChanged}"
+                                                    FontSize="18"
+                                                    VerticalAlignment="Center"
+                                                    Visibility="{Binding IsEditing, Converter={StaticResource BoolToVisibility}}">
+                                                <TextBox.InputBindings>
+                                                    <KeyBinding
+                                                                Key="Enter"
+                                                                Command="{Binding DataContext.EndEditTaskCommand, RelativeSource={RelativeSource AncestorType=ui:Page}}"
+                                                                CommandParameter="{Binding}"/>
+                                                </TextBox.InputBindings>
+                                            </TextBox>
+
+                                            <!-- 删除按钮 -->
+                                            <Button
+                                                    Grid.Column="2"
+                                                    Content="×"
+                                                    Width="20"
+                                                    Height="20"
+                                                    Margin="10,0,0,0"
+                                                    Command="{Binding DataContext.DeleteTaskCommand, RelativeSource={RelativeSource AncestorType=ui:Page}}"
+                                                    CommandParameter="{Binding}">
+                                                <Button.Style>
+                                                    <Style TargetType="Button" BasedOn="{StaticResource IconButtonStyle}">
+                                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                                        <Setter Property="FontSize" Value="18"/>
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding IsMouseOver, RelativeSource={RelativeSource AncestorType=ListViewItem}}" Value="True">
+                                                                <Setter Property="Visibility" Value="Visible"/>
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </Button.Style>
+                                            </Button>
+
+                                            <!-- 悬停时显示编辑提示 -->
+                                            <Grid.Style>
+                                                <Style TargetType="Grid">
+                                                    <Style.Triggers>
+                                                        <Trigger Property="IsMouseOver" Value="True">
+                                                            <Setter Property="ToolTip" Value="双击编辑"/>
+                                                        </Trigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </Grid.Style>
+                                        </Grid>
+                                    </Border>
+                                </DataTemplate>
+                            </ListView.ItemTemplate>
+                        </ListView>
+
+                        <!-- 输入框 -->
+                        <Grid
+                            Grid.Row="1"
+                            Margin="10,0,10,10"
+                            VerticalAlignment="Bottom"
+                            Visibility="{Binding Modules[4].IsInputVisible, Converter={StaticResource BoolToVisibility}}">
+                            <TextBox
+                                    Text="{Binding Modules[4].NewTaskText, UpdateSourceTrigger=PropertyChanged}"
+                                    Tag="{Binding Modules[4]}">
+                                <TextBox.InputBindings>
+                                    <KeyBinding
+                                                Key="Enter"
+                                                Command="{Binding DataContext.AddTaskCommand, RelativeSource={RelativeSource AncestorType=ui:Page}}"
+                                                CommandParameter="{Binding Tag, RelativeSource={RelativeSource AncestorType=TextBox}}"/>
+                                </TextBox.InputBindings>
+                            </TextBox>
+                        </Grid>
                     </Grid>
-                </Grid>
+                </Border>
+
             </Border>
 
             <Border Grid.Row="1"

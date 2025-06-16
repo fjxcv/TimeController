@@ -123,9 +123,9 @@
             <Button Command="{Binding GoToCurrentMonthCommand}"
                 Width="40"
                 Height="40"
+                Content="📍"
                 ToolTip="回到当前月份"
                 Visibility="{Binding IsCurrentMonth, Converter={StaticResource InverseBoolToVisibilityConverter}}">
-                <uiControls:FontIcon Glyph="&#xE823;" FontSize="16"/>
             </Button>
         </StackPanel>
 

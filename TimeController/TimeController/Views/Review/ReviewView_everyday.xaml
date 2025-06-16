@@ -185,16 +185,6 @@
         <ScrollViewer Grid.Row="1" Margin="20,10,20,10">
             <StackPanel Margin="0,0,0,30">
 
-                <!-- 调试：显示任务数量 --><!--
-                <StackPanel Orientation="Vertical" Margin="0,0,0,10">
-                    <TextBlock Text="{Binding CompletedTasks.Count, StringFormat='✔ 已完成任务数: {0}'}" FontSize="14" Foreground="Green"/>
-                    <TextBlock Text="{Binding TodayPendingTasks.Count, StringFormat='📌 今日待处理任务数: {0}'}" FontSize="14" Foreground="DarkOrange"/>
-                    <TextBlock Text="{Binding OverduePendingTasks.Count, StringFormat='⏰ 过期任务数: {0}'}" FontSize="14" Foreground="Red"/>
-                    <TextBlock Text="{Binding UncompletedTasks.Count, StringFormat='❌ 所有未完成任务数: {0}'}" FontSize="14" Foreground="Blue"/>
-                    <TextBlock Text="{Binding SelectedDate}" Foreground="DarkGray"/>
-
-                </StackPanel>-->
-
 
                 <!-- 今日任务概览 -->
                 <StackPanel>
