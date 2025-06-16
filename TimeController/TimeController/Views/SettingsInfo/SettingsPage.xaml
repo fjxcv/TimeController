@@ -7,7 +7,26 @@
 
 >
 
-<ScrollViewer>
+    <ui:Page.Resources>
+        <!-- 基于系统 AccentButtonStyleKey 创建一个自定义保存按钮样式 -->
+        <Style x:Key="SaveButtonStyle"
+         TargetType="Button"
+         BasedOn="{StaticResource {x:Static ui:ThemeKeys.AccentButtonStyleKey}}">
+            <!-- 默认文字色保持白色 -->
+            <Setter Property="Foreground" Value="White"/>
+            <Style.Triggers>
+                <!-- 鼠标移入时，背景会变浅，我们把文字改成深色 -->
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Foreground" Value="#333333"/>
+                </Trigger>
+                <!-- 如果还想在按下时再调一次样式 -->
+                <Trigger Property="IsPressed" Value="True">
+                    <Setter Property="Foreground" Value="#111111"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+    </ui:Page.Resources>
+    <ScrollViewer>
     <ikw:SimpleStackPanel Spacing="6" Margin="0,20,0,0">
 
         <!-- 每周目标任务量 -->
@@ -65,7 +84,7 @@
                         MinWidth="70"
                         MinHeight="35"
                         Margin="20,0,30,0"
-                        Style="{StaticResource {x:Static ui:ThemeKeys.AccentButtonStyleKey}}" />
+                        Style="{StaticResource SaveButtonStyle}" />
             </StackPanel>
         
         </ikw:SimpleStackPanel>
