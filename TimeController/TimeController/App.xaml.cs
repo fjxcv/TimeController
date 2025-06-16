@@ -15,6 +15,7 @@ using TimeController.Views.StrongGoalMonth;
 using TimeController.Views.StrongGoalWeek;
 using iNKORE.UI.WPF.Modern.Helpers.Styles;
 using MessageBox = iNKORE.UI.WPF.Modern.Controls.MessageBox;
+using TimeController.Helpers;
 
 namespace TimeController
 {
@@ -84,6 +85,10 @@ namespace TimeController
                 })
                 .Build();
             AppHost.Start();
+
+            // 根据存储的主题选项或系统主题应用样式
+            var settingsSvc = AppHost.Services.GetRequiredService<ISettingsService>();
+            ThemeHelper.ApplyFromSettings(settingsSvc);
 
             // 确保数据库使用迁移初始化
             try

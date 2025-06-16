@@ -2,7 +2,7 @@
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Windows;
-using Microsoft.Win32;
+using TimeController.Helpers;
 using System.Windows.Input;
 using TimeController.Services;
 using TimeController.Models;
@@ -48,7 +48,7 @@ namespace TimeController.ViewModels
             if (_selectedThemeOption == ThemeOption.System)
                 SubscribeSystemThemeChange();
             else
-                ApplyAppTheme(_selectedThemeOption == ThemeOption.Light);
+                ThemeHelper.ApplyAppTheme(_selectedThemeOption == ThemeOption.Light);
 
             // 从存储中读取阈值，默认至少 4
             RewardThreshold = Math.Max(4, _settingsService.LoadWeeklyTarget());
@@ -139,7 +139,7 @@ namespace TimeController.ViewModels
                 else
                 {
                     UnsubscribeSystemThemeChange();
-                    ApplyAppTheme(value == ThemeOption.Light);
+                    ThemeHelper.ApplyAppTheme(value == ThemeOption.Light);
                 }
             }
         }
@@ -151,7 +151,7 @@ namespace TimeController.ViewModels
         {
             SystemEvents.UserPreferenceChanged += OnUserPreferenceChanged;
             // 首次同步一次
-            ApplyAppTheme(GetCurrentSystemIsLight());
+            ThemeHelper.ApplyAppTheme(ThemeHelper.GetSystemIsLight());
         }
 
         private void UnsubscribeSystemThemeChange()
@@ -163,25 +163,12 @@ namespace TimeController.ViewModels
         {
             // Windows 主题改变时 e.Category 为 General
             if (e.Category == UserPreferenceCategory.General)
-                ApplyAppTheme(GetCurrentSystemIsLight());
+                ThemeHelper.ApplyAppTheme(ThemeHelper.GetSystemIsLight());
         }
 
-        private bool GetCurrentSystemIsLight()
-        {
-            const string key = @"HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Themes\Personalize";
-            var value = Registry.GetValue(key, "AppsUseLightTheme", 1);
-            return Convert.ToInt32(value) == 1;
-        }
+        private bool GetCurrentSystemIsLight() => ThemeHelper.GetSystemIsLight();
 
-        private void ApplyAppTheme(bool isLight)
-        {
-            // 假设你项目里有两个 ResourceDictionary：LightTheme.xaml / DarkTheme.xaml
-            var uri = new Uri($"/TimeController;component/Themes/{(isLight ? "Light" : "Dark")}Theme.xaml",
-                              UriKind.Relative);
-            var dict = new ResourceDictionary { Source = uri };
-            // 替换第一个 MergedDictionary
-            Application.Current.Resources.MergedDictionaries[0] = dict;
-        }
+        private void ApplyAppTheme(bool isLight) => ThemeHelper.ApplyAppTheme(isLight);
 
         #endregion
 

@@ -15,7 +15,10 @@
         IsPaneToggleButtonVisible="False"
         IsBackButtonVisible="Collapsed"
         SelectionChanged="NavigationView_SelectionChanged"
-        AlwaysShowHeader="False">
+        AlwaysShowHeader="False"
+        Background="{DynamicResource NavigationBackgroundBrush}"
+        PaneBackground="{DynamicResource NavigationBackgroundBrush}"
+        Foreground="{DynamicResource PrimaryTextBrush}">
 
         <FrameworkElement.Resources>
             <SolidColorBrush x:Key="{x:Static ui:ThemeKeys.NavigationViewContentBackgroundKey}" Color="Transparent"/>

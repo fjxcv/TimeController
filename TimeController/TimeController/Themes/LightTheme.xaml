@@ -7,5 +7,16 @@
     <SolidColorBrush x:Key="AppBackgroundBrush" Color="White"/>
     <SolidColorBrush x:Key="AppForegroundBrush" Color="Black"/>
 
-
+    <SolidColorBrush x:Key="NavigationBackgroundBrush" Color="#FFFFFF"/>
+    <SolidColorBrush x:Key="PageBackgroundBrush" Color="#F5F5F5"/>
+    <SolidColorBrush x:Key="PrimaryTextBrush" Color="#333333"/>
+    <SolidColorBrush x:Key="SecondaryTextBrush" Color="#666666"/>
+    <SolidColorBrush x:Key="ButtonBackgroundBrush" Color="#E5E5E5"/>
+    <SolidColorBrush x:Key="ButtonHoverBrush" Color="#D5D5D5"/>
+    <SolidColorBrush x:Key="ButtonForegroundBrush" Color="#000000"/>
+    <SolidColorBrush x:Key="InputBorderBrush" Color="#CCCCCC"/>
+    <SolidColorBrush x:Key="InputFocusBorderBrush" Color="#888888"/>
+    <SolidColorBrush x:Key="InputBackgroundBrush" Color="#FFFFFF"/>
+    <SolidColorBrush x:Key="DividerBrush" Color="#E0E0E0"/>
+    <SolidColorBrush x:Key="AccentBrush" Color="#5a9bd4"/>
 </ResourceDictionary>

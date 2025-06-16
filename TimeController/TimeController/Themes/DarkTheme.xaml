@@ -7,6 +7,18 @@
     <!-- 覆盖的深色自定义 -->
     <SolidColorBrush x:Key="AppBackgroundBrush" Color="#111111"/>
     <SolidColorBrush x:Key="AppForegroundBrush" Color="White"/>
-    <!-- … -->
+
+    <SolidColorBrush x:Key="NavigationBackgroundBrush" Color="#18171d"/>
+    <SolidColorBrush x:Key="PageBackgroundBrush" Color="#222328"/>
+    <SolidColorBrush x:Key="PrimaryTextBrush" Color="#e0e0e0"/>
+    <SolidColorBrush x:Key="SecondaryTextBrush" Color="#a0a0a0"/>
+    <SolidColorBrush x:Key="ButtonBackgroundBrush" Color="#2a2a33"/>
+    <SolidColorBrush x:Key="ButtonHoverBrush" Color="#3a3a44"/>
+    <SolidColorBrush x:Key="ButtonForegroundBrush" Color="#ffffff"/>
+    <SolidColorBrush x:Key="InputBorderBrush" Color="#44444f"/>
+    <SolidColorBrush x:Key="InputFocusBorderBrush" Color="#64646f"/>
+    <SolidColorBrush x:Key="InputBackgroundBrush" Color="#1f1f27"/>
+    <SolidColorBrush x:Key="DividerBrush" Color="#1a1a1f"/>
+    <SolidColorBrush x:Key="AccentBrush" Color="#5a9bd4"/>
 
 </ResourceDictionary>
