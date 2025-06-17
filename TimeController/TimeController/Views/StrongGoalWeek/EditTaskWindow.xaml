@@ -112,7 +112,7 @@
         <StackPanel Grid.Row="5" Grid.Column="2" VerticalAlignment="Center" Orientation="Horizontal">
         <!-- 日期 -->
         <TextBlock Text="日期:" Margin="40,5,20,2" FontWeight="Medium" FontSize="14"/>
-        <DatePicker SelectedDate="{Binding PlannedDate, Mode=TwoWay}"/>
+        <DatePicker SelectedDate="{Binding PlannedDate, Mode=TwoWay}" Width="120"/>
         </StackPanel>
         
         <StackPanel Grid.Row="6" Grid.ColumnSpan="2" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,15,0,0">

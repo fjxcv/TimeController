@@ -101,45 +101,30 @@ namespace TimeController
                 Console.Error.WriteLine($"Database migration failed: {ex.Message}");
             }
 
-            // 打开主窗口
-            var mainWindow = AppHost.Services.GetRequiredService<MainWindow>();
+            var settingsService = AppHost.Services.GetRequiredService<ISettingsService>();
+            UserSettings.EnableDailyReviewPrompt = settingsService.LoadEnableDailyReviewPrompt();
+            UserSettings.DailyReviewPromptHour = settingsService.LoadDailyReviewPromptHour();
 
-            // 1. 拿到今天的任务
-            var taskService = AppHost.Services.GetRequiredService<ITaskService>();
-            var list = await taskService.GetTasksForDate(DateTime.Today);
-            var todayTasks = new ObservableCollection<TaskModel>(list);
-
-            // 2. new 出提醒弹窗，把同一份 todayTasks 传进去
-            var reminderDlg = new TodayTasksReminderDialog(todayTasks)
+            Dispatcher.BeginInvoke(async () =>
             {
-                Owner = Current.MainWindow,
-                WindowStartupLocation = WindowStartupLocation.CenterOwner
-            };
-
-            // 3. 拿到 VM 并订阅 ActiveTasks
-            var vm = (TodayTasksReminderViewModel)reminderDlg.DataContext;
-            vm.PropertyChanged += (s, evt) =>
-            {
-                if (evt.PropertyName == nameof(vm.ActiveTasks)
-                    && vm.ActiveTasks.Any()
-                    && !reminderDlg.IsVisible)
+                var mainWindow = Current.MainWindow;
+                var taskService = AppHost.Services.GetRequiredService<ITaskService>();
+                var navService = AppHost.Services.GetRequiredService<INavigationService>();
+                var list = await taskService.GetTasksForDate(DateTime.Today);
+                var todayTasks = new ObservableCollection<TaskModel>(list.Where(t => t.IsReminderEnabled));
+                if (todayTasks.Any())
                 {
-                    reminderDlg.Show();
-                    reminderDlg.Activate();
+                    var dlg = new TodayTasksReminderDialog(todayTasks)
+                    {
+                        Owner = mainWindow,
+                        WindowStartupLocation = WindowStartupLocation.CenterOwner
+                    };
+                    dlg.ShowDialog();
                 }
-            };
 
-            // 提醒复盘弹窗
-            _ = Task.Run(async () =>
-            {
-                await Task.Delay(1000);
-                await Application.Current.Dispatcher.InvokeAsync(async () =>
-                {
-                    await ReviewReminderService.TryShowReviewReminderAsync(
-                        taskService,
-                        AppHost.Services.GetRequiredService<INavigationService>());
-                });
+                ReviewReminderService.Start(taskService, navService);
             });
+
 
         }
         protected override void OnExit(ExitEventArgs e)

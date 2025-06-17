@@ -404,6 +404,14 @@
                                                             <TextBlock Text="{Binding Name}" 
                                                                        FontWeight="Bold" 
                                                                        Margin="0,0,0,4"/>
+                                                            <!-- 时间段 -->
+                                                            <TextBlock FontSize="12"
+                                                                       Foreground="#666666"
+                                                                       Margin="0,0,0,4">
+                                                                <Run Text="{Binding StartTime, Converter={StaticResource TimeSpanToStringConverter}}"/>
+                                                                <Run Text=" – "/>
+                                                                <Run Text="{Binding EndTime, Converter={StaticResource TimeSpanToStringConverter}}"/>
+                                                            </TextBlock>
                                                             <!-- 备注（如果为空就不显示也没关系） -->
                                                             <TextBlock Text="{Binding Note}" 
                                                                        FontStyle="Italic" 

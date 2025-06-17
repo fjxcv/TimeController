@@ -67,6 +67,25 @@
                 </ComboBox>
             </ui:SettingsCard>-->
 
+            <!-- 自动复盘提醒时间 -->
+            <ui:SettingsCard Header="自动复盘提醒时间"
+                             IsEnabled="True">
+                <ui:SettingsCard.HeaderIcon>
+                    <ui:FontIcon Glyph="&#xE823;"/>
+                </ui:SettingsCard.HeaderIcon>
+                <ComboBox Width="80"
+                        SelectedValue="{Binding DailyReviewPromptOption}"
+                        SelectedValuePath="Tag"
+                        Margin="0,8,0,0">
+                    <ComboBoxItem Content="关闭提醒" Tag="-1" />
+                    <ComboBoxItem Content="18:00" Tag="18" />
+                    <ComboBoxItem Content="19:00" Tag="19" />
+                    <ComboBoxItem Content="20:00" Tag="20" />
+                    <ComboBoxItem Content="21:00" Tag="21" />
+                    <ComboBoxItem Content="22:00" Tag="22" />
+                </ComboBox>
+            </ui:SettingsCard>
+        
             <!-- 保存 & 重置 按钮 -->
             <StackPanel Orientation="Horizontal"
                           HorizontalAlignment="Right"
