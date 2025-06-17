@@ -15,6 +15,7 @@ using TimeController.Views.StrongGoalMonth;
 using TimeController.Views.StrongGoalWeek;
 using iNKORE.UI.WPF.Modern.Helpers.Styles;
 using MessageBox = iNKORE.UI.WPF.Modern.Controls.MessageBox;
+using System.Collections.ObjectModel;
 
 namespace TimeController
 {
@@ -40,7 +41,7 @@ namespace TimeController
         /// </summary>
         public static IServiceProvider Services => AppHost.Services;
 
-        protected override void OnStartup(StartupEventArgs e)
+        protected override async void OnStartup(StartupEventArgs e)
         {
             base.OnStartup(e);
 
@@ -68,6 +69,7 @@ namespace TimeController
                     services.AddScoped<CasualModeViewModel>();
                     services.AddTransient<SettingsPageViewModel>();
                     services.AddTransient<AboutPageViewModel>();
+                    services.AddSingleton<TodayTasksReminderViewModel>();
 
                     //views
                     services.AddTransient<CasualModeView>();
@@ -76,10 +78,11 @@ namespace TimeController
                     services.AddTransient<ReviewView_everyday>();
                     services.AddTransient<SettingsPage>();
                     services.AddTransient<AboutPage>();
-
+                    services.AddSingleton<TodayTasksReminderDialog>();
 
                     // MainWindow
                     services.AddSingleton<MainWindow>();
+
 
                 })
                 .Build();
@@ -98,14 +101,35 @@ namespace TimeController
                 Console.Error.WriteLine($"Database migration failed: {ex.Message}");
             }
 
-            // 重置开发数据（仅示例，生产环境可移除）
-            var taskService = AppHost.Services.GetRequiredService<ITaskService>();
-            //_ = ((TaskService)taskService).ResetTaskDataAsync();
-
             // 打开主窗口
             var mainWindow = AppHost.Services.GetRequiredService<MainWindow>();
 
-            // 异步延迟后提醒复盘
+            // 1. 拿到今天的任务
+            var taskService = AppHost.Services.GetRequiredService<ITaskService>();
+            var list = await taskService.GetTasksForDate(DateTime.Today);
+            var todayTasks = new ObservableCollection<TaskModel>(list);
+
+            // 2. new 出提醒弹窗，把同一份 todayTasks 传进去
+            var reminderDlg = new TodayTasksReminderDialog(todayTasks)
+            {
+                Owner = Current.MainWindow,
+                WindowStartupLocation = WindowStartupLocation.CenterOwner
+            };
+
+            // 3. 拿到 VM 并订阅 ActiveTasks
+            var vm = (TodayTasksReminderViewModel)reminderDlg.DataContext;
+            vm.PropertyChanged += (s, evt) =>
+            {
+                if (evt.PropertyName == nameof(vm.ActiveTasks)
+                    && vm.ActiveTasks.Any()
+                    && !reminderDlg.IsVisible)
+                {
+                    reminderDlg.Show();
+                    reminderDlg.Activate();
+                }
+            };
+
+            // 提醒复盘弹窗
             _ = Task.Run(async () =>
             {
                 await Task.Delay(1000);
