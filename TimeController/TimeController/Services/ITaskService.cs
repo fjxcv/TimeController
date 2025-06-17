@@ -34,6 +34,10 @@ namespace TimeController.Services
 
         Task DeleteTaskAsync(TaskModel task);
 
+        // 删除所有相同课程的实例
+        Task DeleteAllCourseInstancesAsync(TaskModel courseTask);
+
+
         // 获取所有课程任务（不限日期范围）
         Task<List<TaskModel>> GetAllCourseTasksAsync();
 

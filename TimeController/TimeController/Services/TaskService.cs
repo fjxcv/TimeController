@@ -19,9 +19,7 @@ namespace TimeController.Services
     {
         private readonly TaskDbContext _context;
         private IDbContextTransaction? _currentTransaction; 
-
-        public event Action<TaskModel>? TaskSaved;
-
+        public event Action<TaskModel>?TaskSaved;
         public TaskService(TaskDbContext context)
         {
             _context = context;
@@ -39,16 +37,163 @@ namespace TimeController.Services
         // 按周获取课程
         public async Task<List<TaskModel>> GetCourseTasksForWeekAsync(DateTime referenceDate)
         {
-            // 计算参考日期所在周的周一
-            DateTime monday = referenceDate.Date;
-            while (monday.DayOfWeek != DayOfWeek.Monday)
-                monday = monday.AddDays(-1);
-            DateTime sunday = monday.AddDays(6);
-            // 返回该周的课程任务
-            return await _context.Task
-                .Where(t => t.IsCourseTask && t.PlannedDate >= monday && t.PlannedDate <= sunday)
-                .ToListAsync();
+            try
+            {
+                // 获取学期第一周的周一（如果有设置）
+                DateTime? semesterStartDate = await GetSemesterStartDateAsync();
+                if (!semesterStartDate.HasValue)
+                {
+                    Console.WriteLine("无法获取学期开始日期，无法计算当前周次");
+                    return new List<TaskModel>();
+                }
+
+                // 获取学期第一周的周一
+                DateTime semesterFirstMonday = semesterStartDate.Value;
+                while (semesterFirstMonday.DayOfWeek != DayOfWeek.Monday)
+                {
+                    semesterFirstMonday = semesterFirstMonday.AddDays(-1);
+                }
+
+                // 计算当前是学期第几周
+                DateTime currentWeekMonday = referenceDate.Date;
+                while (currentWeekMonday.DayOfWeek != DayOfWeek.Monday)
+                {
+                    currentWeekMonday = currentWeekMonday.AddDays(-1);
+                }
+
+                // 修改这里，使用 Ceiling 而不是 Round 来确保计算正确
+                int currentWeekNumber = (int)Math.Ceiling((currentWeekMonday - semesterFirstMonday).TotalDays / 7.0) + 1;
+
+                // 如果结果小于1，默认为第1周
+                currentWeekNumber = Math.Max(1, currentWeekNumber);
+
+                Console.WriteLine($"学期开始日期: {semesterFirstMonday:yyyy-MM-dd}, 当前周一: {currentWeekMonday:yyyy-MM-dd}, 当前是学期第 {currentWeekNumber} 周");
+
+                // 获取所有课程任务
+                var allCourseTasks = await GetAllCourseTasksAsync();
+                Console.WriteLine($"总共获取到 {allCourseTasks.Count} 个课程任务");
+
+                // 筛选出应该在当前周显示的课程
+                var currentWeekCourses = new List<TaskModel>();
+
+                foreach (var task in allCourseTasks)
+                {
+                    // 从Note中提取周次模式
+                    string weekPattern = null;
+                    if (!string.IsNullOrEmpty(task.Note) && task.Note.Contains("周次模式:"))
+                    {
+                        int startIndex = task.Note.IndexOf("周次模式:") + "周次模式:".Length;
+                        int endIndex = task.Note.IndexOf(",", startIndex);
+                        if (endIndex == -1) // 如果是最后一部分
+                            endIndex = task.Note.Length;
+
+                        if (startIndex < endIndex)
+                            weekPattern = task.Note.Substring(startIndex, endIndex - startIndex).Trim();
+                    }
+
+                    Console.WriteLine($"处理课程: {task.Name}, 周次模式: {weekPattern ?? "未设置"}");
+
+                    // 如果没有周次模式，默认为第一周
+                    if (string.IsNullOrEmpty(weekPattern))
+                    {
+                        if (currentWeekNumber == 1)
+                        {
+                            currentWeekCourses.Add(task);
+                            Console.WriteLine($"课程 {task.Name} 没有周次模式，但当前是第1周，所以添加此课程");
+                        }
+                        else
+                        {
+                            Console.WriteLine($"课程 {task.Name} 没有周次模式，默认只在第1周显示，当前是第{currentWeekNumber}周，不添加");
+                        }
+                        continue;
+                    }
+
+                    try
+                    {
+                        // 解析周次模式
+                        var weeks = AddCourseViewModel.ParseWeekPattern(weekPattern);
+                        Console.WriteLine($"课程 {task.Name} 的周次模式 {weekPattern} 解析结果: {string.Join(",", weeks)}");
+
+                        // 如果当前周在周次列表中，添加该课程
+                        if (weeks.Contains(currentWeekNumber))
+                        {
+                            currentWeekCourses.Add(task);
+                            Console.WriteLine($"当前第{currentWeekNumber}周在课程 {task.Name} 的周次列表中，添加此课程");
+                        }
+                        else
+                        {
+                            Console.WriteLine($"当前第{currentWeekNumber}周不在课程 {task.Name} 的周次列表中，不添加");
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"解析周次模式 '{weekPattern}' 失败: {ex.Message}");
+                        // 解析失败时，如果是第一周就添加
+                        if (currentWeekNumber == 1)
+                        {
+                            currentWeekCourses.Add(task);
+                            Console.WriteLine($"周次解析失败，默认在第1周显示");
+                        }
+                    }
+                }
+
+                Console.WriteLine($"本周共筛选出 {currentWeekCourses.Count} 个课程任务");
+                return currentWeekCourses;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"获取本周课程任务时出错: {ex.Message}\n{ex.StackTrace}");
+                return new List<TaskModel>();
+            }
         }
+
+
+
+        // 获取学期开始日期
+        private async Task<DateTime?> GetSemesterStartDateAsync()
+        {
+            try
+            {
+                // 尝试从 App.Current.Properties 获取学期开始日期
+                if (App.Current.Properties.Contains("SemesterStartDate"))
+                {
+                    var dateString = App.Current.Properties["SemesterStartDate"] as string;
+                    if (DateTime.TryParse(dateString, out DateTime result))
+                    {
+                        Console.WriteLine($"从应用程序属性获取到学期开始日期: {result:yyyy-MM-dd}");
+                        return result;
+                    }
+                }
+
+                // 尝试从数据库中获取第一个课程任务的日期作为参考
+                var firstCourseTask = await _context.Task
+                    .Where(t => t.IsCourseTask)
+                    .OrderBy(t => t.PlannedDate)
+                    .FirstOrDefaultAsync();
+
+                if (firstCourseTask != null)
+                {
+                    // 找到课程的实际日期，然后回推到学期开始的周一
+                    DateTime date = firstCourseTask.PlannedDate;
+                    // 根据星期几偏移回到该周的周一
+                    DateTime monday = date.AddDays(-firstCourseTask.WeekDay);
+
+                    Console.WriteLine($"从第一个课程任务推导学期开始日期: {monday:yyyy-MM-dd}");
+                    return monday;
+                }
+
+                // 如果没有课程任务，返回当前日期
+                Console.WriteLine("没有找到学期开始日期参考，使用当前日期");
+                return DateTime.Today;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"获取学期开始日期时出错: {ex.Message}");
+                // 如果出错，返回当前日期
+                return DateTime.Today;
+            }
+        }
+
         public IDisposable BeginTransaction()
         {
             _currentTransaction = _context.Database.BeginTransaction();
@@ -75,25 +220,12 @@ namespace TimeController.Services
             var start = date.Date;
             var end = start.AddDays(1);
 
-            Debug.WriteLine($"[GetTasksForDate] Date range = {start:yyyy-MM-dd HH:mm:ss} ～ {end:yyyy-MM-dd HH:mm:ss}");
-           
-            // 3. 构造查询
-            var query = _context.Task
-                .Where(t => t.PlannedDate >= start && t.PlannedDate < end);
-
-            // 4. 打印 EF 要执行的 SQL
-            Debug.WriteLine("[GetTasksForDate] SQL =\n" + query.ToQueryString());
-
-            // 5. 真正执行
-            var list = await query.ToListAsync();
-
-            // 6. 再打印一下结果明细
-            Debug.WriteLine($"[GetTasksForDate] Fetched {list.Count} items:");
-            foreach (var t in list)
-                Debug.WriteLine($"    - {t.Name} | {t.Status} | {t.PlannedDate:yyyy-MM-dd HH:mm:ss}");
-
-            return list;
-
+            return await _context.Task
+                .Where(t =>
+                    t.PlannedDate >= start &&
+                    t.PlannedDate < end
+                )
+                .ToListAsync();
         }
 
 
@@ -103,6 +235,28 @@ namespace TimeController.Services
             await _context.SaveChangesAsync();
         }
 
+        public async Task DeleteAllCourseInstancesAsync(TaskModel courseTask)
+        {
+            if (!courseTask.IsCourseTask)
+                return; // 如果不是课程任务，则不执行操作
+
+            // 从课程名称和Note（包含教师和地点信息）标识相同的课程
+            string courseName = courseTask.Name;
+            string courseNote = courseTask.Note;
+            int weekDay = courseTask.WeekDay;
+
+            // 查找所有拥有相同名称、Note和星期几的课程任务
+            var allInstancesOfCourse = await _context.Task
+                .Where(t => t.IsCourseTask
+                       && t.Name == courseName
+                       && t.Note == courseNote
+                       && t.WeekDay == weekDay)
+                .ToListAsync();
+
+            // 从数据库中删除所有这些课程实例
+            _context.Task.RemoveRange(allInstancesOfCourse);
+            await _context.SaveChangesAsync();
+        }
 
 
         public async Task<List<TaskModel>> GetTasksForDateRange(DateTime startDate, DateTime endDate)
@@ -118,11 +272,9 @@ namespace TimeController.Services
                 Debug.WriteLine($"任务状态: {task.Name} - {task.Status}");
             }
 
-            //return await _context.Task
-            //    .Where(t => t.PlannedDate.Date >= startDate.Date && t.PlannedDate.Date <= endDate.Date)
-            //    .ToListAsync();
-
-            return tasks;
+            return await _context.Task
+                .Where(t => t.PlannedDate.Date >= startDate.Date && t.PlannedDate.Date <= endDate.Date)
+                .ToListAsync();
         }
 
         public Task<List<TaskModel>> GetAllTasksAsync()
@@ -133,19 +285,7 @@ namespace TimeController.Services
         //更新任务状态
         public async Task UpdateTaskAsync(TaskModel task)
         {
-            var conn = _context.Database.GetDbConnection();
-            Debug.WriteLine($"[DB File] {conn.DataSource}");
-
-            Debug.WriteLine($"🔨 Enter UpdateTaskAsync for {task.Name}, Id={task.Id}");
-            if (task.Id == 0)
-            {
-                await _context.Task.AddAsync(task);
-            }
-            else
-            {
-                _context.Task.Update(task);
-            }
-
+            _context.Task.Update(task);
             await _context.SaveChangesAsync();
 
             TaskSaved?.Invoke(task);

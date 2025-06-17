@@ -4,6 +4,7 @@ using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using TimeController.Models;
 using System.Windows.Input;
+using System.Diagnostics;
 
 namespace TimeController.ViewModels
 {
@@ -67,6 +68,9 @@ namespace TimeController.ViewModels
 
             SaveCommand = new RelayCommand(_ => OnSave(), _ => IsTimeValid);
 
+            // 初始化时更新时间段提示
+            UpdateTimePeriodHint();
+
         }
 
         public event Action<TaskModel>? SaveRequested;
@@ -106,6 +110,70 @@ namespace TimeController.ViewModels
             }
         }
 
+        // 添加时间段提示属性
+        private string _timePeriodHint = string.Empty;
+        public string TimePeriodHint
+        {
+            get => _timePeriodHint;
+            private set
+            {
+                if (_timePeriodHint != value)
+                {
+                    _timePeriodHint = value;
+                    OnPropertyChanged();
+                    OnPropertyChanged(nameof(HasTimePeriodHint));
+                }
+            }
+        }
+
+        public bool HasTimePeriodHint => !string.IsNullOrEmpty(TimePeriodHint);
+
+
+        // 添加UpdateTimePeriodHint方法
+        private void UpdateTimePeriodHint()
+        {
+            if (!IsAllDay && Task.StartTime.HasValue && Task.EndTime.HasValue)
+            {
+                TimeSpan startTime = Task.StartTime.Value;
+                TimeSpan endTime = Task.EndTime.Value;
+
+                Debug.WriteLine($"检查时间段: {startTime} - {endTime}");
+
+                // 判断时间段是否在7:00-12:00之间
+                if (startTime >= new TimeSpan(7, 0, 0) && endTime <= new TimeSpan(12, 0, 0))
+                {
+                    TimePeriodHint = "7:00-12:00为高度集中和强自制力时间段\n推荐进行不感兴趣且消耗精力的事情";
+                    Debug.WriteLine($"设置提示: {TimePeriodHint}");
+                    return;
+                }
+
+                // 判断时间段是否在12:00-18:00之间
+                if (startTime >= new TimeSpan(12, 0, 0) && endTime <= new TimeSpan(18, 0, 0))
+                {
+                    TimePeriodHint = "12:00-18:00为高强度能量和低自制力时间段\n推荐进行感兴趣但又消耗精力的事情";
+                    Debug.WriteLine($"设置提示: {TimePeriodHint}");
+                    return;
+                }
+
+                // 判断时间段是否在18:00-22:00之间
+                if (startTime >= new TimeSpan(18, 0, 0) && endTime <= new TimeSpan(22, 0, 0))
+                {
+                    TimePeriodHint = "18:00-22:00为低能量和低自制力时间段\n推荐进行有趣且不消耗精力的事情";
+                    Debug.WriteLine($"设置提示: {TimePeriodHint}");
+                    return;
+                }
+
+                // 不在特定时间段内，清空提示
+                TimePeriodHint = string.Empty;
+                Debug.WriteLine("清空提示: 不在特定时间段内");
+            }
+            else
+            {
+                // 全天任务或时间未设置，清空提示
+                TimePeriodHint = string.Empty;
+                Debug.WriteLine("清空提示: 全天任务或时间未设置");
+            }
+        }
 
 
         private string? _note;
@@ -130,6 +198,7 @@ namespace TimeController.ViewModels
             set { Task.Type = value; OnPropertyChanged(); }
         }
 
+        // 修改IsAllDay属性，添加时间段提示更新
         public bool IsAllDay
         {
             get => Task.IsAllDay;
@@ -138,6 +207,7 @@ namespace TimeController.ViewModels
                 Task.IsAllDay = value;
                 OnPropertyChanged();
                 OnPropertyChanged(nameof(IsTimeSelectionEnabled));
+                UpdateTimePeriodHint(); // 更新时间段提示
             }
         }
 
@@ -169,6 +239,7 @@ namespace TimeController.ViewModels
                 }
 
                 ValidateTimeRange();//开始时间<结束时间
+                UpdateTimePeriodHint(); // 更新时间段提示
             }
         }
         private void ValidateTimeRange()
@@ -315,6 +386,7 @@ namespace TimeController.ViewModels
                 Task.EndTime = value?.TimeOfDay;
                 OnPropertyChanged();
                 ValidateTimeRange();//开始时间<结束时间
+                UpdateTimePeriodHint();
             }
         }
 

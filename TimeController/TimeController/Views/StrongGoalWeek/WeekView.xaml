@@ -11,12 +11,10 @@
         Title="" d:DesignHeight="800" d:DesignWidth="1104">
 
     <ui:Page.Resources>
-        
         <conv:CompletedToTextDecorationConverter x:Key="CompletedToTextDecorationConverter"/>
-        
     </ui:Page.Resources>
-    
-        <Grid x:Name="RootGrid">
+
+    <Grid x:Name="RootGrid">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
@@ -25,7 +23,6 @@
 
         <!-- Header -->
         <Grid Grid.Row="0" Margin="24,0,24,0">
-            <!-- 原有的头部内容保持不变 -->
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="Auto"/>
                 <ColumnDefinition Width="*"/>
@@ -40,9 +37,8 @@
                        FontWeight="Bold"
                        VerticalAlignment="Center"/>
 
-            <StackPanel Grid.Column="1" 
-                        Orientation="Horizontal" 
-                        HorizontalAlignment="Center">
+            <!-- 将月份日期的显示移到中间位置 -->
+            <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
                 <Button Content="&lt;" Margin="8,0" Padding="8,4" Command="{Binding PreviousMonthCommand}"/>
                 <TextBlock x:Name="MonthText" Text="{Binding MonthText}" VerticalAlignment="Center" Margin="8,0"/>
                 <Button Content="&gt;" Margin="8,0" Padding="8,4" Command="{Binding NextMonthCommand}"/>
@@ -51,11 +47,12 @@
                 <Button Content="&gt;" Margin="8,0" Padding="8,4" Command="{Binding NextWeekCommand}"/>
 
                 <TextBlock Text="{Binding SemesterWeekText}" 
-                    VerticalAlignment="Center" 
-                    Margin="24,0,8,0"
-                    Foreground="#0078D4"
-                    FontWeight="SemiBold"
-                    Visibility="{Binding SemesterWeekText, Converter={StaticResource StringToVisibilityConverter}}"/>
+                   VerticalAlignment="Center" 
+                   Margin="24,0,8,0"
+                   Foreground="#0078D4"
+                   FontSize="13"
+                   FontWeight="SemiBold"
+                   Visibility="{Binding SemesterWeekText, Converter={StaticResource StringToVisibilityConverter}}"/>
             </StackPanel>
 
             <Button Grid.Column="2"
@@ -101,13 +98,11 @@
                 <!-- 左上角区域显示"全天任务" -->
                 <Border Grid.Column="0" Background="Transparent">
                     <TextBlock Text="全天任务" 
-               VerticalAlignment="Center" 
-               HorizontalAlignment="Center"
-               
-               FontSize="14"
-               Foreground="#333333"/>
+                               VerticalAlignment="Center" 
+                               HorizontalAlignment="Center"
+                               FontSize="14"
+                               Foreground="#333333"/>
                 </Border>
-
 
                 <!-- 日期列标题 -->
                 <Grid Grid.Column="1">
@@ -146,53 +141,29 @@
                     <Grid Grid.Column="0">
                         <Grid.RowDefinitions>
                             <RowDefinition Height="40"/>
-                            <!-- 0:00 -->
                             <RowDefinition Height="40"/>
-                            <!-- 1:00 -->
                             <RowDefinition Height="40"/>
-                            <!-- 2:00 -->
                             <RowDefinition Height="40"/>
-                            <!-- 3:00 -->
                             <RowDefinition Height="40"/>
-                            <!-- 4:00 -->
                             <RowDefinition Height="40"/>
-                            <!-- 5:00 -->
                             <RowDefinition Height="40"/>
-                            <!-- 6:00 -->
                             <RowDefinition Height="40"/>
-                            <!-- 7:00 -->
                             <RowDefinition Height="40"/>
-                            <!-- 8:00 -->
                             <RowDefinition Height="40"/>
-                            <!-- 9:00 -->
                             <RowDefinition Height="40"/>
-                            <!-- 10:00 -->
                             <RowDefinition Height="40"/>
-                            <!-- 11:00 -->
                             <RowDefinition Height="40"/>
-                            <!-- 12:00 -->
                             <RowDefinition Height="40"/>
-                            <!-- 13:00 -->
                             <RowDefinition Height="40"/>
-                            <!-- 14:00 -->
                             <RowDefinition Height="40"/>
-                            <!-- 15:00 -->
                             <RowDefinition Height="40"/>
-                            <!-- 16:00 -->
                             <RowDefinition Height="40"/>
-                            <!-- 17:00 -->
                             <RowDefinition Height="40"/>
-                            <!-- 18:00 -->
                             <RowDefinition Height="40"/>
-                            <!-- 19:00 -->
                             <RowDefinition Height="40"/>
-                            <!-- 20:00 -->
                             <RowDefinition Height="40"/>
-                            <!-- 21:00 -->
                             <RowDefinition Height="40"/>
-                            <!-- 22:00 -->
                             <RowDefinition Height="40"/>
-                            <!-- 23:00 -->
                         </Grid.RowDefinitions>
                         <TextBlock Text="0:00" Grid.Row="0" VerticalAlignment="Center" HorizontalAlignment="Left"/>
                         <TextBlock Text="1:00" Grid.Row="1" VerticalAlignment="Center" HorizontalAlignment="Left"/>
@@ -256,6 +227,7 @@
                                             <ColumnDefinition Width="*"/>
                                         </Grid.ColumnDefinitions>
                                         <Grid.RowDefinitions>
+                                            <!-- 24小时，每小时一行 -->
                                             <RowDefinition Height="40"/>
                                             <RowDefinition Height="40"/>
                                             <RowDefinition Height="40"/>
@@ -386,7 +358,7 @@
                                 <DataTemplate>
                                     <Grid MouseEnter="Grid_MouseEnter" MouseLeave="Grid_MouseLeave" MouseLeftButtonDown="TaskBlock_MouseLeftButtonDown"
                                         Background="Transparent" Tag="{Binding}">
-                                        <!-- 你的任务块背景 -->
+                                        <!-- 任务块背景 -->
                                         <Border Background="{Binding Brush}"
                                                 CornerRadius="3"
                                                 Margin="2">
@@ -477,6 +449,15 @@
                     Width="40" Height="40"
                     Visibility="Collapsed"
                     Click="AddTaskButton_Click"/>
+            <Border x:Name="TaskDetailsCard" Visibility="Collapsed" 
+                    Background="#fffbc7" CornerRadius="4" Padding="3"
+                    BorderBrush="#fffbc7" BorderThickness="1">
+                <StackPanel>
+                    <TextBlock x:Name="CardNoteText" TextWrapping="Wrap" Margin="0,0,0,2" FontSize="13"/>
+                    <TextBlock x:Name="CardTypeText" Margin="0,0,0,2" FontSize="13"/>
+                    <TextBlock x:Name="CardTimeText" FontSize="13"/>
+                </StackPanel>
+            </Border>
         </Canvas>
     </Grid>
 </ui:Page>

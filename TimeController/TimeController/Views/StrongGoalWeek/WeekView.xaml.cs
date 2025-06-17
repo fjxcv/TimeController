@@ -41,9 +41,6 @@ namespace TimeController.Views.StrongGoalWeek
                 // 从服务容器获取 TaskService
                 _viewModel = App.Services.GetRequiredService<WeekViewModel>();
 
-                // 使用有参构造函数创建 ViewModel
-                //_viewModel = new WeekViewModel(taskService);
-
                 DataContext = _viewModel;
 
                 // 初始化视图模型和事件处理
@@ -56,16 +53,16 @@ namespace TimeController.Views.StrongGoalWeek
                 // 强制初始加载
                 _viewModel.LoadTasksForCurrentWeek();
 
+
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 MessageBox.Show($"初始化错误：{ex.Message}\n\n应用程序可能无法正常工作。",
                        "初始化错误", MessageBoxButton.OK, MessageBoxImage.Error);
                 Console.WriteLine($"初始化错误：{ex.Message}\n{ex.StackTrace}");
-
             }
-
         }
+
 
         private void InitializeEvents()
         {
@@ -88,97 +85,97 @@ namespace TimeController.Views.StrongGoalWeek
             // 添加删除确认事件处理
             _viewModel.DeleteConfirmationRequested += async (block) =>
             {
-                var result = MessageBox.Show(
-                     $"确定要删除任务 \"{block.Name}\" 吗？",
-                     "确认删除",
-                    MessageBoxButton.YesNo,
-                    MessageBoxImage.Warning);
+                // 对于普通任务，显示简单确认对话框
+                if (!block.IsCourse)
+                {
+                    string message = $"确定要删除任务 \"{block.Name}\" 吗？";
+                    string title = "确认删除";
 
-                return result == MessageBoxResult.Yes;
+                    var result = MessageBox.Show(
+                        message,
+                        title,
+                        MessageBoxButton.YesNo,
+                        MessageBoxImage.Warning);
+
+                    return result == MessageBoxResult.Yes;
+                }
+                else
+                {
+                    // 对于课程任务，不在这里处理确认，返回 true 让 ViewModel 中的逻辑处理
+                    // 这样 ViewModel 中的课程确认对话框就会正常显示
+                    return true;
+                }
             };
+
         }
 
         // 处理任务冲突
-        private async void OnTaskConflictDetected(TaskModel newTask, List<WeekViewModel.TaskBlock> conflicts)
+        private void OnTaskConflictDetected(TaskModel newTask, List<WeekViewModel.TaskBlock> conflicts)
         {
             Console.WriteLine($"收到冲突检测事件 - 任务: {newTask.Name}, 冲突数: {conflicts.Count}");
 
-            // 分别获取任务和课程冲突
-            var taskConflicts = conflicts.Where(c => !c.IsCourse).ToList();
+            // 只获取课程冲突，因为我们只关心课程冲突
             var courseConflicts = conflicts.Where(c => c.IsCourse).ToList();
 
-            // 构建冲突提示文本
-            string message = "";
-            if (taskConflicts.Any())
-            {
-                var taskNames = string.Join("\n", taskConflicts.Select(c => $"- {c.Name}"));
-                message += $"该时间段与以下任务冲突:\n{taskNames}\n";
-            }
-
+            // 如果有课程冲突，显示警告并阻止添加
             if (courseConflicts.Any())
             {
                 var courseNames = string.Join("\n", courseConflicts.Select(c => $"- {c.Name}"));
-                message += $"{(taskConflicts.Any() ? "\n还" : "")}与以下课程冲突:\n{courseNames}\n";
+                string message = $"无法添加任务，与以下课程时间冲突:\n{courseNames}\n\n请修改任务时间以避免与课程冲突。";
+
+                // 弹出警告对话框（只有确定按钮）
+                MessageBox.Show(
+                    message,
+                    "课程时间冲突",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Warning);
+
+                Console.WriteLine("检测到课程冲突，阻止添加任务");
+                return; // 直接返回，不继续处理
             }
 
-            // 修改这里的提示文本，明确说明点击确认会删除冲突任务
+            // 对于非课程冲突，保持原有处理逻辑
+            var taskConflicts = conflicts.Where(c => !c.IsCourse).ToList();
             if (taskConflicts.Any())
             {
-                message += "\n确认后将会【删除】上述冲突的任务，是否继续?";
-            }
-            else
-            {
-                message += "\n是否仍要添加此任务?";
-            }
+                string message = "";
+                var taskNames = string.Join("\n", taskConflicts.Select(c => $"- {c.Name}"));
+                message += $"该时间段与以下任务冲突:\n{taskNames}\n";
+                message += "\n确认后将会删除原有冲突的任务，是否继续?";
 
-            // 如果是课程冲突，添加特别说明
-            if (courseConflicts.Any())
-            {
-                message += "\n\n注意：添加后课程不会被删除，但会被标记为冲突。";
-            }
+                // 弹出确认对话框
+                var result = MessageBox.Show(
+                    message,
+                    "任务时间冲突",
+                    MessageBoxButton.YesNo,
+                    MessageBoxImage.Warning);
 
-            // 弹出确认对话框
-            var result = MessageBox.Show(
-                message,
-                "时间冲突",
-                MessageBoxButton.YesNo,
-                MessageBoxImage.Warning);
-
-            // 如果用户选择"是"，则处理冲突并添加新任务
-            if (result == MessageBoxResult.Yes)
-            {
-                Console.WriteLine("用户确认处理冲突，开始执行HandleConflictAndAddTask");
-                var viewModel = DataContext as WeekViewModel;
-                if (viewModel != null)
+                // 如果用户选择"是"，则处理冲突并添加新任务
+                if (result == MessageBoxResult.Yes)
                 {
-                    try
+                    Console.WriteLine("用户确认处理任务冲突，开始执行HandleConflictAndAddTask");
+                    var viewModel = DataContext as WeekViewModel;
+                    if (viewModel != null)
                     {
-                        await viewModel.HandleConflictAndAddTask(newTask, conflicts);
-
-                        // 如果有任务被删除，显示一个通知
-                        if (taskConflicts.Any())
+                        try
                         {
+                            // 只传递非课程冲突，因为我们只处理任务冲突
+                            viewModel.HandleConflictAndAddTask(newTask, taskConflicts);
+
+                            // 显示通知
                             MessageBox.Show(
                                 $"已删除 {taskConflicts.Count} 个冲突任务，并添加新任务：{newTask.Name}",
                                 "操作完成",
                                 MessageBoxButton.OK,
                                 MessageBoxImage.Information);
                         }
-                    }
-                    catch (Exception ex)
-                    {
-                        Console.WriteLine($"处理冲突时出错: {ex.Message}");
-                        MessageBox.Show($"处理冲突时出错: {ex.Message}", "错误", MessageBoxButton.OK, MessageBoxImage.Error);
+                        catch (Exception ex)
+                        {
+                            Console.WriteLine($"处理冲突时出错: {ex.Message}");
+                            MessageBox.Show($"处理冲突时出错: {ex.Message}", "错误", MessageBoxButton.OK, MessageBoxImage.Error);
+                        }
                     }
                 }
-                else
-                {
-                    Console.WriteLine("错误: 找不到WeekViewModel实例");
-                }
-            }
-            else
-            {
-                Console.WriteLine("用户取消了冲突处理");
             }
         }
 
@@ -250,12 +247,18 @@ namespace TimeController.Views.StrongGoalWeek
                             "添加成功", MessageBoxButton.OK, MessageBoxImage.Information);
                     }
                 }
+                catch (InvalidOperationException ex) when (ex.Message.Contains("课程时间冲突"))
+                {
+                    // 显示冲突信息
+                    MessageBox.Show(ex.Message, "课程时间冲突", MessageBoxButton.OK, MessageBoxImage.Warning);
+                }
                 catch (Exception ex)
                 {
                     MessageBox.Show($"添加课程失败：{ex.Message}", "错误", MessageBoxButton.OK, MessageBoxImage.Error);
                 }
             }
         }
+
 
 
         // 供 DateColumnControl 调用的方法
@@ -269,22 +272,78 @@ namespace TimeController.Views.StrongGoalWeek
             DeleteAllDayButton_Click(sender, e);
         }
 
+        // 记录当前显示的详情面板和任务ID
+        private StackPanel _currentVisibleDetailsPanel;
+        private Border _currentHighlightedTask;
+        private int _currentVisibleTaskId = -1;
+
         // 供 WeekContentGrid 调用的方法
-        // 修改WeekContentGrid_MouseDown方法，调整点击位置计算
         private async void WeekContentGrid_MouseDown(object sender, MouseButtonEventArgs e)
         {
-            // 如果点击的是任务块（Border 或其子元素），则不显示加号
-            var originalSource = e.OriginalSource as DependencyObject;
-            while (originalSource != null)
+            // 如果详情卡片是可见的，点击空白区域时隐藏它
+            if (TaskDetailsCard.Visibility == Visibility.Visible)
             {
-                if (originalSource is Border border && border.DataContext is TimeController.ViewModels.WeekViewModel.TaskBlock)
-                {
-                    // 点击的是任务块，直接返回，不显示加号
-                    return;
-                }
-                originalSource = VisualTreeHelper.GetParent(originalSource);
+                TaskDetailsCard.Visibility = Visibility.Collapsed;
+                _currentVisibleTaskId = -1;
             }
 
+            // 获取原始点击源
+            var originalSource = e.OriginalSource as DependencyObject;
+            TaskBlock clickedTaskBlock = null;
+            Border clickedBorder = null;
+
+            // 添加对 Run 对象的特殊处理
+            if (originalSource is System.Windows.Documents.Run run)
+            {
+                // 对于文本元素，尝试获取父级 TextBlock
+                var parent = run.Parent as DependencyObject;
+                if (parent != null)
+                {
+                    originalSource = parent;
+                }
+            }
+
+            // 向上查找视觉树，确定是否点击了任务块
+            try
+            {
+                DependencyObject current = originalSource;
+                while (current != null)
+                {
+                    // 检查是否是边框且有TaskBlock数据
+                    if (current is Border border)
+                    {
+                        clickedBorder = border;
+                        clickedTaskBlock = border.DataContext as TaskBlock ?? border.Tag as TaskBlock;
+
+                        // 如果找到了任务块，跳出循环
+                        if (clickedTaskBlock != null)
+                            break;
+                    }
+
+                    try
+                    {
+                        current = VisualTreeHelper.GetParent(current);
+                    }
+                    catch (InvalidOperationException)
+                    {
+                        break; // 元素不是Visual，跳出循环
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"查找任务块时出错: {ex.Message}");
+            }
+
+            // 如果点击了任务块，处理任务块点击事件
+            if (clickedTaskBlock != null && clickedBorder != null)
+            {
+                // 转发到TaskBlock_MouseLeftButtonDown处理
+                TaskBlock_MouseLeftButtonDown(clickedBorder, e);
+                return; // 任务块点击已处理，不继续处理空白区域点击
+            }
+
+            // 以下是处理点击空白区域的逻辑
             double timeAxisWidth = 75; // 时间轴宽度
 
             Point pos = e.GetPosition(WeekContentGrid);
@@ -348,6 +407,46 @@ namespace TimeController.Views.StrongGoalWeek
             toolTip.IsOpen = false;
         }
 
+        public void UpdateCardPositionForElement(FrameworkElement element)
+        {
+            if (element != null)
+            {
+                // 计算任务块在页面中的位置
+                var taskPosition = element.TransformToVisual(RootCanvas).Transform(new Point(0, 0));
+
+                // 确保卡片有正确的尺寸
+                TaskDetailsCard.Measure(new Size(double.PositiveInfinity, double.PositiveInfinity));
+                TaskDetailsCard.Arrange(new Rect(0, 0, TaskDetailsCard.DesiredSize.Width, TaskDetailsCard.DesiredSize.Height));
+
+                // 设置卡片位置 - 根据任务块位置计算
+                double cardLeft = taskPosition.X + element.ActualWidth - 5; // 让卡片与任务块右侧略微重叠
+                double cardTop = taskPosition.Y + 5; // 将卡片定位在任务块正下方的位置，略有偏移
+
+                // 如果卡片会超出右边界，则显示在任务块的左侧
+                if (cardLeft + TaskDetailsCard.ActualWidth > RootCanvas.ActualWidth)
+                {
+                    cardLeft = Math.Max(0, taskPosition.X - TaskDetailsCard.ActualWidth + 5); // 让卡片与任务块左侧略微重叠
+                }
+
+
+                // 如果卡片会超出下边界，调整垂直位置
+                if (cardTop + TaskDetailsCard.ActualHeight > RootCanvas.ActualHeight)
+                {
+                    cardTop = Math.Max(0, RootCanvas.ActualHeight - TaskDetailsCard.ActualHeight - 2);
+                }
+
+                // 应用计算出的位置
+                Canvas.SetLeft(TaskDetailsCard, cardLeft);
+                Canvas.SetTop(TaskDetailsCard, cardTop);
+            }
+        }
+
+        public void CloseTaskDetailsCard()
+        {
+            TaskDetailsCard.Visibility = Visibility.Collapsed;
+            _currentVisibleTaskId = -1;
+        }
+
         /// <summary>
         /// 点击任务块时，弹出编辑窗口并保存修改
         /// </summary>
@@ -355,23 +454,127 @@ namespace TimeController.Views.StrongGoalWeek
         private void TaskBlock_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
             // 从 Element.Tag 获取 TaskBlock
-            var block = (sender as FrameworkElement)?.Tag as TaskBlock;
+            var element = sender as FrameworkElement;
+            var block = element?.Tag as TaskBlock;
             if (block == null) return;
 
-            // 从 DataContext 拿到 ViewModel
-            var vm = (TimeController.ViewModels.WeekViewModel)DataContext;
-            // 根据 Id 找到对应 TaskModel
-            var taskModel = vm.Tasks.FirstOrDefault(t => t.Id == block.Id);
-            if (taskModel == null) return;
-
-            // 弹出编辑窗口
-            var dialog = new EditTaskWindow(taskModel);
-            if (dialog.ShowDialog() == true)
+            // 如果是课程任务，不显示卡片，继续原有的编辑逻辑
+            if (block.IsCourse)
             {
-                // 用户保存后，重新加载本周任务
-                vm.LoadTasksForCurrentWeek();
+                // 从 DataContext 拿到 ViewModel
+                var vm = (TimeController.ViewModels.WeekViewModel)DataContext;
+                // 根据 Id 找到对应 TaskModel
+                var taskModel = vm.Tasks.FirstOrDefault(t => t.Id == block.Id);
+                if (taskModel == null) return;
+
+                // 弹出编辑窗口
+                var dialog = new EditTaskWindow(taskModel);
+                if (dialog.ShowDialog() == true)
+                {
+                    // 用户保存后，重新加载本周任务
+                    vm.LoadTasksForCurrentWeek();
+                }
+                return;
+            }
+
+            // 如果当前显示的是同一个任务的详情卡片，则隐藏卡片
+            if (_currentVisibleTaskId == block.Id && TaskDetailsCard.Visibility == Visibility.Visible)
+            {
+                TaskDetailsCard.Visibility = Visibility.Collapsed;
+                _currentVisibleTaskId = -1;
+                e.Handled = true;
+                return;
+            }
+
+            // 设置详情卡片的内容
+            CardNoteText.Text = string.IsNullOrEmpty(block.Note) ?
+                "任务备注: 无" : $"任务备注: {block.Note}";
+            CardTypeText.Text = $"任务类型: {block.Type}";
+
+            // 根据是否为全天任务设置不同的时间显示
+            if (block.IsAllDay)
+            {
+                CardTimeText.Text = "任务时间: 全天";
+            }
+            else
+            {
+                CardTimeText.Text = $"任务时间: {block.StartTime.ToString(@"hh\:mm")} - {block.EndTime.ToString(@"hh\:mm")}";
+            }
+
+            // 获取鼠标点击的位置（相对于当前元素）
+            Point mousePos = e.GetPosition(element);
+
+            // 将点击位置转换为屏幕坐标
+            Point screenPoint = element.PointToScreen(mousePos);
+
+            // 将屏幕坐标转换为相对于RootCanvas的坐标
+            Point canvasPoint = RootCanvas.PointFromScreen(screenPoint);
+
+            // 设置卡片位置，确保不超出边界
+            double cardLeft = canvasPoint.X + 10; // 右侧偏移10像素
+            double cardTop = canvasPoint.Y + 10;  // 下方偏移10像素
+
+            // 确保卡片不会超出右边界
+            if (cardLeft + TaskDetailsCard.ActualWidth > RootCanvas.ActualWidth)
+            {
+                cardLeft = Math.Max(0, canvasPoint.X - TaskDetailsCard.ActualWidth - 10);
+            }
+
+            // 确保卡片不会超出下边界
+            if (cardTop + TaskDetailsCard.ActualHeight > RootCanvas.ActualHeight)
+            {
+                cardTop = Math.Max(0, canvasPoint.Y - TaskDetailsCard.ActualHeight - 10);
+            }
+
+            Canvas.SetLeft(TaskDetailsCard, cardLeft);
+            Canvas.SetTop(TaskDetailsCard, cardTop);
+
+            // 显示卡片并记录当前显示的任务ID
+            TaskDetailsCard.Visibility = Visibility.Visible;
+            _currentVisibleTaskId = block.Id;
+
+            e.Handled = true;
+        }
+
+
+
+        // 关闭详情卡片时，如果点击的不是卡片本身或其子元素，则隐藏卡片
+        public void CloseTaskDetailsCardIfOutside(DependencyObject clickedElement)
+        {
+            if (TaskDetailsCard.Visibility == Visibility.Visible)
+            {
+                // 检查点击的元素是否是卡片本身或其子元素
+                bool isClickInsideCard = IsElementDescendantOf(clickedElement, TaskDetailsCard);
+
+                // 如果点击不在卡片内，关闭卡片
+                if (!isClickInsideCard)
+                {
+                    CloseTaskDetailsCard();
+                }
             }
         }
+
+        // 检查元素是否是另一个元素的后代
+        private bool IsElementDescendantOf(DependencyObject element, DependencyObject ancestor)
+        {
+            while (element != null)
+            {
+                if (element == ancestor)
+                    return true;
+
+                // 获取视觉树上的父元素
+                try
+                {
+                    element = VisualTreeHelper.GetParent(element);
+                }
+                catch
+                {
+                    return false;
+                }
+            }
+            return false;
+        }
+
 
         //取消选中的方法
         private void ClearSelection()
@@ -412,6 +615,7 @@ namespace TimeController.Views.StrongGoalWeek
 
         }
 
+        //添加任务按钮点击事件
         private async void AddTaskButton_Click(object sender, RoutedEventArgs e)
         {
             var dialog = new AddTaskDialog(_clickedDate);
@@ -431,21 +635,123 @@ namespace TimeController.Views.StrongGoalWeek
 
                 try
                 {
-                    // 直接使用 TaskService 保存任务
-                    var taskService = App.Services.GetRequiredService<ITaskService>();
-                    await taskService.UpdateTaskAsync(task);
+                    // 创建一个标记，用于跟踪任务是否应该被保存
+                    bool shouldSaveTask = true;
 
-                    // 任务已保存到数据库，现在添加到视图模型
-                    _viewModel.AddTask(task, true); // 使用 forceAdd 参数，避免重复保存到数据库
-
-                    // 添加消息提示任务已保存
-                    MessageBox.Show($"任务「{task.Name}」已成功保存！", "提示", MessageBoxButton.OK, MessageBoxImage.Information);
-
-                    // 添加强制刷新
-                    if (dialog.ResultTask.IsAllDay)
+                    // 设置任务冲突处理的事件处理程序
+                    Action<TaskModel, List<TaskBlock>> conflictHandler = null;
+                    conflictHandler = async (conflictTask, conflicts) =>
                     {
-                        // 强制更新 UI
-                        WeekContentGrid.UpdateLayout();
+                        // 获取课程冲突
+                        var courseConflicts = conflicts.Where(c => c.IsCourse).ToList();
+
+                        // 如果有课程冲突，显示警告并阻止添加
+                        if (courseConflicts.Any())
+                        {
+                            var courseNames = string.Join("\n", courseConflicts.Select(c => $"- {c.Name}"));
+                            string message = $"无法添加任务，与以下课程时间冲突:\n{courseNames}\n\n请修改任务时间以避免与课程冲突。";
+
+                            // 弹出警告对话框
+                            Application.Current.Dispatcher.Invoke(() =>
+                                MessageBox.Show(
+                                    message,
+                                    "课程时间冲突",
+                                    MessageBoxButton.OK,
+                                    MessageBoxImage.Warning)
+                            );
+
+                            // 设置标记为false，不保存任务
+                            shouldSaveTask = false;
+
+                            // 移除临时事件处理程序
+                            _viewModel.ConflictDetected -= conflictHandler;
+                            return;
+                        }
+
+                        // 获取任务冲突，保持原有处理逻辑
+                        var taskConflicts = conflicts.Where(c => !c.IsCourse).ToList();
+                        if (taskConflicts.Any())
+                        {
+                            var taskNames = string.Join("\n", taskConflicts.Select(c => $"- {c.Name}"));
+                            string message = $"该时间段与以下任务冲突:\n{taskNames}\n\n确认后将会删除原有冲突的任务，是否继续?";
+
+                            // 弹出确认对话框
+                            var result = Application.Current.Dispatcher.Invoke(() =>
+                                MessageBox.Show(
+                                    message,
+                                    "任务时间冲突",
+                                    MessageBoxButton.YesNo,
+                                    MessageBoxImage.Warning)
+                            );
+
+                            if (result == MessageBoxResult.Yes)
+                            {
+                                // 用户选择处理冲突并继续
+                                await _viewModel.HandleConflictAndAddTask(conflictTask, taskConflicts);
+
+                                // 显示通知
+                                Application.Current.Dispatcher.Invoke(() =>
+                                    MessageBox.Show(
+                                        $"已删除 {taskConflicts.Count} 个冲突任务，并添加新任务：{conflictTask.Name}",
+                                        "操作完成",
+                                        MessageBoxButton.OK,
+                                        MessageBoxImage.Information)
+                                );
+                            }
+                            else
+                            {
+                                // 用户取消冲突处理，设置标记为false
+                                shouldSaveTask = false;
+                            }
+                        }
+
+                        // 移除临时事件处理程序
+                        _viewModel.ConflictDetected -= conflictHandler;
+                    };
+
+
+                    // 临时订阅冲突事件
+                    _viewModel.ConflictDetected += conflictHandler;
+
+                    // 仅当用户确认处理冲突或无冲突时才保存任务
+                    var taskService = App.Services.GetRequiredService<ITaskService>();
+
+                    // 使用同步方法检查冲突
+                    if (!task.IsAllDay && task.StartTime.HasValue && task.EndTime.HasValue)
+                    {
+                        // 检查与任务的冲突
+                        var (hasTaskConflict, taskConflicts) = _viewModel.CheckTimeConflicts(task);
+
+                        // 检查与课程的冲突
+                        var (hasCourseConflict, courseConflicts) = _viewModel.CheckCourseConflicts(task);
+
+                        // 合并冲突列表
+                        var allConflicts = taskConflicts.Concat(courseConflicts).ToList();
+
+                        if (allConflicts.Any())
+                        {
+                            // 手动触发冲突处理，直接在当前UI线程上调用
+                            conflictHandler(task, allConflicts);
+
+                            // 等待一段时间，让异步处理完成
+                            await Task.Delay(100);
+                        }
+                    }
+
+                    if (shouldSaveTask)
+                    {
+                        // 保存到数据库
+                        await taskService.UpdateTaskAsync(task);
+
+                        // 添加到视图模型，使用forceAdd=true跳过冲突检查
+                        _viewModel.AddTask(task, true);
+
+                        // 添加强制刷新
+                        if (dialog.ResultTask.IsAllDay)
+                        {
+                            // 强制更新 UI
+                            WeekContentGrid.UpdateLayout();
+                        }
                     }
                 }
                 catch (Exception ex)
@@ -458,6 +764,8 @@ namespace TimeController.Views.StrongGoalWeek
             AddTaskButton.Visibility = Visibility.Collapsed;
             ClearSelection();
         }
+
+
 
 
         // 悬停进来：显示按钮
@@ -473,7 +781,6 @@ namespace TimeController.Views.StrongGoalWeek
             if (sender is Grid g && g.FindName("ActionButtons") is UIElement btns)
                 btns.Visibility = Visibility.Collapsed;
         }
-
 
         // 全天任务鼠标进入事件
         private void AllDayGrid_MouseEnter(object sender, MouseEventArgs e)
@@ -509,8 +816,6 @@ namespace TimeController.Views.StrongGoalWeek
             }
             e.Handled = true;
         }
-
-
 
 
         //查找子元素
@@ -573,6 +878,7 @@ namespace TimeController.Views.StrongGoalWeek
                 }
             }
         }
+
         private void TodayButton_Click(object sender, RoutedEventArgs e)
         {
             _viewModel.CurrentDate = DateTime.Today;

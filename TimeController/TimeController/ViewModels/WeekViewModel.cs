@@ -16,6 +16,7 @@ using System.Windows;
 using Microsoft.Windows.Input;
 using MessageBox = iNKORE.UI.WPF.Modern.Controls.MessageBox;
 using System.Threading.Tasks;
+using System.Windows.Controls;
 
 namespace TimeController.ViewModels
 {
@@ -70,7 +71,7 @@ namespace TimeController.ViewModels
         public ICommand NextWeekCommand { get; private set; }
         public ICommand PreviousMonthCommand { get; private set; }
         public ICommand NextMonthCommand { get; private set; }
-        public ICommand ToggleCompleteCommand { get; private set; }
+        public ICommand ToggleCompleteCommand { get; }
 
         public WeekViewModel()
               : this(
@@ -78,9 +79,9 @@ namespace TimeController.ViewModels
                 App.AppHost.Services.GetRequiredService<ITaskService>(),
                 // 从全局 ServiceProvider 拿到 INavigationService
                 App.AppHost.Services.GetRequiredService<INavigationService>())
-            {
-                // 这里不用再写其它逻辑，所有初始化都在主构造里完成
-            }
+        {
+            // 这里不用再写其它逻辑，所有初始化都在主构造里完成
+        }
 
 
         private void Initialize()
@@ -98,10 +99,7 @@ namespace TimeController.ViewModels
 
             SaveRequested += OnTaskSaved;
             RemoveTaskBlockCommand = new RelayCommand<TaskBlock>(RemoveTaskBlock);
-            ToggleCompleteCommand = new RelayCommand<TaskBlock>(ToggleComplete);
             ToggleColumnExpandCommand = new RelayCommand<int>(ToggleColumnExpand);
-
-            DateTime monday = GetCurrentWeekMonday();
 
             // 初始化日期列
             for (int i = 0; i < 7; i++)
@@ -110,10 +108,16 @@ namespace TimeController.ViewModels
                 {
                     Index = i,
                     WeekDayText = GetWeekDayText(i),
-                    Date = monday.AddDays(i),
                     AllDayTasks = AllDayTaskBlocksPerDay[i],
                     IsExpanded = ExpandedColumns[i]
                 });
+            }
+
+            if (App.Current.Properties.Contains("SemesterWeeks") &&
+                int.TryParse(App.Current.Properties["SemesterWeeks"].ToString(), out int weeks) &&
+                weeks >= 1)
+            {
+                _semesterWeeks = weeks;
             }
 
             // 更新日期文本和月份状态
@@ -130,7 +134,7 @@ namespace TimeController.ViewModels
         public bool[] ShouldShowMoreButtonForColumn => Enumerable.Range(0, 7)
             .Select(i => AllDayTaskBlocksPerDay[i].Count > 2).ToArray();
 
-
+        // 获取星期几对应的索引（0=周一）
         private string GetWeekDayText(int dayIndex)
         {
             switch (dayIndex)
@@ -158,7 +162,7 @@ namespace TimeController.ViewModels
             var taskModel = new TaskModel
             {
                 Name = course.Name,
-                Note = $"教师:{course.Teacher}, 地点:{course.Location}",
+                Note = $"教师:{course.Teacher}, 地点:{course.Location}，周次:{course.WeekPattern}",
                 Type = TaskType.学习学业,
                 Mode = TaskMode.Strong,
                 // 占位日期，实际会根据当前周动态计算
@@ -179,10 +183,37 @@ namespace TimeController.ViewModels
 
 
         /// <summary>
+        /// 判断任务是否为课程（基于 Note 字段中是否包含周次模式信息）
+        /// </summary>
+        public bool IsCourseByNote(TaskModel task)
+        {
+            // 检查任务类型必须是学习学业
+            if (task.Type != TaskType.学习学业) return false;
+
+            // 检查 Note 字段是否为空
+            if (string.IsNullOrEmpty(task.Note)) return false;
+
+            // 检查 Note 字段是否包含教师、地点和周次信息
+            return task.Note.Contains("教师:") &&
+                   task.Note.Contains("地点:") &&
+                   task.Note.Contains("周次:");
+        }
+
+        /// <summary>
         /// 一步完成课程的添加和保存
         /// </summary>
         public async Task<List<TaskModel>> AddAndSaveCourse(Course course)
         {
+            // 先检查是否与数据库中的所有课程冲突
+            var (hasConflict, conflictCourses) = await CheckCourseTimeConflictsWithDatabase(course);
+
+            // 如果有冲突，抛出异常并返回冲突信息
+            if (hasConflict)
+            {
+                var conflictNames = string.Join("\n- ", conflictCourses.Select(c => c.Name));
+                throw new InvalidOperationException($"新课程与以下已有课程时间冲突:\n- {conflictNames}\n\n请修改上课时间以避免冲突。");
+            }
+
             // 1. 转换为任务模型
             TaskModel taskModel = ConvertCourseToTaskModel(course);
 
@@ -203,6 +234,291 @@ namespace TimeController.ViewModels
             return new List<TaskModel> { taskModel };
         }
 
+        /// <summary>
+        /// 检查新添加的课程是否与数据库中所有课程冲突
+        /// </summary>
+        public async Task<(bool hasConflict, List<Course> conflicts)> CheckCourseTimeConflictsWithDatabase(Course newCourse)
+        {
+            var conflicts = new List<Course>();
+
+            try
+            {
+                // 添加详细日志
+                Debug.WriteLine($"===== 开始检测课程冲突 =====");
+                Debug.WriteLine($"新课程: {newCourse.Name}, 星期: {newCourse.DayOfWeek}, 时间: {newCourse.StartTime}-{newCourse.EndTime}, 周次: {newCourse.WeekPattern}");
+
+                // 只有当课程有有效的时间范围时才检查冲突
+                if (newCourse.StartTime < newCourse.EndTime)
+                {
+                    // 获取课程对应的星期几索引
+                    int dayIndex = GetDayIndex(newCourse.DayOfWeek);
+                    Debug.WriteLine($"课程对应的星期索引: {dayIndex}");
+
+                    // 从数据库获取所有课程任务
+                    var allCourses = await _taskService.GetAllCourseTasksAsync();
+                    Debug.WriteLine($"数据库中共找到 {allCourses.Count} 门课程");
+
+                    // 预先解析新课程的周次模式
+                    HashSet<int> newCourseWeeks;
+                    try
+                    {
+                        newCourseWeeks = ParseWeekPattern(newCourse.WeekPattern);
+                        Debug.WriteLine($"新课程周次: [{string.Join(", ", newCourseWeeks)}]");
+                    }
+                    catch (Exception ex)
+                    {
+                        Debug.WriteLine($"解析新课程周次时出错: {ex.Message}，假设所有周都有课");
+                        newCourseWeeks = new HashSet<int>(Enumerable.Range(1, SemesterWeeks)); // 默认为所有周
+                    }
+
+                    // 检查所有课程任务
+                    int courseCount = 0;
+                    foreach (var courseTask in allCourses)
+                    {
+                        courseCount++;
+                        // 只检查同一天的课程
+                        if (courseTask.WeekDay == dayIndex)
+                        {
+                            Debug.WriteLine($"检查第 {courseCount} 门课程: {courseTask.Name}, WeekDay: {courseTask.WeekDay}, 时间: {courseTask.StartTime?.ToString() ?? "无"}-{courseTask.EndTime?.ToString() ?? "无"}");
+
+                            // 跳过无效时间段
+                            if (!courseTask.StartTime.HasValue || !courseTask.EndTime.HasValue)
+                            {
+                                Debug.WriteLine($"跳过: 课程 {courseTask.Name} 时间未设置");
+                                continue;
+                            }
+
+                            if (courseTask.StartTime >= courseTask.EndTime)
+                            {
+                                Debug.WriteLine($"跳过: 课程 {courseTask.Name} 时间段无效");
+                                continue;
+                            }
+
+                            // 时间区间有重叠 - 核心判断逻辑修正
+                            bool hasTimeOverlap = Math.Max(newCourse.StartTime.TotalMinutes, courseTask.StartTime.Value.TotalMinutes) <
+                                                 Math.Min(newCourse.EndTime.TotalMinutes, courseTask.EndTime.Value.TotalMinutes);
+
+                            Debug.WriteLine($"时间是否重叠: {hasTimeOverlap}");
+                            Debug.WriteLine($"  新课程: {newCourse.StartTime}-{newCourse.EndTime}");
+                            Debug.WriteLine($"  已有课程: {courseTask.StartTime}-{courseTask.EndTime}");
+
+                            if (hasTimeOverlap)
+                            {
+                                // 从课程注释中提取周次模式
+                                string existingWeekPattern = ExtractWeekPatternFromNote(courseTask.Note);
+                                Debug.WriteLine($"现有课程 {courseTask.Name} 的周次模式: {existingWeekPattern}");
+
+                                // 解析现有课程的周次
+                                HashSet<int> existingWeeks;
+                                try
+                                {
+                                    existingWeeks = ParseWeekPattern(existingWeekPattern);
+                                    Debug.WriteLine($"现有课程周次: [{string.Join(", ", existingWeeks)}]");
+                                }
+                                catch (Exception ex)
+                                {
+                                    Debug.WriteLine($"解析现有课程周次时出错: {ex.Message}，假设所有周都有课");
+                                    // 解析失败时，假设所有周都有课
+                                    existingWeeks = new HashSet<int>(Enumerable.Range(1, SemesterWeeks));
+                                }
+
+                                // 检查是否有周次重叠
+                                bool hasWeekOverlap = existingWeeks.Any(week => newCourseWeeks.Contains(week));
+                                Debug.WriteLine($"周次是否重叠: {hasWeekOverlap}");
+
+                                if (hasWeekOverlap)
+                                {
+                                    // 将任务转换为Course对象以便返回冲突信息
+                                    var course = new Course
+                                    {
+                                        Name = courseTask.Name,
+                                        DayOfWeek = GetDayOfWeekString(courseTask.WeekDay),
+                                        StartTime = courseTask.StartTime.Value,
+                                        EndTime = courseTask.EndTime.Value,
+                                        Location = ExtractLocationFromNote(courseTask.Note),
+                                        Teacher = ExtractTeacherFromNote(courseTask.Note),
+                                        WeekPattern = existingWeekPattern
+                                    };
+
+                                    Debug.WriteLine($"检测到冲突课程: {course.Name}");
+                                    conflicts.Add(course);
+                                }
+                                else
+                                {
+                                    Debug.WriteLine($"时间重叠但周次不冲突，跳过");
+                                }
+                            }
+                        }
+                    }
+                }
+                else
+                {
+                    Debug.WriteLine($"课程时间无效: {newCourse.StartTime} - {newCourse.EndTime}");
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"冲突检测过程中出错: {ex.Message}\n{ex.StackTrace}");
+            }
+
+            Debug.WriteLine($"课程冲突检测结果: 找到 {conflicts.Count} 个冲突");
+            Debug.WriteLine($"===== 冲突检测结束 =====");
+
+            return (conflicts.Count > 0, conflicts);
+        }
+
+        /// <summary>
+        /// 从注释中提取周次模式
+        /// </summary>
+        private string ExtractWeekPatternFromNote(string note)
+        {
+            if (string.IsNullOrEmpty(note))
+                return "1";  // 默认值
+
+            // 标准格式："教师:XX, 地点:XX，周次:1,3,5-10"
+            int weekIndex = note.IndexOf("周次:");
+            if (weekIndex >= 0)
+            {
+                // 提取周次后面的部分
+                string pattern = note.Substring(weekIndex + 3).Trim();
+
+                // 如果有其他文本跟在后面，只保留周次部分
+                char[] delimiters = new char[] { '，', ',', ' ', '、' };
+                foreach (var delimiter in delimiters)
+                {
+                    int delimiterIndex = pattern.IndexOf(delimiter);
+                    if (delimiterIndex >= 0)
+                        pattern = pattern.Substring(0, delimiterIndex);
+                }
+
+                return pattern;
+            }
+
+            // 直接搜索数字模式：1,3,5-10
+            var match = System.Text.RegularExpressions.Regex.Match(note, @"(\d+(-\d+)?)(,\d+(-\d+)?)*");
+            if (match.Success)
+            {
+                return match.Value;
+            }
+
+            return "1";  // 默认值
+        }
+
+        /// <summary>
+        /// 从注释中提取教师信息
+        /// </summary>
+        private string ExtractTeacherFromNote(string note)
+        {
+            if (string.IsNullOrEmpty(note))
+                return "";
+
+            int teacherIndex = note.IndexOf("教师:");
+            if (teacherIndex >= 0)
+            {
+                string teacher = note.Substring(teacherIndex + 3);
+                int endIndex = teacher.IndexOf(',');
+                if (endIndex < 0) endIndex = teacher.IndexOf('，');
+                return endIndex >= 0 ? teacher.Substring(0, endIndex).Trim() : teacher.Trim();
+            }
+            return "";
+        }
+
+        /// <summary>
+        /// 从注释中提取地点信息
+        /// </summary>
+        private string ExtractLocationFromNote(string note)
+        {
+            if (string.IsNullOrEmpty(note))
+                return "";
+
+            int locationIndex = note.IndexOf("地点:");
+            if (locationIndex >= 0)
+            {
+                string location = note.Substring(locationIndex + 3);
+                int endIndex = location.IndexOf(',');
+                if (endIndex < 0) endIndex = location.IndexOf('，');
+                return endIndex >= 0 ? location.Substring(0, endIndex).Trim() : location.Trim();
+            }
+            return "";
+        }
+
+        /// <summary>
+        /// 根据索引获取星期几字符串
+        /// </summary>
+        private string GetDayOfWeekString(int dayIndex)
+        {
+            return dayIndex switch
+            {
+                0 => "周一",
+                1 => "周二",
+                2 => "周三",
+                3 => "周四",
+                4 => "周五",
+                5 => "周六",
+                6 => "周日",
+                _ => "周一"
+            };
+        }
+
+        /// <summary>
+        /// 解析周次模式，例如"1,3,5-10"
+        /// </summary>
+        private HashSet<int> ParseWeekPattern(string pattern)
+        {
+            var weeks = new HashSet<int>();
+            if (string.IsNullOrWhiteSpace(pattern))
+            {
+                // 处理空模式
+                return weeks;
+            }
+
+            try
+            {
+                var parts = pattern.Split(new char[] { ',', '，', ' ', '、' }, StringSplitOptions.RemoveEmptyEntries);
+                foreach (var part in parts)
+                {
+                    if (part.Contains('-'))
+                    {
+                        var range = part.Split('-');
+                        if (range.Length == 2 && int.TryParse(range[0], out int start) && int.TryParse(range[1], out int end))
+                        {
+                            // 确保范围合法
+                            if (start > end)
+                            {
+                                int temp = start;
+                                start = end;
+                                end = temp;
+                            }
+
+                            // 添加范围内的所有周次
+                            for (int i = start; i <= end; i++)
+                            {
+                                if (i > 0) // 确保周次有效
+                                {
+                                    weeks.Add(i);
+                                }
+                            }
+                        }
+                    }
+                    else if (int.TryParse(part, out int week) && week > 0)
+                    {
+                        weeks.Add(week);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"解析周次模式时出错: {ex.Message}");
+            }
+
+            // 如果解析结果为空，返回默认周次1
+            if (weeks.Count == 0)
+            {
+                weeks.Add(1);
+            }
+
+            return weeks;
+        }
 
 
         /// <summary>
@@ -237,7 +553,7 @@ namespace TimeController.ViewModels
         }
 
 
-        
+        //学期开始日
         private DateTime? _semesterStartDate;
 
         public DateTime? SemesterStartDate
@@ -269,8 +585,7 @@ namespace TimeController.ViewModels
             }
         }
 
-
-        //导入改
+        //学期周数
         private string _semesterWeekText = "";
         public string SemesterWeekText
         {
@@ -285,6 +600,7 @@ namespace TimeController.ViewModels
             }
         }
 
+        // 更新学期周数
         private void UpdateSemesterWeekText()
         {
             if (!_semesterStartDate.HasValue)
@@ -301,7 +617,6 @@ namespace TimeController.ViewModels
             }
 
             // 获取学期第一周的周一
-            // 获取学期第一周的周一
             DateTime semesterMonday = _semesterStartDate.Value;
             while (semesterMonday.DayOfWeek != DayOfWeek.Monday)
             {
@@ -311,10 +626,17 @@ namespace TimeController.ViewModels
             // 计算相差的周数
             int weeksDiff = (int)Math.Round((currentMonday - semesterMonday).TotalDays / 7) + 1;
 
-            SemesterWeekText = weeksDiff > 0
-                ? $"学期第 {weeksDiff} 周"
-                : $"学期前 {Math.Abs(weeksDiff) + 2} 周";
+            // 只有当前周在学期周数范围内且在学期开始日期之后时才显示学期周数
+            if (weeksDiff > 0 && weeksDiff <= SemesterWeeks)
+            {
+                SemesterWeekText = $"学期第 {weeksDiff} 周";
+            }
+            else
+            {
+                SemesterWeekText = ""; // 如果超出学期周数或在学期开始日期之前，则不显示
+            }
         }
+
 
         // 更新日期列的日期文本和月份状态
         private void UpdateDateColumns()
@@ -331,8 +653,6 @@ namespace TimeController.ViewModels
             {
                 DateTime currentDay = monday.AddDays(i);
                 var column = DateColumns[i];
-
-                column.Date = currentDay;
 
                 // 更新日期文本
                 if (currentDay.Month != currentMonth)
@@ -356,10 +676,11 @@ namespace TimeController.ViewModels
             LoadTasksForCurrentWeek();
         }
 
+        // 全天任务
         public ObservableCollection<TaskBlock>[] AllDayTaskBlocksPerDay { get; } =
     Enumerable.Range(0, 7).Select(_ => new ObservableCollection<TaskBlock>()).ToArray();
 
-
+        // 添加保存任务块
         private void OnTaskSaved(TaskModel task)
         {
             // 只需调用 AddTask，所有定位和添加逻辑都在 AddTask 里完成
@@ -369,60 +690,59 @@ namespace TimeController.ViewModels
         // 添加任务到视图
         private void AddTaskToView(TaskModel task)
         {
-            // 如果是全天任务，跳过
-            if (task.IsAllDay) return;
+            // 计算本周一
+            DateTime monday = CurrentDate.Date;
+            while (monday.DayOfWeek != DayOfWeek.Monday)
+                monday = monday.AddDays(-1);
 
-            // 计算位置
-            DateTime monday = GetCurrentWeekMonday();
+            // 计算任务在本周的列（0=周一，1=周二...）
             int column = (task.PlannedDate - monday).Days;
-            if (column < 0 || column > 6) return;
+            if (column < 0 || column > 6) return; // 不在当前周的任务不显示
 
-            bool isCourse = task.IsCourseTask;
-
-            if (isCourse)
+            // 检查IsCourseTask属性
+            if (task.IsCourseTask)
             {
                 var courseBlock = new TaskBlock
                 {
-                    Id = task.Id,
                     Name = task.Name,
                     Note = task.Note,
                     Type = task.Type,
-                    Status = task.Status,
-                    IsCourse = true,
                     StartTime = task.StartTime ?? TimeSpan.Zero,
                     EndTime = task.EndTime ?? TimeSpan.Zero,
-                    Brush = new SolidColorBrush(Color.FromRgb(230, 247, 255)),
+                    // 设置蓝色背景
+                    Brush = new SolidColorBrush(Color.FromRgb(204, 229, 255)),  // 浅蓝色背景 #CCE5FF
+                    BorderBrush = new SolidColorBrush(Color.FromRgb(0, 120, 212)), // 蓝色边框 #0078D4
+                    BorderThickness = new Thickness(1),
+                    CornerRadius = new CornerRadius(4),
                     Column = column,
                     Row = task.StartTime.HasValue ? task.StartTime.Value.Hours : 0,
-                    RowSpan = task.EndTime.HasValue
-                               ? Math.Max(1, (int)(task.EndTime.Value - task.StartTime.Value).TotalHours) + 1
-                               : 1
+                    RowSpan = (!task.IsAllDay && task.StartTime.HasValue && task.EndTime.HasValue)
+                              ? Math.Max(1, (int)(task.EndTime.Value - task.StartTime.Value).TotalHours) + 1 : 1,
+                    Id = task.Id,
+                    IsCourse = true
                 };
                 CourseTaskBlocks.Add(courseBlock);
             }
             else
             {
-                var timedBlock = new TaskBlock
+                var taskBlock = new TaskBlock
                 {
-                    Id = task.Id,
                     Name = task.Name,
                     Note = task.Note,
                     Type = task.Type,
-                    Status = task.Status,
-                    IsAllDay = false,
+                    IsAllDay = task.IsAllDay,
                     StartTime = task.StartTime ?? TimeSpan.Zero,
                     EndTime = task.EndTime ?? TimeSpan.Zero,
                     Brush = GetBrushForTaskType(task.Type),
                     Column = column,
                     Row = task.StartTime.HasValue ? task.StartTime.Value.Hours : 0,
-                    RowSpan = task.EndTime.HasValue
-                               ? Math.Max(1, (int)(task.EndTime.Value - task.StartTime.Value).TotalHours) + 1
-                               : 1
+                    RowSpan = (!task.IsAllDay && task.StartTime.HasValue && task.EndTime.HasValue)
+                              ? Math.Max(1, (int)(task.EndTime.Value - task.StartTime.Value).TotalHours) + 1 : 1,
+                    Id = task.Id,
+                    IsCourse = false
                 };
-                TaskBlocks.Add(timedBlock);
-
+                TaskBlocks.Add(taskBlock);
             }
-
             OnPropertyChanged(nameof(AllDayTaskBlocks));
         }
 
@@ -448,38 +768,15 @@ namespace TimeController.ViewModels
 
                 if (allConflicts.Any())
                 {
-                    // 确保有订阅者再触发事件
+                    // 触发冲突事件，但不添加任务
                     if (ConflictDetected != null)
                     {
-                        // 通知View层处理冲突
+                        // 通知View层处理冲突并阻止添加
                         ConflictDetected(task, allConflicts);
-                        return; // 不继续执行添加，等待用户决定
-                    }
-                    else
-                    {
-                        Console.WriteLine("警告: ConflictDetected 事件没有订阅者!");
-                        // 如果没有订阅者，可以显示一个对话框询问用户
-                        var result = MessageBox.Show(
-                            $"任务 '{task.Name}' 与当前时间段内的 {allConflicts.Count} 个任务冲突。\n是否继续添加并删除冲突任务?",
-                            "时间冲突",
-                            MessageBoxButton.YesNo,
-                            MessageBoxImage.Warning);
-
-                        if (result == MessageBoxResult.Yes)
-                        {
-                            // 用户确认继续，处理冲突
-                            await HandleConflictAndAddTask(task, allConflicts);
-                            return;
-                        }
-                        else
-                        {
-                            // 用户取消
-                            return;
-                        }
+                        return; // 不继续执行添加，直接返回
                     }
                 }
             }
-
 
             // 无冲突或强制添加，执行正常的添加流程
             Tasks.Add(task);
@@ -560,8 +857,6 @@ namespace TimeController.ViewModels
             }
         }
 
-
-
         // 添加错误处理方法
         private void HandleError(Exception ex)
         {
@@ -576,7 +871,7 @@ namespace TimeController.ViewModels
             LoadTasksForCurrentWeek();
         }
 
-
+        // 处理任务与任务冲突
         private async Task ProcessTaskConflicts(List<TaskBlock> conflicts)
         {
             foreach (var conflict in conflicts)
@@ -601,6 +896,7 @@ namespace TimeController.ViewModels
             }
         }
 
+        // 处理课程与任务冲突
         private void ProcessCourseConflicts(TaskModel newTask, List<TaskBlock> conflicts)
         {
             if (conflicts.Any())
@@ -611,6 +907,7 @@ namespace TimeController.ViewModels
             }
         }
 
+        // 添加任务并刷新UI
         private async Task AddNewTaskWithRefresh(TaskModel task)
         {
             Tasks.Add(task);
@@ -691,28 +988,6 @@ namespace TimeController.ViewModels
             return (conflicts.Count > 0, conflicts);
         }
 
-        private void OnExternalTaskSaved(TaskModel task)
-        {
-            // 忽略非强管理任务
-            if (task.Mode != TaskMode.Strong)
-                return;
-
-            DateTime monday = CurrentDate.Date;
-            while (monday.DayOfWeek != DayOfWeek.Monday)
-                monday = monday.AddDays(-1);
-            DateTime sunday = monday.AddDays(6);
-
-            if (task.PlannedDate < monday || task.PlannedDate > sunday)
-                return;
-
-            if (Tasks.Any(t => t.Id == task.Id))
-                return;
-
-            Tasks.Add(task);
-            AddTaskToView(task);
-            OnPropertyChanged(nameof(TimedTaskBlocks));
-        }
-
         private Brush GetBrushForTaskType(TaskType type)
         {
             switch (type)
@@ -732,35 +1007,6 @@ namespace TimeController.ViewModels
             }
         }
 
-
-        private async void ToggleComplete(TaskBlock block)
-        {
-            if (block == null) return;
-            var task = Tasks.FirstOrDefault(t => t.Id == block.Id);
-            if (task == null) return;
-
-            // 切换 Model 状态
-            if (task.Status == MyTaskStatus.Completed)
-            {
-                task.Status = MyTaskStatus.Pending;
-                task.IsCompleted = false;
-            }
-            else
-            {
-                task.Status = MyTaskStatus.Completed;
-                task.IsCompleted = true;
-            }
-            if (_taskService != null)
-                await _taskService.UpdateTaskAsync(task);
-
-            // **同步更新视图模型状态**
-            block.Status = task.Status;
-
-            // 刷新列表样式
-            TimedTaskBlocksView.Refresh();
-            OnPropertyChanged(nameof(AllDayTaskBlocks));
-        }
-
         //任务块类
         public class TaskBlock : INotifyPropertyChanged
         {
@@ -772,6 +1018,9 @@ namespace TimeController.ViewModels
             public Brush Brush { get; set; }
             public bool IsAllDay { get; set; }
             public bool IsCourse { get; set; }
+            public Brush BorderBrush { get; set; }
+            public Thickness BorderThickness { get; set; } = new Thickness(1);
+            public CornerRadius CornerRadius { get; set; } = new CornerRadius(4);
 
             // 定位属性
             public int Column { get; set; } // 星期几（0=周一，1=周二...）
@@ -797,6 +1046,7 @@ namespace TimeController.ViewModels
             public event PropertyChangedEventHandler? PropertyChanged;
         }
 
+
         //当前日期
         public DateTime CurrentDate
         {
@@ -814,6 +1064,23 @@ namespace TimeController.ViewModels
             }
         }
 
+        private int _semesterWeeks = 18; // 默认值
+        public int SemesterWeeks
+        {
+            get => _semesterWeeks;
+            set
+            {
+                if (_semesterWeeks != value && value >= 1)
+                {
+                    _semesterWeeks = value;
+                    App.Current.Properties["SemesterWeeks"] = value.ToString();
+                    OnPropertyChanged();
+                    UpdateSemesterWeekText(); // 更新学期周数文本
+                }
+            }
+        }
+
+        //删除课程和任务
         private async void RemoveTaskBlock(TaskBlock block)
         {
             if (block == null) return;
@@ -861,9 +1128,40 @@ namespace TimeController.ViewModels
                     {
                         try
                         {
-                            // 直接传递任务ID和引用以确保删除正确的任务
-                            Console.WriteLine($"删除数据库任务 ID={taskToDelete.Id}, Name={taskToDelete.Name}");
-                            await _taskService.DeleteTaskAsync(taskToDelete);
+                            // 判断是否为课程任务，如果是，则询问是否删除所有周次
+                            if (block.IsCourse)
+                            {
+                                var result = MessageBox.Show(
+                                    $"是否删除课程 \"{block.Name}\" 的所有周次？\n\n选择\"是\"将删除所有周次的课程\n选择\"否\"仅删除当前周课程",
+                                    "删除课程",
+                                    MessageBoxButton.YesNoCancel,
+                                    MessageBoxImage.Question);
+
+                                if (result == MessageBoxResult.Cancel)
+                                {
+                                    // 用户取消删除操作
+                                    return;
+                                }
+                                else if (result == MessageBoxResult.Yes)
+                                {
+                                    // 删除所有周次的课程
+                                    Console.WriteLine($"删除所有周次的课程: {taskToDelete.Name}");
+                                    await _taskService.DeleteAllCourseInstancesAsync(taskToDelete);
+                                }
+                                else // No
+                                {
+                                    // 仅删除当前周的课程
+                                    Console.WriteLine($"仅删除当前周课程: {taskToDelete.Name}, ID: {taskToDelete.Id}");
+                                    await _taskService.DeleteTaskAsync(taskToDelete);
+                                }
+                            }
+                            else
+                            {
+                                // 普通任务直接删除
+                                Console.WriteLine($"删除数据库任务 ID={taskToDelete.Id}, Name={taskToDelete.Name}");
+                                await _taskService.DeleteTaskAsync(taskToDelete);
+                            }
+
                             Console.WriteLine($"数据库删除任务成功：ID = {taskToDelete.Id}");
                         }
                         catch (Exception ex)
@@ -943,6 +1241,20 @@ namespace TimeController.ViewModels
             }
         }
 
+        // （课程）悬停进来：显示按钮
+        private void Grid_MouseEnter(object sender, MouseEventArgs e)
+        {
+            if (sender is Grid g && g.FindName("ActionButtons") is UIElement btns)
+                btns.Visibility = Visibility.Visible;
+        }
+
+        // （课程）悬停离开：隐藏按钮
+        private void Grid_MouseLeave(object sender, MouseEventArgs e)
+        {
+            if (sender is Grid g && g.FindName("ActionButtons") is UIElement btns)
+                btns.Visibility = Visibility.Collapsed;
+        }
+
 
         // 修改 LoadTasksForCurrentWeek 方法，确保只加载数据库中的最新数据
         public async void LoadTasksForCurrentWeek()
@@ -1015,22 +1327,6 @@ namespace TimeController.ViewModels
             }
         }
 
-        private async void MarkTaskCompleted(TaskBlock block)
-        {
-            if (block == null) return;
-            var task = Tasks.FirstOrDefault(t => t.Id == block.Id);
-            if (task != null)
-            {
-                task.Status = MyTaskStatus.Completed;
-                task.IsCompleted = true;
-                if (_taskService != null)
-                    await _taskService.UpdateTaskAsync(task);
-            }
-            LoadTasksForCurrentWeek();
-        }
-
-
-
         // 检查分时任务时间冲突
         public (bool hasConflict, List<TaskBlock> conflicts) CheckTimeConflicts(TaskModel newTask)
         {
@@ -1079,9 +1375,6 @@ namespace TimeController.ViewModels
             Console.WriteLine($"时间冲突检测结果: 找到 {conflicts.Count} 个冲突");
             return (conflicts.Count > 0, conflicts);
         }
-
-
-
 
         //导航栏周
         private void NavigateWeek(int offset)

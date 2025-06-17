@@ -59,6 +59,7 @@ namespace TimeController
                     // Services
                     services.AddScoped<ITaskService, TaskService>();
                     services.AddSingleton<INavigationService, NavigationService>();
+
                     services.AddScoped<IRewardService, RewardService>();
                     services.AddSingleton<ISettingsService, JsonSettingsService>();
 
@@ -67,6 +68,7 @@ namespace TimeController
                     services.AddScoped<ReviewViewModel_everyday>();
                     services.AddScoped<ReviewViewModel_everyweek>();
                     services.AddScoped<CasualModeViewModel>();
+
                     services.AddTransient<SettingsPageViewModel>();
                     services.AddTransient<AboutPageViewModel>();
                     services.AddSingleton<TodayTasksReminderViewModel>();

@@ -2,7 +2,6 @@
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Windows.Data;
-using System;
 
 namespace TimeController.ViewModels
 {
@@ -12,7 +11,6 @@ namespace TimeController.ViewModels
         private string _weekDayText = "";
         private string _dateText = "";
         private bool _isCurrentMonth;
-        private DateTime _date;
         private bool _isToday;
         private ObservableCollection<WeekViewModel.TaskBlock> _allDayTasks = new();
 
@@ -57,7 +55,7 @@ namespace TimeController.ViewModels
             }
         }
 
-        public bool ShouldShowMoreButton => AllDayTasks?.Count > 3;
+        public bool ShouldShowMoreButton => AllDayTasks?.Count > 2;
 
         public bool IsExpanded
         {
@@ -74,29 +72,11 @@ namespace TimeController.ViewModels
             }
         }
 
-        public int Index { get; set; }
-        public string WeekDayText { get => _weekDayText; set { _weekDayText = value; OnPropertyChanged(); } }
-        public string DateText { get => _dateText; set { _dateText = value; OnPropertyChanged(); } }
-        public bool IsCurrentMonth { get => _isCurrentMonth; set { _isCurrentMonth = value; OnPropertyChanged(); } }
-
-        public DateTime Date
-        {
-            get => _date;
-            set
-            {
-                if (_date != value)
-                {
-                    _date = value;
-                    OnPropertyChanged();
-                    IsToday = _date.Date == DateTime.Today;
-                }
-            }
-        }
-
+        // IsToday 属性
         public bool IsToday
         {
             get => _isToday;
-            private set
+            set
             {
                 if (_isToday != value)
                 {
@@ -105,6 +85,12 @@ namespace TimeController.ViewModels
                 }
             }
         }
+
+
+        public int Index { get; set; }
+        public string WeekDayText { get => _weekDayText; set { _weekDayText = value; OnPropertyChanged(); } }
+        public string DateText { get => _dateText; set { _dateText = value; OnPropertyChanged(); } }
+        public bool IsCurrentMonth { get => _isCurrentMonth; set { _isCurrentMonth = value; OnPropertyChanged(); } }
 
         /// <summary>
         /// 根据 IsExpanded 切换 AllDayTasksView 的过滤器：折叠时只看前 3 条，展开时看全部
@@ -118,7 +104,7 @@ namespace TimeController.ViewModels
                 var block = item as WeekViewModel.TaskBlock;
                 if (block == null) return false;
                 int idx = AllDayTasks.IndexOf(block);
-                return idx < 3 || IsExpanded;
+                return idx < 2 || IsExpanded;
             };
             AllDayTasksView.Refresh();
             OnPropertyChanged(nameof(ShouldShowMoreButton));

@@ -4,13 +4,12 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:ui="http://schemas.inkore.net/lib/ui/wpf/modern"
-			  xmlns:converters="clr-namespace:TimeController.Converters"
+             xmlns:converters="clr-namespace:TimeController.Converters"
              mc:Ignorable="d">
 
     <UserControl.Resources>
         <SolidColorBrush x:Key="SystemAccentBrushLight" Color="#B3E5FC"/>
         <converters:CompletedToTextDecorationConverter x:Key="CompletedToTextDecorationConverter"/>
-
     </UserControl.Resources>
 
     <Border x:Name="ColumnBorder" Background="#F0F0F0" CornerRadius="4" Margin="2" MinHeight="100">
@@ -19,7 +18,6 @@
                 <Setter Property="Background" Value="#F0F0F0"/>
                 <Style.Triggers>
                     <DataTrigger Binding="{Binding IsToday}" Value="True">
-                        <!-- 当日期为今天时，将全天任务格子的背景和边框设为醒目的蓝色 -->
                         <Setter Property="Background" Value="#CCE4FF"/>
                         <Setter Property="BorderBrush" Value="#1890FF"/>
                         <Setter Property="BorderThickness" Value="1"/>
@@ -28,58 +26,44 @@
             </Style>
         </Border.Style>
         <Grid>
-			<Grid.RowDefinitions>
-				<RowDefinition Height="Auto"/>
-				<RowDefinition Height="Auto"/>
-				<RowDefinition/>
-				<RowDefinition/>
-			</Grid.RowDefinitions>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition/>
+                <RowDefinition/>
+            </Grid.RowDefinitions>
 
             <!-- 日期标题 -->
             <StackPanel Grid.Row="0" HorizontalAlignment="Center" VerticalAlignment="Center">
                 <TextBlock Text="{Binding WeekDayText}" HorizontalAlignment="Center"/>
-
-                <TextBlock Text="{Binding DateText}"
-               HorizontalAlignment="Center"
-               FontSize="16">
-                    <TextBlock.Style>
-                        <Style TargetType="TextBlock">
-                            <!-- 默认颜色和字体粗细 -->
-                            <Setter Property="Foreground"
-                        Value="{Binding IsCurrentMonth, Converter={StaticResource BoolToColorConverter}}"/>
-                            <Setter Property="FontWeight" Value="Bold"/>
-
-                            <!--<Style.Triggers>
-                                --><!-- 今天高亮 --><!--
-                                <DataTrigger Binding="{Binding IsToday}" Value="True">
-                                    <Setter Property="Foreground"
-                                Value="{StaticResource SystemAccentBrushLight}"/>
-                                    <Setter Property="FontWeight" Value="ExtraBold"/>
-                                </DataTrigger>
-                            </Style.Triggers>-->
-                        </Style>
-                    </TextBlock.Style>
-                </TextBlock>
+                <TextBlock x:Name="DateTextBlock"
+                           Text="{Binding DateText}"
+                           HorizontalAlignment="Center"
+                           FontSize="16"
+                           FontWeight="Bold"
+                           Foreground="{Binding IsCurrentMonth, Converter={StaticResource BoolToColorConverter}}"/>
             </StackPanel>
 
             <!-- 全天任务列表 -->
-			<ItemsControl Grid.Row="1" Margin="2,2,2,2" 
+            <ItemsControl Grid.Row="1" Margin="2"
                           ItemsSource="{Binding AllDayTasksView}">
-				<ItemsControl.ItemsPanel>
-					<ItemsPanelTemplate>
-						<StackPanel Orientation="Vertical"/>
-					</ItemsPanelTemplate>
-				</ItemsControl.ItemsPanel>
-				<ItemsControl.ItemTemplate>
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <StackPanel Orientation="Vertical"/>
+                    </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate>
                     <DataTemplate>
-                        <Grid MouseEnter="Grid_MouseEnter" MouseLeave="Grid_MouseLeave" MouseLeftButtonDown="TaskBlock_MouseLeftButtonDown"
-                                Background="Transparent" Tag="{Binding}">
-                            <!-- 你的任务块背景 -->
+                        <Grid MouseEnter="Grid_MouseEnter"
+                              MouseLeave="Grid_MouseLeave"
+                              MouseLeftButtonDown="TaskBlock_MouseLeftButtonDown"
+                              Background="Transparent"
+                              Tag="{Binding}">
                             <Border Background="{Binding Brush}"
                                     CornerRadius="3"
                                     Margin="2">
                                 <TextBlock Text="{Binding Name}"
-                                             Margin="8,4"
+                                           Margin="8,4"
                                            TextWrapping="Wrap"
                                            Foreground="#333333"
                                            FontWeight="Medium"
@@ -94,119 +78,70 @@
                                     </TextBlock.ToolTip>
                                 </TextBlock>
                             </Border>
-
                             <!-- 浮动按钮组 -->
                             <StackPanel x:Name="ActionButtons"
-                                        Panel.ZIndex="10"            
+                                        Panel.ZIndex="10"
                                         Orientation="Horizontal"
                                         HorizontalAlignment="Right"
                                         VerticalAlignment="Top"
                                         Margin="4"
                                         Visibility="Collapsed">
                                 <!-- 标记完成 -->
-                                <Button Width="26" Height="26"
-                                          Padding="0"
-                                          Background="#CCFFFFFF"
-                                          BorderThickness="0"
-                                          Margin="4,0,5,0"
-                                          Command="{Binding DataContext.ToggleCompleteCommand, RelativeSource={RelativeSource AncestorType=ui:Page}}"
-                                          CommandParameter="{Binding}">
-                                    <TextBlock 
-                                          FontFamily="Segoe MDL2 Assets" 
-                                          Text="&#xE73E;"
-                                          FontSize="20" 
-                                          Foreground="#333333"/>
+                                <Button Width="19" Height="19"
+                                        Padding="0"
+                                        Background="#CCFFFFFF"
+                                        BorderThickness="0"
+                                        Margin="4,0,5,0"
+                                        Command="{Binding DataContext.ToggleCompleteCommand, RelativeSource={RelativeSource AncestorType=ui:Page}}"
+                                        CommandParameter="{Binding}">
+                                    <TextBlock FontFamily="Segoe MDL2 Assets" Text="&#xE73E;" FontSize="20" Foreground="#333333"/>
                                 </Button>
-
                                 <!-- 删除任务 -->
-                                <Button Width="26" Height="26"
-                                          Padding="0"
-                                          Background="#CCFFFFFF"
-                                          BorderThickness="0"
-                                          Command="{Binding DataContext.RemoveTaskBlockCommand,
-                                                    RelativeSource={RelativeSource AncestorType=ui:Page}}"
-                                          CommandParameter="{Binding}">
-                                    <TextBlock 
-                                          FontFamily="Segoe MDL2 Assets" 
-                                          Text="&#xE74D;"
-                                          FontSize="20" 
-                                          Foreground="#333333"/>
+                                <Button Width="19" Height="19"
+                                        Padding="0"
+                                        Background="#CCFFFFFF"
+                                        BorderThickness="0"
+                                        Command="{Binding DataContext.RemoveTaskBlockCommand, RelativeSource={RelativeSource AncestorType=ui:Page}}"
+                                        CommandParameter="{Binding}">
+                                    <TextBlock FontFamily="Segoe MDL2 Assets" Text="&#xE74D;" FontSize="20" Foreground="#333333"/>
                                 </Button>
                             </StackPanel>
                         </Grid>
                     </DataTemplate>
                 </ItemsControl.ItemTemplate>
-                
-				<ItemsControl.ItemContainerStyle>
-					<Style TargetType="ContentPresenter">
-						<Setter Property="Visibility" Value="Visible"/>
-						<Style.Triggers>
-							<!-- 显示该列的任务 -->
-							<MultiDataTrigger>
-								<MultiDataTrigger.Conditions>
-									<Condition Binding="{Binding RelativeSource={RelativeSource TemplatedParent}, Converter={StaticResource IndexConverter}}" Value="0"/>
-								</MultiDataTrigger.Conditions>
-								<Setter Property="Visibility" Value="Visible"/>
-							</MultiDataTrigger>
-							<!-- 如果是第三个以上的任务，只有在展开状态下显示 -->
-							<MultiDataTrigger>
-								<MultiDataTrigger.Conditions>
-                                    <Condition Binding="{Binding RelativeSource={RelativeSource TemplatedParent}, 
-                                             Converter={StaticResource IndexConverter}, ConverterParameter=gt2}" 
-                                             Value="True"/>
-                                    <Condition Binding="{Binding DataContext.IsExpanded, 
-                                             RelativeSource={RelativeSource AncestorType=UserControl}}" 
-                                             Value="False"/>
-                                </MultiDataTrigger.Conditions>
-								<Setter Property="Visibility" Value="Collapsed"/>
-							</MultiDataTrigger>
-						</Style.Triggers>
-					</Style>
-				</ItemsControl.ItemContainerStyle>
+                <ItemsControl.ItemContainerStyle>
+                    <Style TargetType="ContentPresenter">
+                        <Setter Property="Visibility" Value="Visible"/>
+                        <Style.Triggers>
+                            <!-- 第三个及以上的任务只有在展开状态下才显示 -->
+                            <DataTrigger Binding="{Binding RelativeSource={RelativeSource Self}, Converter={StaticResource IndexConverter}, ConverterParameter=gt1}" Value="True">
+                                <Setter Property="Visibility" Value="{Binding DataContext.IsExpanded, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type UserControl}}, Converter={StaticResource BoolToVisibility}}"/>
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </ItemsControl.ItemContainerStyle>
             </ItemsControl>
 
-            <!-- Popup showing additional task details -->
-            <!--<Popup x:Name="TaskPopup"
-                               PlacementTarget="{Binding ElementName=ColumnBorder}"
-                               Placement="Bottom"
-                               HorizontalOffset="20"
-                               VerticalOffset="8"
-                               AllowsTransparency="True"
-                               StaysOpen="False"
-                               PopupAnimation="Fade"
-                               Closed="TaskPopup_Closed">
-                <Border Background="#CCFFFFFF" CornerRadius="6" Padding="8">
-                    <Border.Effect>
-                        <DropShadowEffect BlurRadius="8" ShadowDepth="0" Opacity="0.25"/>
-                    </Border.Effect>
-                    <ItemsControl ItemsSource="{Binding AllDayTasks}">
-                        <ItemsControl.ItemTemplate>
-                            <DataTemplate>
-                                <TextBlock Text="{Binding Name}" Margin="2,0"/>
-                            </DataTemplate>
-                        </ItemsControl.ItemTemplate>
-                    </ItemsControl>
-                </Border>
-            </Popup>-->
-
             <!-- 展开/折叠按钮 -->
-            <Button x:Name="ExpandButton" Grid.Row="1" HorizontalAlignment="Center"
-                                        VerticalAlignment="Bottom"
-                                        Margin="0,2,0,0"
-                                        Click="ExpandButton_Click"
-                                        Visibility="{Binding ShouldShowMoreButton, Converter={StaticResource BoolToVisibility}}">
+            <Button x:Name="ExpandButton"
+                    Grid.Row="1"
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Bottom"
+                    Margin="0,2,0,0"
+                    Click="ExpandButton_Click"
+                    Visibility="{Binding ShouldShowMoreButton, Converter={StaticResource BoolToVisibility}}">
                 <Button.Content>
                     <TextBlock Text="{Binding IsExpanded, Converter={StaticResource ExpandedToSymbolConverter}}" />
                 </Button.Content>
                 <Button.Style>
-					<Style TargetType="Button">
-						<Setter Property="Background" Value="Transparent"/>
-						<Setter Property="BorderThickness" Value="0"/>
-						<Setter Property="Padding" Value="4,0"/>
-						<Setter Property="FontSize" Value="12"/>
-					</Style>
-				</Button.Style>
-			</Button>
-		</Grid>
-	</Border>
+                    <Style TargetType="Button">
+                        <Setter Property="Background" Value="Transparent"/>
+                        <Setter Property="BorderThickness" Value="0"/>
+                        <Setter Property="Padding" Value="4,0"/>
+                        <Setter Property="FontSize" Value="12"/>
+                    </Style>
+                </Button.Style>
+            </Button>
+        </Grid>
+    </Border>
 </UserControl>
