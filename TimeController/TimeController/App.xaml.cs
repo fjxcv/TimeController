@@ -41,7 +41,7 @@ namespace TimeController
         /// </summary>
         public static IServiceProvider Services => AppHost.Services;
 
-        protected override async void OnStartup(StartupEventArgs e)
+        protected override void OnStartup(StartupEventArgs e)
         {
             base.OnStartup(e);
 
@@ -101,15 +101,22 @@ namespace TimeController
                 Console.Error.WriteLine($"Database migration failed: {ex.Message}");
             }
 
+            // 加载用户设置
             var settingsService = AppHost.Services.GetRequiredService<ISettingsService>();
             UserSettings.EnableDailyReviewPrompt = settingsService.LoadEnableDailyReviewPrompt();
             UserSettings.DailyReviewPromptHour = settingsService.LoadDailyReviewPromptHour();
 
+            var mainWindow = AppHost.Services.GetRequiredService<MainWindow>();
+            Current.MainWindow = mainWindow;
+
             Dispatcher.BeginInvoke(async () =>
             {
-                var mainWindow = Current.MainWindow;
                 var taskService = AppHost.Services.GetRequiredService<ITaskService>();
                 var navService = AppHost.Services.GetRequiredService<INavigationService>();
+
+                // 启动复盘提醒计时器，确保不会被其他弹窗阻塞
+                ReviewReminderService.Start(taskService, navService);
+
                 var list = await taskService.GetTasksForDate(DateTime.Today);
                 var todayTasks = new ObservableCollection<TaskModel>(list.Where(t => t.IsReminderEnabled));
                 if (todayTasks.Any())
@@ -121,8 +128,9 @@ namespace TimeController
                     };
                     dlg.ShowDialog();
                 }
-
-                ReviewReminderService.Start(taskService, navService);
+                // —— 复盘提醒 —— 
+                // 立即尝试一次，不用等 Timer Tick
+                await ReviewReminderService.TryShowReviewReminderAsync(taskService, navService);
             });
 
 

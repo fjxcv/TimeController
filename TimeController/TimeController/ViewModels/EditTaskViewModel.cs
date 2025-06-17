@@ -10,85 +10,165 @@ namespace TimeController.ViewModels
         public TaskModel Task { get; }
         public bool IsEdit { get; }
 
-        // 构造：编辑已有任务
+        private DateTime? _startTimeWrapper;
+        private DateTime? _endTimeWrapper;
+        private bool _isTimeValid = true;
+        private string _timeError = "";
+
         public EditTaskViewModel(TaskModel existing)
         {
             Task = existing;
             IsEdit = true;
+
+            // 1. 初始化 TimeWrapper 字段，使它们和 Task 里已有的时间同步
+            if (Task.StartTime.HasValue)
+                _startTimeWrapper = DateTime.Today + Task.StartTime.Value;
+            if (Task.EndTime.HasValue)
+                _endTimeWrapper = DateTime.Today + Task.EndTime.Value;
+
+            // 2. 触发一次初始的 PropertyChanged，让界面立刻拿到最新值
+            OnPropertyChanged(nameof(IsAllDay));
+            OnPropertyChanged(nameof(IsTimeSelectionEnabled));
+            OnPropertyChanged(nameof(StartTimeWrapper));
+            OnPropertyChanged(nameof(EndTimeWrapper));
+
+            // 3. 校验一次时间合法性（如果是全天，就永远合法）
+            ValidateTimeRange();
         }
 
-        // 以下属性直接映射 TaskModel
+        //—— 直接映射 TaskModel 的属性 ——//
+
         public string Name
         {
             get => Task.Name;
             set { Task.Name = value; OnPropertyChanged(); }
         }
+
         public string Note
         {
             get => Task.Note;
             set { Task.Note = value; OnPropertyChanged(); }
         }
+
         public TaskType Type
         {
             get => Task.Type;
             set { Task.Type = value; OnPropertyChanged(); }
         }
+
         public bool IsAllDay
         {
             get => Task.IsAllDay;
-            set { Task.IsAllDay = value; OnPropertyChanged(); }
+            set
+            {
+                if (Task.IsAllDay != value)
+                {
+                    Task.IsAllDay = value;
+                    OnPropertyChanged();
+                    // 全天切换，也要更新“时间选择是否可用”
+                    OnPropertyChanged(nameof(IsTimeSelectionEnabled));
+                    ValidateTimeRange();
+                }
+            }
         }
+
         public bool IsReminderEnabled
         {
             get => Task.IsReminderEnabled;
             set { Task.IsReminderEnabled = value; OnPropertyChanged(); }
         }
+
         public DateTime PlannedDate
         {
             get => Task.PlannedDate;
             set { Task.PlannedDate = value; OnPropertyChanged(); }
         }
 
-        private DateTime? _startTimeWrapper;
+        //—— 时间包装属性 + 校验 ——//
+
         public DateTime? StartTimeWrapper
         {
-            get => Task.StartTime.HasValue ? DateTime.Today + Task.StartTime.Value : _startTimeWrapper;
+            get => _startTimeWrapper;
             set
             {
                 _startTimeWrapper = value;
                 Task.StartTime = value?.TimeOfDay;
                 OnPropertyChanged();
-                OnPropertyChanged(nameof(IsTimeValid));
-                OnPropertyChanged(nameof(TimeError));
+                ValidateTimeRange();
             }
         }
 
-        private DateTime? _endTimeWrapper;
         public DateTime? EndTimeWrapper
         {
-            get => Task.EndTime.HasValue ? DateTime.Today + Task.EndTime.Value : _endTimeWrapper;
+            get => _endTimeWrapper;
             set
             {
                 _endTimeWrapper = value;
                 Task.EndTime = value?.TimeOfDay;
                 OnPropertyChanged();
-                OnPropertyChanged(nameof(IsTimeValid));
-                OnPropertyChanged(nameof(TimeError));
+                ValidateTimeRange();
             }
         }
+
+        private void ValidateTimeRange()
+        {
+            if (IsAllDay)
+            {
+                IsTimeValid = true;
+                TimeError = "";
+            }
+            else if (Task.StartTime.HasValue && Task.EndTime.HasValue && Task.StartTime <= Task.EndTime)
+            {
+                IsTimeValid = true;
+                TimeError = "";
+            }
+            else
+            {
+                IsTimeValid = false;
+                TimeError = "开始时间不能晚于结束时间";
+            }
+            OnPropertyChanged(nameof(HasTimeError));
+        }
+
+        //—— 校验结果、UI 状态属性 ——//
 
         public bool IsTimeValid
         {
-            get
+            get => _isTimeValid;
+            private set
             {
-                if (IsAllDay) return true;
-                return Task.StartTime.HasValue && Task.EndTime.HasValue && Task.StartTime <= Task.EndTime;
+                if (_isTimeValid != value)
+                {
+                    _isTimeValid = value;
+                    OnPropertyChanged();
+                }
             }
         }
-        public string TimeError => IsTimeValid ? string.Empty : "开始时间不能晚于结束时间";
+
+        public string TimeError
+        {
+            get => _timeError;
+            private set
+            {
+                if (_timeError != value)
+                {
+                    _timeError = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
+
+        public bool HasTimeError => !string.IsNullOrEmpty(TimeError);
+
+        /// <summary>
+        /// 全日任务勾上后，时间选择器禁用
+        /// </summary>
+        public bool IsTimeSelectionEnabled => !IsAllDay;
+
+        //—— INotifyPropertyChanged ——//
 
         public event PropertyChangedEventHandler? PropertyChanged;
-        private void OnPropertyChanged([CallerMemberName] string? name = null) =>
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
+        private void OnPropertyChanged([CallerMemberName] string? name = null)
+            => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
     }
 }

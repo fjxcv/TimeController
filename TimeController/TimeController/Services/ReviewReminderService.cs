@@ -1,15 +1,11 @@
-﻿
-
-//跳出复盘弹窗的逻辑：1.时间在晚6点后 2.当天有已完成的任务 （可选允许or不允许弹出，还没做）
-
-
-using System;
+﻿using System;
 using System.Threading.Tasks;
 using System.Windows;
 using TimeController.Services;
 using TimeController.Helpers;
 using TimeController.Models;
 using TimeController.Views.Review;
+using System.Diagnostics;
 
 namespace TimeController.Services
 {
@@ -50,9 +46,8 @@ namespace TimeController.Services
             var todayTasks = await taskService.GetTasksForDate(DateTime.Today);
             if (todayTasks.Count == 0) return;
 
-
             bool allUnfinished = todayTasks.TrueForAll(t => t.Status != MyTaskStatus.Completed);
-            if (allUnfinished) return;
+            if (!allUnfinished) return;
 
             var dialog = new ReviewReminderDialog
             {
