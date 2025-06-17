@@ -962,9 +962,14 @@ namespace TimeController.ViewModels
                 // 拉数据
                 var weekTasks = await _taskService.GetTasksForDateRange(monday, sunday);
                 var courseTasks = await _taskService.GetCourseTasksForWeekAsync(CurrentDate);
+                weekTasks = weekTasks
+                .Where(t => t.Mode == TaskMode.Strong)
+                .ToList();
+
                 Tasks.Clear();
                 foreach (var t in weekTasks.Concat(courseTasks))
                     Tasks.Add(t);
+
 
                 // ① 先插入分时与课程任务
                 foreach (var t in Tasks.Where(t => !t.IsAllDay))

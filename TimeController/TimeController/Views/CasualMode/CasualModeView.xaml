@@ -275,15 +275,22 @@
                                                             CommandParameter="{Binding}"/>
                                             </TextBox.InputBindings>
                                         </TextBox>
-                                        <Button Grid.Column="2" Content="×" Width="20" Height="20" Margin="10,0,0,0"
-                                                Command="{Binding DataContext.DeleteTaskCommand, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ui:Page}}}"
-                                                CommandParameter="{Binding}">
+                                        <Button Grid.Column="2"
+                                                  Content="×"
+                                                  Width="20" Height="20"
+                                                  Margin="10,0,6,0"
+                                                  Panel.ZIndex="10"
+                                            Command="{Binding DataContext.DeleteTaskCommand,
+                                            RelativeSource={RelativeSource AncestorType=ui:Page}}"
+                                             CommandParameter="{Binding}">
                                             <Button.Style>
                                                 <Style TargetType="Button" BasedOn="{StaticResource IconButtonStyle}">
-                                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                                    <Setter Property="Visibility" Value="Hidden"/>
                                                     <Setter Property="FontSize" Value="18"/>
                                                     <Style.Triggers>
-                                                        <DataTrigger Binding="{Binding IsMouseOver, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ListViewItem}}}" Value="True">
+                                                        <DataTrigger Binding="{Binding IsMouseOver, 
+                                                                     RelativeSource={RelativeSource AncestorType=ListViewItem}}"
+                                                                     Value="True">
                                                             <Setter Property="Visibility" Value="Visible"/>
                                                         </DataTrigger>
                                                     </Style.Triggers>
@@ -389,15 +396,22 @@
                                                             CommandParameter="{Binding}"/>
                                             </TextBox.InputBindings>
                                         </TextBox>
-                                        <Button Grid.Column="2" Content="×" Width="20" Height="20" Margin="10,0,0,0"
-                                                Command="{Binding DataContext.DeleteTaskCommand, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ui:Page}}}"
-                                                CommandParameter="{Binding}">
+                                        <Button Grid.Column="2"
+                                                  Content="×"
+                                                  Width="20" Height="20"
+                                                  Margin="10,0,6,0"
+                                                  Panel.ZIndex="10"
+                                            Command="{Binding DataContext.DeleteTaskCommand,
+                                            RelativeSource={RelativeSource AncestorType=ui:Page}}"
+                                             CommandParameter="{Binding}">
                                             <Button.Style>
                                                 <Style TargetType="Button" BasedOn="{StaticResource IconButtonStyle}">
-                                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                                    <Setter Property="Visibility" Value="Hidden"/>
                                                     <Setter Property="FontSize" Value="18"/>
                                                     <Style.Triggers>
-                                                        <DataTrigger Binding="{Binding IsMouseOver, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ListViewItem}}}" Value="True">
+                                                        <DataTrigger Binding="{Binding IsMouseOver, 
+                                                                     RelativeSource={RelativeSource AncestorType=ListViewItem}}"
+                                                                     Value="True">
                                                             <Setter Property="Visibility" Value="Visible"/>
                                                         </DataTrigger>
                                                     </Style.Triggers>
@@ -502,15 +516,22 @@
                                                             CommandParameter="{Binding}"/>
                                             </TextBox.InputBindings>
                                         </TextBox>
-                                        <Button Grid.Column="2" Content="×" Width="20" Height="20" Margin="10,0,0,0"
-                                                Command="{Binding DataContext.DeleteTaskCommand, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ui:Page}}}"
-                                                CommandParameter="{Binding}">
+                                        <Button Grid.Column="2"
+                                                  Content="×"
+                                                  Width="20" Height="20"
+                                                  Margin="10,0,6,0"
+                                                  Panel.ZIndex="10"
+                                            Command="{Binding DataContext.DeleteTaskCommand,
+                                            RelativeSource={RelativeSource AncestorType=ui:Page}}"
+                                             CommandParameter="{Binding}">
                                             <Button.Style>
                                                 <Style TargetType="Button" BasedOn="{StaticResource IconButtonStyle}">
-                                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                                    <Setter Property="Visibility" Value="Hidden"/>
                                                     <Setter Property="FontSize" Value="18"/>
                                                     <Style.Triggers>
-                                                        <DataTrigger Binding="{Binding IsMouseOver, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ListViewItem}}}" Value="True">
+                                                        <DataTrigger Binding="{Binding IsMouseOver, 
+                                                                     RelativeSource={RelativeSource AncestorType=ListViewItem}}"
+                                                                     Value="True">
                                                             <Setter Property="Visibility" Value="Visible"/>
                                                         </DataTrigger>
                                                     </Style.Triggers>
@@ -615,15 +636,22 @@
                                                             CommandParameter="{Binding}"/>
                                             </TextBox.InputBindings>
                                         </TextBox>
-                                        <Button Grid.Column="2" Content="×" Width="20" Height="20" Margin="10,0,0,0"
-                                                Command="{Binding DataContext.DeleteTaskCommand, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ui:Page}}}"
-                                                CommandParameter="{Binding}">
+                                        <Button Grid.Column="2"
+                                                  Content="×"
+                                                  Width="20" Height="20"
+                                                  Margin="10,0,6,0"
+                                                  Panel.ZIndex="10"
+                                            Command="{Binding DataContext.DeleteTaskCommand,
+                                            RelativeSource={RelativeSource AncestorType=ui:Page}}"
+                                             CommandParameter="{Binding}">
                                             <Button.Style>
                                                 <Style TargetType="Button" BasedOn="{StaticResource IconButtonStyle}">
-                                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                                    <Setter Property="Visibility" Value="Hidden"/>
                                                     <Setter Property="FontSize" Value="18"/>
                                                     <Style.Triggers>
-                                                        <DataTrigger Binding="{Binding IsMouseOver, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ListViewItem}}}" Value="True">
+                                                        <DataTrigger Binding="{Binding IsMouseOver, 
+                                                                     RelativeSource={RelativeSource AncestorType=ListViewItem}}"
+                                                                     Value="True">
                                                             <Setter Property="Visibility" Value="Visible"/>
                                                         </DataTrigger>
                                                     </Style.Triggers>
@@ -789,7 +817,7 @@
                                                     CommandParameter="{Binding}">
                                                 <Button.Style>
                                                     <Style TargetType="Button" BasedOn="{StaticResource IconButtonStyle}">
-                                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                                        <Setter Property="Visibility" Value="Hidden"/>
                                                         <Setter Property="FontSize" Value="18"/>
                                                         <Style.Triggers>
                                                             <DataTrigger Binding="{Binding IsMouseOver, RelativeSource={RelativeSource AncestorType=ListViewItem}}" Value="True">

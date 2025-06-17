@@ -49,7 +49,7 @@
 
             </ui:SettingsCard>
 
-            <!-- 主题设置卡片 -->
+            <!-- 主题设置卡片 --><!--
             <ui:SettingsCard Header="主题模式"
                  Description="选择浅色 / 深色，或跟随系统"
                  IsEnabled="True">
@@ -65,7 +65,7 @@
                     <ComboBoxItem Content="Dark"     Tag="{x:Static local:ThemeOption.Dark}"    />
                     <ComboBoxItem Content="跟随系统" Tag="{x:Static local:ThemeOption.System}"  />
                 </ComboBox>
-            </ui:SettingsCard>
+            </ui:SettingsCard>-->
 
             <!-- 保存 & 重置 按钮 -->
             <StackPanel Orientation="Horizontal"

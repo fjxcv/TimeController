@@ -88,7 +88,7 @@
                 </Setter.Value>
             </Setter>
 
-            <!-- ✅ 每周按钮只在 IsEverydayPage 为 false 时高亮 -->
+            <!-- 每周按钮只在 IsEverydayPage 为 false 时高亮 -->
             <Style.Triggers>
                 <DataTrigger Binding="{Binding IsEverydayPage}" Value="False">
                     <Setter Property="Background" Value="#00BFA5"/>
@@ -195,40 +195,57 @@
                 <ItemsControl.ItemTemplate>
                     <DataTemplate>
                         <Border Style="{StaticResource CardStyle}">
-
                             <Grid>
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="5"/>
                                     <ColumnDefinition Width="*" />
                                 </Grid.ColumnDefinitions>
-                                
-                                <!-- 彩色条 -->
-                                <Border Background="{Binding AccentColor}" Grid.Column="0" />
+
+                                <!-- 左侧彩色条 -->
+                                <Border Background="{Binding AccentColor}" Grid.Column="0"/>
 
                                 <StackPanel Grid.Column="1" Margin="12,8,10,8">
-                                <!-- 图标 -->
-                                <TextBlock Text="{Binding Icon}" FontSize="20" Opacity="0.7" Margin="0,0,0,6"/>
+                                   
+                                    <TextBlock Text="{Binding Icon}"
+                                               FontSize="20"
+                                               Opacity="0.7"
+                                               Margin="0,0,0,5"
+                                               VerticalAlignment="Center"/>
 
-                                <!--复盘标题-->
-                                <TextBlock Text="{Binding Title}"
-                                           FontSize="16"
-                                           FontWeight="SemiBold"
-                                           Foreground="#222"
-                                           Margin="0,0,0,15"/>
-                                    <RichTextBox local:RichTextBoxHelper.BindableDocument="{Binding FormattedMessage}"
-                                             x:Name="myRichTextBox"
-                                             FontSize="17"
-                                             Foreground="#444"
-                                             IsReadOnly="True"
-                                             BorderThickness="0"
-                                             Background="Transparent"/>
+                                    
+                                    <TextBlock Text="{Binding Title}"
+                                               FontSize="16"
+                                               FontWeight="SemiBold"
+                                               Foreground="#222"
+                                               Margin="0,0,0,10"/>
 
+                                   
+                                    <RichTextBox
+                                                local:RichTextBoxHelper.BindableDocument="{Binding FormattedMessage}"
+                                                FontSize="17"
+                                                Foreground="#444"
+                                                IsReadOnly="True"
+                                                BorderThickness="0"
+                                                Background="Transparent"
+                                                HorizontalScrollBarVisibility="Disabled"
+                                                VerticalScrollBarVisibility="Hidden">
+                                        <RichTextBox.Resources>
+                                            <!-- 去掉 FlowDocument 默认留白 -->
+                                            <Style TargetType="FlowDocument">
+                                                <Setter Property="PagePadding" Value="0"/>
+                                            </Style>
+                                            <Style TargetType="Paragraph">
+                                                <Setter Property="Margin" Value="0"/>
+                                            </Style>
+                                        </RichTextBox.Resources>
+                                    </RichTextBox>
                                 </StackPanel>
                             </Grid>
                         </Border>
                     </DataTemplate>
                 </ItemsControl.ItemTemplate>
             </ItemsControl>
+
 
             <!-- 右边：折线图和被推迟/放弃的任务列表 -->
             <Grid Grid.Column="1">

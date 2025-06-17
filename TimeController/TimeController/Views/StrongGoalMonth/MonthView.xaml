@@ -58,76 +58,102 @@
         </Grid>
 
         <!-- 年月导航栏 -->
-        <StackPanel Grid.Row="1" 
-                   Orientation="Horizontal" 
-                   HorizontalAlignment="Center" 
-                   Margin="0,5,0,0">
+        <Grid Grid.Row="1" 
+              HorizontalAlignment="Center" 
+              Margin="0,5,0,0"
+              Width="600">
+            <!-- 固定总宽度 -->
+            <Grid.ColumnDefinitions>
+                <!-- 年份部分 -->
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="8"/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="8"/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="24"/>
+                <!-- 年份和月份之间的总间距 -->
+
+                <!-- 月份部分 -->
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="8"/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="8"/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="Auto"/>
+                <!-- 回到当前月份按钮 -->
+            </Grid.ColumnDefinitions>
 
             <!-- 上一年按钮 -->
             <Button Command="{Binding PrevYearCommand}"
                     Width="40"
                     Height="40"
-                    Margin="0,0,8,0">
+                    Grid.Column="0"
+                    Margin="50,0,0,0">
                 <uiControls:FontIcon Glyph="&#xE76B;" FontSize="16"/>
             </Button>
 
             <!-- 当前年份 -->
             <Border Background="#FFEBEBEB"
-                   CornerRadius="20"
-                   Padding="20,0"
-                   Margin="0,0,8,0">
+           CornerRadius="20"
+           Padding="20,0"
+           Grid.Column="2">
                 <TextBlock Text="{Binding YearText}"
-                           FontSize="24"
-                           FontWeight="SemiBold"
-                           VerticalAlignment="Center"
-                           HorizontalAlignment="Center"/>
+                   FontSize="24"
+                   FontWeight="SemiBold"
+                   VerticalAlignment="Center"
+                   HorizontalAlignment="Center"
+                   MinWidth="80"/>
             </Border>
 
             <!-- 下一年按钮 -->
             <Button Command="{Binding NextYearCommand}"
-                    Width="40"
-                    Height="40"
-                    Margin="0,0,24,0">
+            Width="40"
+            Height="40"
+            Grid.Column="4">
                 <uiControls:FontIcon Glyph="&#xE76C;" FontSize="16"/>
             </Button>
 
-
             <!-- 上一月按钮 -->
             <Button Command="{Binding PrevMonthCommand}"
-                    Width="40"
-                    Height="40"
-                    Margin="0,0,8,0">
+            Width="40"
+            Height="40"
+            Grid.Column="6">
                 <uiControls:FontIcon Glyph="&#xE76B;" FontSize="16"/>
             </Button>
 
             <!-- 当前月份 -->
             <Border Background="#FFEBEBEB"
-                   CornerRadius="20"
-                   Padding="20,0"
-                   Margin="0,0,8,0">
+           CornerRadius="20"
+           Padding="20,0"
+           Grid.Column="8"
+           HorizontalAlignment="Center">
                 <TextBlock Text="{Binding MonthText}"
-                           FontSize="24"
-                           FontWeight="SemiBold"
-                           VerticalAlignment="Center"
-                           HorizontalAlignment="Center"/>
+                   FontSize="24"
+                   FontWeight="SemiBold"
+                   VerticalAlignment="Center"
+                   HorizontalAlignment="Center"
+                   MinWidth="40"/>
             </Border>
 
             <!-- 下一月按钮 -->
             <Button Command="{Binding NextMonthCommand}"
-                    Width="40"
-                    Height="40"
-                     Margin="0,0,24,0">
+            Width="40"
+            Height="40"
+            Grid.Column="10">
                 <uiControls:FontIcon Glyph="&#xE76C;" FontSize="16"/>
             </Button>
 
+            <!-- 回到当前月份按钮 -->
             <Button Command="{Binding GoToCurrentMonthCommand}"
-                Width="40"
-                Height="40"
-                Content="📍"
-                ToolTip="回到当前月份"
-                Visibility="{Binding IsCurrentMonth, Converter={StaticResource InverseBoolToVisibilityConverter}}">
+            Width="40"
+            Height="40"
+            Content="📍"
+            ToolTip="回到当前月份"
+            Visibility="{Binding IsCurrentMonth, Converter={StaticResource InverseBoolToVisibilityConverter}}"
+            Grid.Column="11"
+            Margin="24,0,0,0">
             </Button>
-        </StackPanel>
+        </Grid>
 
         <!-- 星期栏 -->
         <Grid Grid.Row="2" Margin="40,30,40,0">

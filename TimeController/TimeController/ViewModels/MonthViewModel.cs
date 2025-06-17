@@ -289,13 +289,21 @@ namespace TimeController.ViewModels
 
         public async void CheckTodayTasks()
         {
-            if (CurrentMonth.Year == DateTime.Now.Year && 
+            if (CurrentMonth.Year == DateTime.Now.Year &&
                 CurrentMonth.Month == DateTime.Now.Month)
             {
                 var todayTasks = await GetTasksForDate(DateTime.Today);
                 if (todayTasks?.Any() == true)
                 {
-                    TodayTasksFound?.Invoke(this, todayTasks);
+                    //TodayTasksFound?.Invoke(this, todayTasks);
+                    // 只过滤出开启了提醒的任务
+                    var reminderTasks = new ObservableCollection<TaskModel>(
+                        todayTasks.Where(t => t.IsReminderEnabled));
+
+                    if (reminderTasks.Any())
+                    {
+                        TodayTasksFound?.Invoke(this, reminderTasks);
+                    }
                 }
             }
         }

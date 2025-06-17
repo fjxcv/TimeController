@@ -69,9 +69,11 @@ namespace TimeController.ViewModels
             Acknowledgements = new ObservableCollection<string>
             {
                 "Inkore.UI.WPF.Modern — 现代化控件库",
-                "小组的每一个人",
-                "戒社、名侦探柯南 — 写代码时的陪伴",
-                "所有听我抱怨骂街的朋友们"
+                "小组的每一个人:",
+                "张欣茹",
+                "曹心如",
+                "邱舒桐",
+                "彭湉欣"
             };
         }
 

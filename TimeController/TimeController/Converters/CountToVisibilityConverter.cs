@@ -1,11 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.Globalization;
 using System.Windows;
 using System.Windows.Data;
-using System.Globalization;
+using System.Collections;
 
 namespace TimeController.Converters
 {
@@ -13,9 +10,9 @@ namespace TimeController.Converters
     {
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
-            if (value is int count)
+            if (value is ICollection collection)
             {
-                return count > 0 ? Visibility.Visible : Visibility.Collapsed;
+                return collection.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
             }
             return Visibility.Collapsed;
         }
