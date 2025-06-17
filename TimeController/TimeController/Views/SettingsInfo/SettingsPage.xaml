@@ -69,7 +69,8 @@
 
             <!-- 自动复盘提醒时间 -->
             <ui:SettingsCard Header="自动复盘提醒时间"
-                             IsEnabled="True">
+                             IsEnabled="True"
+                             Description="设置您希望提醒复盘的时间或关闭">
                 <ui:SettingsCard.HeaderIcon>
                     <ui:FontIcon Glyph="&#xE823;"/>
                 </ui:SettingsCard.HeaderIcon>
