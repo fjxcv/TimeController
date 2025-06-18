@@ -129,15 +129,22 @@ namespace TimeController.ViewModels
         public bool HasTimePeriodHint => !string.IsNullOrEmpty(TimePeriodHint);
 
 
-        // 添加UpdateTimePeriodHint方法
+        //根据时间段推荐任务
         private void UpdateTimePeriodHint()
         {
             if (!IsAllDay && Task.StartTime.HasValue && Task.EndTime.HasValue)
             {
                 TimeSpan startTime = Task.StartTime.Value;
                 TimeSpan endTime = Task.EndTime.Value;
+                bool is24Hour = endTime == TimeSpan.FromHours(24);
 
-                Debug.WriteLine($"检查时间段: {startTime} - {endTime}");
+                // 判断时间段是否在22:00-24:00之间
+                if (startTime >= new TimeSpan(22, 0, 0) &&
+                    (endTime <= TimeSpan.FromHours(24) || is24Hour))
+                {
+                    TimePeriodHint = "22:00-24:00为夜间时间段\n建议安排轻松活动并及时休息";
+                    return;
+                }
 
                 // 判断时间段是否在7:00-12:00之间
                 if (startTime >= new TimeSpan(7, 0, 0) && endTime <= new TimeSpan(12, 0, 0))
@@ -242,31 +249,45 @@ namespace TimeController.ViewModels
                 UpdateTimePeriodHint(); // 更新时间段提示
             }
         }
+
+        // TimePicker绑定的属性
         private void ValidateTimeRange()
         {
             if (Task.StartTime.HasValue && Task.EndTime.HasValue)
             {
-                if (Task.StartTime.Value < Task.EndTime.Value)
+                bool isValid;
+                TimeSpan startTime = Task.StartTime.Value;
+                TimeSpan endTime = Task.EndTime.Value;
+
+                // 特殊处理24:00的情况
+                bool is24Hour = endTime == TimeSpan.FromHours(24);
+
+                // 24:00总是大于任何其他时间，包括23:59:59
+                if (is24Hour)
                 {
-                    IsTimeValid = true;
-                    TimeError = null;
+                    // 允许任何开始时间与24:00组合
+                    isValid = true;
+                    Debug.WriteLine($"24:00特殊处理: 允许与任何开始时间组合 {startTime}");
                 }
                 else
                 {
-                    IsTimeValid = false;
-                    TimeError = "开始时间不能晚于结束时间";
+                    // 常规情况：开始时间必须早于结束时间
+                    isValid = startTime < endTime;
+                    Debug.WriteLine($"常规时间验证: {startTime} < {endTime} = {isValid}");
                 }
+
+                IsTimeValid = isValid;
+                TimeError = isValid ? null : "开始时间不能晚于结束时间";
             }
             else
             {
-                // 处理一个或两个时间为空的情况
                 IsTimeValid = true;
                 TimeError = null;
             }
 
-            // 更新总体表单有效性
             UpdateFormValidity();
         }
+
 
 
         private void ValidateWeekPattern()
@@ -376,16 +397,57 @@ namespace TimeController.ViewModels
             }
         }
 
-
-
+        // 对24:00特殊处理
+        // 对24:00和00:00进行区分处理
         public DateTime? EndTimeWrapper
         {
-            get => Task.EndTime.HasValue ? DateTime.Today + Task.EndTime.Value : null;
+            get
+            {
+                if (Task.EndTime.HasValue)
+                {
+                    // 特殊处理24:00情况 - 依然显示为当天，但时间显示为00:00
+                    if (Task.EndTime.Value == TimeSpan.FromHours(24))
+                    {
+                        // 返回当天的00:00，但在UI上理解为24:00
+                        return DateTime.Today;
+                    }
+
+                    return DateTime.Today + Task.EndTime.Value;
+                }
+                return null;
+            }
             set
             {
-                Task.EndTime = value?.TimeOfDay;
+                if (value.HasValue)
+                {
+                    // 如果选择了当天的00:00，视为24:00
+                    if (value.Value.Date == DateTime.Today &&
+                        value.Value.TimeOfDay == TimeSpan.Zero)
+                    {
+                        Task.EndTime = TimeSpan.FromHours(24); // 设置为24:00
+                        Debug.WriteLine($"将当天00:00映射为24:00: {Task.EndTime}");
+                    }
+                    // 如果选择了次日的00:00，也视为24:00
+                    else if (value.Value.Date > DateTime.Today &&
+                             value.Value.TimeOfDay == TimeSpan.Zero)
+                    {
+                        Task.EndTime = TimeSpan.FromHours(24); // 设置为24:00
+                        Debug.WriteLine($"将次日00:00映射为24:00: {Task.EndTime}");
+                    }
+                    else
+                    {
+                        Task.EndTime = value.Value.TimeOfDay;
+                        Debug.WriteLine($"设置普通结束时间: {Task.EndTime}");
+                    }
+                }
+                else
+                {
+                    Task.EndTime = null;
+                    Debug.WriteLine("结束时间设置为null");
+                }
+
                 OnPropertyChanged();
-                ValidateTimeRange();//开始时间<结束时间
+                ValidateTimeRange();
                 UpdateTimePeriodHint();
             }
         }

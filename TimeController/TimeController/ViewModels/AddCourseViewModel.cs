@@ -21,6 +21,7 @@ namespace TimeController.ViewModels
             WeekPattern = "1"; // 默认只在第一周显示
         }
 
+        // 课程名称相关属性
         public string Name
         {
             get => Course.Name;
@@ -32,25 +33,28 @@ namespace TimeController.ViewModels
             }
         }
 
-
+        // 课程时间范围相关属性
         public string DayOfWeek
         {
             get => Course.DayOfWeek;
             set { Course.DayOfWeek = value; OnPropertyChanged(); }
         }
 
+        // 课程地点相关属性
         public string Location
         {
             get => Course.Location;
             set { Course.Location = value; OnPropertyChanged(); }
         }
 
+        // 课程教师相关属性
         public string Teacher
         {
             get => Course.Teacher;
             set { Course.Teacher = value; OnPropertyChanged(); }
         }
 
+        // 周次模式相关属性
         public string WeekPattern
         {
             get => Course.WeekPattern;
@@ -101,6 +105,7 @@ namespace TimeController.ViewModels
             }
         }
 
+        // TimePicker绑定的属性
         public DateTime? EndTimeWrapper
         {
             get => Course.EndTime != TimeSpan.Zero ? DateTime.Today + Course.EndTime : null;
@@ -112,6 +117,7 @@ namespace TimeController.ViewModels
             }
         }
 
+        // WeekPattern绑定的属性
         private void ValidateTimeRange()
         {
             if (Course.StartTime < Course.EndTime)
@@ -126,6 +132,7 @@ namespace TimeController.ViewModels
             }
         }
 
+        // WeekPattern绑定的属性
         private void ValidateWeekPattern()
         {
             if (string.IsNullOrWhiteSpace(WeekPattern))
@@ -197,6 +204,7 @@ namespace TimeController.ViewModels
             return weeks;
         }
 
+        // 更新总体表单有效性
         private bool _isTimeValid = true;
         public bool IsTimeValid
         {
@@ -212,6 +220,7 @@ namespace TimeController.ViewModels
             }
         }
 
+        // 对24:00特殊处理
         private bool _isWeekPatternValid = true;
         public bool IsWeekPatternValid
         {
@@ -227,6 +236,7 @@ namespace TimeController.ViewModels
             }
         }
 
+        // 时间范围相关属性
         private string _timeError;
         public string TimeError
         {
@@ -239,6 +249,7 @@ namespace TimeController.ViewModels
             }
         }
 
+        // 周次模式相关属性
         private string _weekPatternError;
         public string WeekPatternError
         {
@@ -251,7 +262,10 @@ namespace TimeController.ViewModels
             }
         }
 
+        // 时间是否有错误
         public bool HasTimeError => !string.IsNullOrEmpty(TimeError);
+
+        // 周次模式是否有错误
         public bool HasWeekPatternError => !string.IsNullOrEmpty(WeekPatternError);
 
         public event PropertyChangedEventHandler PropertyChanged;

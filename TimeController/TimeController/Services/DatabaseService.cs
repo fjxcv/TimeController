@@ -112,83 +112,6 @@ namespace TimeController.Services
             };
         }
 
-        // 为特定周次创建任务
-        private TaskModel CreateWeeklyTask(Course course, int week, DateTime semesterFirstMonday)
-        {
-            // 解析星期几
-            DayOfWeek courseDayOfWeek = ParseDayOfWeek(course.DayOfWeek);
-
-            // 计算课程在当前周的日期
-            int dayOfWeekOffset = ((int)courseDayOfWeek - (int)DayOfWeek.Monday + 7) % 7;
-            int daysFromStart = (week - 1) * 7 + dayOfWeekOffset;
-            DateTime taskDate = semesterFirstMonday.AddDays(daysFromStart);
-
-            // 计算 WeekDay 值 (0=周一, 1=周二...)
-            int weekDay = dayOfWeekOffset;
-
-            Console.WriteLine($"第 {week} 周 {course.Name} 课程: 星期{course.DayOfWeek}，日期 {taskDate:yyyy-MM-dd}");
-
-            // 构建完整的Note
-            string note = $"教师:{course.Teacher}, 地点:{course.Location}, 周次模式:{course.WeekPattern}";
-
-            return new TaskModel
-            {
-                Name = course.Name,
-                Note = note,
-                Type = TaskType.学习学业,
-                Mode = TaskMode.Strong,
-                PlannedDate = taskDate,
-                IsAllDay = false,
-                StartTime = course.StartTime,
-                EndTime = course.EndTime,
-                Status = MyTaskStatus.Pending,
-                IsReminderEnabled = true,
-                CreatedAt = DateTime.Now,
-                IsCourseTask = true,
-                WeekDay = weekDay
-            };
-        }
-
-
-        private TaskModel ConvertCourseToTask(Course course, DateTime semesterStartDate)
-        {
-            // 确保开学日期是周一
-            DateTime firstDayOfSemester = semesterStartDate;
-            while (firstDayOfSemester.DayOfWeek != DayOfWeek.Monday)
-            {
-                firstDayOfSemester = firstDayOfSemester.AddDays(-1);
-            }
-
-            // 解析星期几
-            DayOfWeek courseDayOfWeek = ParseDayOfWeek(course.DayOfWeek);
-
-            // 计算课程日期 (该课程在第一周的对应星期几)
-            int daysToAdd = ((int)courseDayOfWeek - (int)DayOfWeek.Monday) % 7;
-            DateTime taskDate = firstDayOfSemester.AddDays(daysToAdd);
-
-            // 添加调试输出
-            Console.WriteLine($"课程 {course.Name} 转换: 星期{course.DayOfWeek} => {taskDate:yyyy-MM-dd}");
-            // 添加调试输出
-            Console.WriteLine($"课程 {course.Name} 转换: 星期{course.DayOfWeek} => {taskDate:yyyy-MM-dd}");
-            Console.WriteLine($"课程时间: {course.StartTime} - {course.EndTime}");
-            return new TaskModel
-            {
-                Name = course.Name,
-                Note = $"教师:{course.Teacher}, 地点:{course.Location}, 周次模式：{course.WeekPattern}",
-                Type = TaskType.学习学业,
-                Mode = TaskMode.Strong,
-                PlannedDate = taskDate,
-                IsAllDay = false,
-                StartTime = course.StartTime,
-                EndTime = course.EndTime,
-                Status = MyTaskStatus.Pending,
-                IsReminderEnabled = true,
-                CreatedAt = DateTime.Now
-            };
-        }
-
-
-
         // 解析星期几文本为 DayOfWeek 枚举
         private DayOfWeek ParseDayOfWeek(string dayText)
         {
@@ -205,11 +128,5 @@ namespace TimeController.Services
             };
         }
 
-        // 获取下一个指定星期几的日期
-        private DateTime GetNextWeekday(DateTime start, DayOfWeek day)
-        {
-            int daysToAdd = ((int)day - (int)start.DayOfWeek + 7) % 7;
-            return start.AddDays(daysToAdd);
-        }
     }
 }

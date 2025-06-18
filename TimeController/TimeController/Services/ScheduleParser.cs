@@ -13,148 +13,12 @@ using TimeController.Models;
 using NPOI.POIFS.FileSystem;
 using System.Net.Sockets;
 using System.Text;
+using System.Diagnostics;
 
 namespace TimeController.Services
 {
     public static class ScheduleParser
     {
-        public static List<Course> ParseExcel(string filePath)
-        {
-            var courses = new List<Course>();
-            IWorkbook workbook;
-
-            try
-            {
-                var ext = Path.GetExtension(filePath).ToLower();
-
-                // 尝试先读取前几个字节判断文件格式
-                byte[] header = new byte[8];
-                using (var fs = new FileStream(filePath, FileMode.Open, FileAccess.Read))
-                {
-                    fs.Read(header, 0, Math.Min(8, (int)fs.Length));
-                }
-
-                // 检查文件是否可能是XML格式（常见HTML或XML文件头）
-                string headerStr = Encoding.ASCII.GetString(header);
-                if (headerStr.StartsWith("<?xml") || headerStr.StartsWith("<!DOCTY") || headerStr.StartsWith("<html>"))
-                {
-                    throw new InvalidOperationException("文件似乎是XML或HTML格式，无法作为Excel文件打开");
-                }
-
-                using (var stream = new FileStream(filePath, FileMode.Open, FileAccess.Read))
-                {
-                    if (ext == ".xls")
-                    {
-                        try
-                        {
-                            workbook = new HSSFWorkbook(stream);
-                        }
-                        catch (NotOLE2FileException)
-                        {
-                            throw new InvalidOperationException("此文件不是有效的Excel .xls格式，请确认文件格式正确");
-                        }
-                    }
-                    else if (ext == ".xlsx")
-                    {
-                        try
-                        {
-                            workbook = new XSSFWorkbook(stream);
-                        }
-                        catch
-                        {
-                            throw new InvalidOperationException("此文件不是有效的Excel .xlsx格式，请确认文件格式正确");
-                        }
-                    }
-                    else
-                    {
-                        throw new NotSupportedException("只支持.xls和.xlsx文件格式");
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                throw new InvalidOperationException($"Excel文件打开失败: {ex.Message}", ex);
-            }
-
-            ISheet sheet = workbook.GetSheetAt(0);
-            int rowCount = sheet.LastRowNum;
-
-            // 确保至少有表头行
-            if (rowCount < 0)
-            {
-                throw new InvalidOperationException("Excel文件为空或格式不正确");
-            }
-
-            Console.WriteLine($"Excel文件共有{rowCount + 1}行数据(包含表头)");
-
-            // 从第二行开始（跳过表头）读取数据
-            for (int row = 1; row <= rowCount; row++)
-            {
-                IRow currentRow = sheet.GetRow(row);
-                if (currentRow == null) continue;
-
-                try
-                {
-                    // 检查课程名称是否为空
-                    var nameCell = currentRow.GetCell(0);
-                    if (nameCell == null || string.IsNullOrWhiteSpace(nameCell.ToString()))
-                    {
-                        Console.WriteLine($"跳过第{row + 1}行：课程名称为空");
-                        continue;
-                    }
-
-                    // 读取并解析数据
-                    string name = GetCellStringValue(currentRow.GetCell(0));
-                    string dayOfWeek = GetCellStringValue(currentRow.GetCell(1));
-                    string startTimeStr = GetCellStringValue(currentRow.GetCell(2));
-                    string endTimeStr = GetCellStringValue(currentRow.GetCell(3));
-                    string location = GetCellStringValue(currentRow.GetCell(4));
-                    string teacher = GetCellStringValue(currentRow.GetCell(5));
-
-                    // 读取周次模式（如果存在）
-                    string weekPattern = currentRow.LastCellNum > 6 ?
-                        GetCellStringValue(currentRow.GetCell(6)) : "1-16";
-
-                    // 确保周次模式不为空
-                    if (string.IsNullOrWhiteSpace(weekPattern))
-                    {
-                        weekPattern = "1-16";
-                    }
-
-                    // 解析时间
-                    TimeSpan startTime = ParseTimeSpan(startTimeStr);
-                    TimeSpan endTime = ParseTimeSpan(endTimeStr);
-
-                    // 验证时间
-                    if (startTime >= endTime)
-                    {
-                        Console.WriteLine($"警告：第{row + 1}行的开始时间晚于或等于结束时间，将跳过");
-                        continue;
-                    }
-
-                    var course = new Course
-                    {
-                        Name = name,
-                        DayOfWeek = dayOfWeek,
-                        StartTime = startTime,
-                        EndTime = endTime,
-                        Location = location,
-                        Teacher = teacher,
-                        WeekPattern = weekPattern
-                    };
-
-                    courses.Add(course);
-                    Console.WriteLine($"成功解析课程: {course.Name}, 星期{course.DayOfWeek}, {course.StartTime}-{course.EndTime}, 周次:{course.WeekPattern}");
-                }
-                catch (Exception ex)
-                {
-                    // 记录错误但继续处理下一行
-                    Console.WriteLine($"解析第{row + 1}行失败: {ex.Message}");
-                }
-            }
-
-            return courses;
-        }
 
         // 获取单元格字符串值，处理不同类型的单元格
         private static string GetCellStringValue(ICell cell)
@@ -197,6 +61,266 @@ namespace TimeController.Services
                     return string.Empty;
             }
         }
+
+
+        // 从文件导入课程
+        public static async Task<List<Course>> ParseExcelAsync(string filePath, IProgress<(int current, int total, string message)> progress = null)
+        {
+            return await Task.Run(() =>
+            {
+                try
+                {
+                    progress?.Report((0, 100, "正在打开Excel文件..."));
+
+                    var courses = new List<Course>();
+                    IWorkbook workbook;
+
+                    // 打开Excel文件的代码
+                    var ext = Path.GetExtension(filePath).ToLower();
+
+                    // 尝试先读取前几个字节判断文件格式
+                    byte[] header = new byte[8];
+                    using (var fs = new FileStream(filePath, FileMode.Open, FileAccess.Read))
+                    {
+                        fs.Read(header, 0, Math.Min(8, (int)fs.Length));
+                    }
+
+                    // 检查文件是否可能是XML格式（常见HTML或XML文件头）
+                    string headerStr = Encoding.ASCII.GetString(header);
+                    if (headerStr.StartsWith("<?xml") || headerStr.StartsWith("<!DOCTY") || headerStr.StartsWith("<html>"))
+                    {
+                        throw new InvalidOperationException("文件似乎是XML或HTML格式，无法作为Excel文件打开");
+                    }
+
+                    using (var stream = new FileStream(filePath, FileMode.Open, FileAccess.Read))
+                    {
+                        progress?.Report((10, 100, "正在加载工作表..."));
+
+                        if (ext == ".xls")
+                        {
+                            try
+                            {
+                                workbook = new HSSFWorkbook(stream);
+                            }
+                            catch (NotOLE2FileException)
+                            {
+                                throw new InvalidOperationException("此文件不是有效的Excel .xls格式，请确认文件格式正确");
+                            }
+                        }
+                        else if (ext == ".xlsx")
+                        {
+                            try
+                            {
+                                workbook = new XSSFWorkbook(stream);
+                            }
+                            catch
+                            {
+                                throw new InvalidOperationException("此文件不是有效的Excel .xlsx格式，请确认文件格式正确");
+                            }
+                        }
+                        else
+                        {
+                            throw new NotSupportedException("只支持.xls和.xlsx文件格式");
+                        }
+                    }
+
+                    ISheet sheet = workbook.GetSheetAt(0);
+                    int rowCount = sheet.LastRowNum;
+
+                    // 确保至少有表头行
+                    if (rowCount < 0)
+                    {
+                        throw new InvalidOperationException("Excel文件为空或格式不正确");
+                    }
+
+                    progress?.Report((20, 100, $"共发现{rowCount}行数据，开始解析..."));
+
+                    // 从第二行开始（跳过表头）读取数据
+                    for (int row = 1; row <= rowCount; row++)
+                    {
+                        // 定期更新进度
+                        if (row % 5 == 0 || row == rowCount)
+                        {
+                            int percentage = 20 + (row * 70 / rowCount); // 20%~90%的进度范围
+                            progress?.Report((percentage, 100, $"正在解析第 {row}/{rowCount} 行..."));
+                        }
+
+                        IRow currentRow = sheet.GetRow(row);
+                        if (currentRow == null) continue;
+
+                        try
+                        {
+                            // 检查课程名称是否为空
+                            var nameCell = currentRow.GetCell(0);
+                            if (nameCell == null || string.IsNullOrWhiteSpace(nameCell.ToString()))
+                            {
+                                continue;
+                            }
+
+                            // 读取并解析数据
+                            string name = GetCellStringValue(currentRow.GetCell(0));
+                            string dayOfWeek = GetCellStringValue(currentRow.GetCell(1));
+                            string startTimeStr = GetCellStringValue(currentRow.GetCell(2));
+                            string endTimeStr = GetCellStringValue(currentRow.GetCell(3));
+                            string location = GetCellStringValue(currentRow.GetCell(4));
+                            string teacher = GetCellStringValue(currentRow.GetCell(5));
+
+                            // 读取周次模式（如果存在）
+                            string weekPattern = currentRow.LastCellNum > 6 ?
+                                GetCellStringValue(currentRow.GetCell(6)) : "1-16";
+
+                            // 确保周次模式不为空
+                            if (string.IsNullOrWhiteSpace(weekPattern))
+                            {
+                                weekPattern = "1-16";
+                            }
+
+                            // 解析时间
+                            TimeSpan startTime = ParseTimeSpan(startTimeStr);
+                            TimeSpan endTime = ParseTimeSpan(endTimeStr);
+
+                            // 验证时间
+                            if (startTime >= endTime)
+                            {
+                                continue;
+                            }
+
+                            var course = new Course
+                            {
+                                Name = name,
+                                DayOfWeek = dayOfWeek,
+                                StartTime = startTime,
+                                EndTime = endTime,
+                                Location = location,
+                                Teacher = teacher,
+                                WeekPattern = weekPattern
+                            };
+
+                            courses.Add(course);
+                        }
+                        catch (Exception)
+                        {
+                            // 记录错误但继续处理下一行
+                            continue;
+                        }
+                    }
+
+                    progress?.Report((95, 100, "解析完成，准备返回数据..."));
+
+                    return courses;
+                }
+                catch (Exception ex)
+                {
+                    progress?.Report((100, 100, $"解析出错: {ex.Message}"));
+                    throw;
+                }
+            });
+        }
+
+        // 从CSV文件导入课程
+        public static async Task<List<Course>> ParseCsvAsync(string filePath, IProgress<(int current, int total, string message)> progress = null)
+        {
+            return await Task.Run(() =>
+            {
+                try
+                {
+                    progress?.Report((0, 100, "正在打开CSV文件..."));
+
+                    using var reader = new StreamReader(filePath, GetEncoding(filePath));
+
+                    var csvConfig = new CsvHelper.Configuration.CsvConfiguration(CultureInfo.InvariantCulture)
+                    {
+                        HasHeaderRecord = true,
+                        MissingFieldFound = null,
+                        BadDataFound = null
+                    };
+
+                    progress?.Report((20, 100, "正在读取CSV数据..."));
+
+                    using var csv = new CsvReader(reader, csvConfig);
+
+                    // 读取并映射CSV记录
+                    var records = new List<Course>();
+
+                    // 读取表头
+                    csv.Read();
+                    csv.ReadHeader();
+
+                    progress?.Report((30, 100, "开始解析记录..."));
+
+                    int rowIndex = 0;
+                    int estimatedRowCount = 100; // 预估行数，CSV无法提前知道总行数
+
+                    while (csv.Read())
+                    {
+                        rowIndex++;
+
+                        // 每解析10行更新一次进度
+                        if (rowIndex % 10 == 0)
+                        {
+                            int progressValue = 30 + Math.Min(60, (rowIndex * 60 / estimatedRowCount));
+                            progress?.Report((progressValue, 100, $"已解析 {rowIndex} 行..."));
+
+                            // 动态调整估计总行数
+                            if (rowIndex > estimatedRowCount)
+                            {
+                                estimatedRowCount = rowIndex * 2;
+                            }
+                        }
+
+                        try
+                        {
+                            string name = csv.GetField("课程名称") ?? csv.GetField(0) ?? "";
+
+                            // 如果课程名称为空，跳过
+                            if (string.IsNullOrWhiteSpace(name)) continue;
+
+                            string dayOfWeek = csv.GetField("星期几") ?? csv.GetField(1) ?? "";
+                            string startTimeStr = csv.GetField("开始时间") ?? csv.GetField(2) ?? "";
+                            string endTimeStr = csv.GetField("结束时间") ?? csv.GetField(3) ?? "";
+                            string location = csv.GetField("上课地点") ?? csv.GetField(4) ?? "";
+                            string teacher = csv.GetField("教师姓名") ?? csv.GetField(5) ?? "";
+                            string weekPattern = csv.GetField("周次") ?? csv.GetField(6) ?? "1-16";
+
+                            // 解析时间
+                            TimeSpan startTime = ParseTimeSpan(startTimeStr);
+                            TimeSpan endTime = ParseTimeSpan(endTimeStr);
+
+                            // 验证时间
+                            if (startTime >= endTime) continue;
+
+                            var course = new Course
+                            {
+                                Name = name,
+                                DayOfWeek = dayOfWeek,
+                                StartTime = startTime,
+                                EndTime = endTime,
+                                Location = location,
+                                Teacher = teacher,
+                                WeekPattern = weekPattern
+                            };
+
+                            records.Add(course);
+                        }
+                        catch (Exception)
+                        {
+                            // 记录错误但继续处理下一行
+                            continue;
+                        }
+                    }
+
+                    progress?.Report((95, 100, $"CSV解析完成，共解析{rowIndex}行，成功导入{records.Count}门课程"));
+
+                    return records;
+                }
+                catch (Exception ex)
+                {
+                    progress?.Report((100, 100, $"解析出错: {ex.Message}"));
+                    throw new InvalidOperationException($"CSV文件解析失败: {ex.Message}", ex);
+                }
+            });
+        }
+
 
         // 解析各种格式的时间字符串为TimeSpan
         private static TimeSpan ParseTimeSpan(string timeStr)
@@ -253,79 +377,6 @@ namespace TimeController.Services
             throw new FormatException($"无法解析时间格式: {timeStr}");
         }
 
-
-        public static List<Course> ParseCsv(string filePath)
-        {
-            try
-            {
-                using var reader = new StreamReader(filePath, GetEncoding(filePath));
-
-                var csvConfig = new CsvHelper.Configuration.CsvConfiguration(CultureInfo.InvariantCulture)
-                {
-                    HasHeaderRecord = true,
-                    MissingFieldFound = null,
-                    BadDataFound = null
-                };
-
-                using var csv = new CsvReader(reader, csvConfig);
-
-                // 读取并映射CSV记录
-                var records = new List<Course>();
-
-                // 读取表头
-                csv.Read();
-                csv.ReadHeader();
-
-                while (csv.Read())
-                {
-                    try
-                    {
-                        string name = csv.GetField("课程名称") ?? csv.GetField(0) ?? "";
-
-                        // 如果课程名称为空，跳过
-                        if (string.IsNullOrWhiteSpace(name)) continue;
-
-                        string dayOfWeek = csv.GetField("星期几") ?? csv.GetField(1) ?? "";
-                        string startTimeStr = csv.GetField("开始时间") ?? csv.GetField(2) ?? "";
-                        string endTimeStr = csv.GetField("结束时间") ?? csv.GetField(3) ?? "";
-                        string location = csv.GetField("上课地点") ?? csv.GetField(4) ?? "";
-                        string teacher = csv.GetField("教师姓名") ?? csv.GetField(5) ?? "";
-                        string weekPattern = csv.GetField("周次") ?? csv.GetField(6) ?? "1-16";
-
-                        // 解析时间
-                        TimeSpan startTime = ParseTimeSpan(startTimeStr);
-                        TimeSpan endTime = ParseTimeSpan(endTimeStr);
-
-                        // 验证时间
-                        if (startTime >= endTime) continue;
-
-                        var course = new Course
-                        {
-                            Name = name,
-                            DayOfWeek = dayOfWeek,
-                            StartTime = startTime,
-                            EndTime = endTime,
-                            Location = location,
-                            Teacher = teacher,
-                            WeekPattern = weekPattern
-                        };
-
-                        records.Add(course);
-                    }
-                    catch (Exception ex)
-                    {
-                        Console.WriteLine($"解析CSV行失败: {ex.Message}");
-                    }
-                }
-
-                return records;
-            }
-            catch (Exception ex)
-            {
-                throw new InvalidOperationException($"CSV文件解析失败: {ex.Message}", ex);
-            }
-        }
-
         // 检测文件编码
         private static Encoding GetEncoding(string filePath)
         {
@@ -334,56 +385,8 @@ namespace TimeController.Services
             return reader.CurrentEncoding;
         }
 
-        // URL导入方法保持不变
-        public static List<Course> ParseFromUrl(string url)
-        {
-            try
-            {
-                using var httpClient = new HttpClient();
-                // 设置超时和更友好的请求头
-                httpClient.Timeout = TimeSpan.FromSeconds(15);
-                httpClient.DefaultRequestHeaders.Add("User-Agent", "TimeController/1.0");
-
-                // 添加更详细的诊断信息
-                Console.WriteLine($"正在请求URL: {url}");
-
-                var response = httpClient.GetAsync(url).Result;
-                response.EnsureSuccessStatusCode();
-                string content = response.Content.ReadAsStringAsync().Result;
-
-                if (string.IsNullOrWhiteSpace(content))
-                {
-                    throw new InvalidOperationException("服务器返回了空内容");
-                }
-
-                Console.WriteLine($"获取到响应内容，长度: {content.Length}");
-
-                return JsonConvert.DeserializeObject<List<Course>>(content)
-                    ?? throw new InvalidOperationException("无法将JSON反序列化为课程列表");
-            }
-            catch (HttpRequestException ex)
-            {
-                throw new InvalidOperationException($"HTTP请求失败: {ex.Message}", ex);
-            }
-            catch (TaskCanceledException ex)
-            {
-                throw new InvalidOperationException("请求超时，请检查网络连接或URL是否正确", ex);
-            }
-            catch (JsonException ex)
-            {
-                throw new InvalidOperationException("返回内容不是有效的JSON格式", ex);
-            }
-            catch (SocketException ex)
-            {
-                throw new InvalidOperationException($"网络连接错误: {ex.Message}", ex);
-            }
-            catch (Exception ex)
-            {
-                throw new InvalidOperationException($"URL解析失败: {ex.GetType().Name}: {ex.Message}", ex);
-            }
-        }
-
-        public static async Task<List<Course>> ParseFromUrlAsync(string url)
+        // 从URL解析课表
+        public static async Task<List<Course>> ParseFromUrlAsync(string url, IProgress<string> progress = null)
         {
             try
             {
@@ -391,10 +394,15 @@ namespace TimeController.Services
                 httpClient.Timeout = TimeSpan.FromSeconds(15);
                 httpClient.DefaultRequestHeaders.Add("User-Agent", "TimeController/1.0");
 
+                progress?.Report("正在请求数据...");
                 var response = await httpClient.GetAsync(url);
                 response.EnsureSuccessStatusCode();
-                string content = await response.Content.ReadAsStringAsync();
 
+                string content = await response.Content.ReadAsStringAsync();
+                if (string.IsNullOrWhiteSpace(content))
+                    throw new InvalidOperationException("服务器返回了空内容");
+
+                progress?.Report("正在解析JSON数据...");
                 return JsonConvert.DeserializeObject<List<Course>>(content)
                     ?? new List<Course>();
             }

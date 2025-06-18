@@ -104,7 +104,9 @@
             <Button Grid.Column="1" Content="帮助" 
                     Command="{Binding OpenHelpCommand}" 
                     Padding="12,4"/>
+
         </Grid>
+        
 
         <!-- 确保遮罩使用正确的转换器 -->
         <Grid Grid.RowSpan="5" 
