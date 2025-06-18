@@ -277,135 +277,6 @@ namespace TimeController.Views.StrongGoalWeek
         private Border _currentHighlightedTask;
         private int _currentVisibleTaskId = -1;
 
-        // 供 WeekContentGrid 调用的方法
-        private async void WeekContentGrid_MouseDown(object sender, MouseButtonEventArgs e)
-        {
-            // 如果详情卡片是可见的，点击空白区域时隐藏它
-            if (TaskDetailsCard.Visibility == Visibility.Visible)
-            {
-                TaskDetailsCard.Visibility = Visibility.Collapsed;
-                _currentVisibleTaskId = -1;
-            }
-
-            // 获取原始点击源
-            var originalSource = e.OriginalSource as DependencyObject;
-            TaskBlock clickedTaskBlock = null;
-            Border clickedBorder = null;
-
-            // 添加对 Run 对象的特殊处理
-            if (originalSource is System.Windows.Documents.Run run)
-            {
-                // 对于文本元素，尝试获取父级 TextBlock
-                var parent = run.Parent as DependencyObject;
-                if (parent != null)
-                {
-                    originalSource = parent;
-                }
-            }
-
-            // 向上查找视觉树，确定是否点击了任务块
-            try
-            {
-                DependencyObject current = originalSource;
-                while (current != null)
-                {
-                    // 检查是否是边框且有TaskBlock数据
-                    if (current is Border border)
-                    {
-                        clickedBorder = border;
-                        clickedTaskBlock = border.DataContext as TaskBlock ?? border.Tag as TaskBlock;
-
-                        // 如果找到了任务块，跳出循环
-                        if (clickedTaskBlock != null)
-                            break;
-                    }
-
-                    try
-                    {
-                        current = VisualTreeHelper.GetParent(current);
-                    }
-                    catch (InvalidOperationException)
-                    {
-                        break; // 元素不是Visual，跳出循环
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"查找任务块时出错: {ex.Message}");
-            }
-
-            // 如果点击了任务块，处理任务块点击事件
-            if (clickedTaskBlock != null && clickedBorder != null)
-            {
-                // 转发到TaskBlock_MouseLeftButtonDown处理
-                TaskBlock_MouseLeftButtonDown(clickedBorder, e);
-                return; // 任务块点击已处理，不继续处理空白区域点击
-            }
-
-            // 以下是处理点击空白区域的逻辑
-            double timeAxisWidth = 75; // 时间轴宽度
-
-            Point pos = e.GetPosition(WeekContentGrid);
-
-            double contentX = pos.X - timeAxisWidth;
-            if (contentX < 0) return;
-
-            double colWidth = (WeekContentGrid.ActualWidth - timeAxisWidth) / 7;
-            int colIndex = (int)(contentX / colWidth);
-
-            // 获取当前周的周一
-            var vm = DataContext as WeekViewModel;
-            var currentDate = vm?.CurrentDate ?? DateTime.Today;
-
-            DateTime monday = currentDate.Date;
-            while (monday.DayOfWeek != DayOfWeek.Monday)
-            {
-                monday = monday.AddDays(-1);
-            }
-
-            // 推算当前点击的是哪一天
-            DateTime clickedDate = monday.AddDays(colIndex);
-
-            //如果再次点击已选中的列，取消
-            if (_clickedDate.HasValue && _clickedDate.Value.Date == clickedDate.Date)
-            {
-                ClearSelection();
-                return;
-            }
-
-            _clickedDate = clickedDate;
-            HighlightColumn(colIndex);
-
-            // 在按钮宽高方面调整点击位置
-            Point screenPoint = WeekContentGrid.PointToScreen(pos);
-            Point canvasPoint = RootCanvas.PointFromScreen(screenPoint);
-
-            Canvas.SetLeft(AddTaskButton, canvasPoint.X - AddTaskButton.Width / 2);
-            Canvas.SetTop(AddTaskButton, canvasPoint.Y - AddTaskButton.Height / 2);
-
-            AddTaskButton.Visibility = Visibility.Visible;
-
-            //点击时显示日期的悬浮提示
-            ToolTip toolTip = new ToolTip
-            {
-                Content = _clickedDate?.ToString("M月d日（dddd）") ?? "",
-                Background = Brushes.LightYellow,
-                Foreground = Brushes.DarkSlateGray,
-                FontSize = 14,
-                Padding = new Thickness(8),
-                Placement = PlacementMode.Top,
-                PlacementTarget = AddTaskButton,
-                IsOpen = true
-            };
-
-            // 设置 ToolTip 到按钮
-            AddTaskButton.ToolTip = toolTip;
-
-            //自动关闭提示
-            await Task.Delay(1000);
-            toolTip.IsOpen = false;
-        }
 
         public void UpdateCardPositionForElement(FrameworkElement element)
         {
@@ -448,93 +319,39 @@ namespace TimeController.Views.StrongGoalWeek
         }
 
         /// <summary>
-        /// 点击任务块时，弹出编辑窗口并保存修改
+        /// 点击任务块时：
+        /// - 如果是课程任务，什么也不弹（或继续原有详情卡逻辑）
+        /// - 否则弹出编辑窗口
         /// </summary>
-        /// 
         private void TaskBlock_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
-            // 从 Element.Tag 获取 TaskBlock
-            var element = sender as FrameworkElement;
-            var block = element?.Tag as TaskBlock;
-            if (block == null) return;
+            // 拿到绑定的 TaskBlock
+            if (!(sender is FrameworkElement elt) || !(elt.Tag is TaskBlock block))
+                return;
 
-            // 如果是课程任务，不显示卡片，继续原有的编辑逻辑
+            // 如果这是课程任务，就让事件继续冒泡，不打开编辑窗口
             if (block.IsCourse)
-            {
-                // 从 DataContext 拿到 ViewModel
-                var vm = (TimeController.ViewModels.WeekViewModel)DataContext;
-                // 根据 Id 找到对应 TaskModel
-                var taskModel = vm.Tasks.FirstOrDefault(t => t.Id == block.Id);
-                if (taskModel == null) return;
+                return;  // 或者：e.Handled = false; 让别的 MouseDown 逻辑接管
 
-                // 弹出编辑窗口
-                var dialog = new EditTaskWindow(taskModel);
-                if (dialog.ShowDialog() == true)
-                {
-                    // 用户保存后，重新加载本周任务
-                    vm.LoadTasksForCurrentWeek();
-                }
-                return;
+            // 以下只处理“非课程”——弹编辑对话框
+            var vm = (WeekViewModel)DataContext;
+            var taskModel = vm.Tasks.FirstOrDefault(t => t.Id == block.Id);
+            if (taskModel == null) return;
+
+            var dialog = new EditTaskWindow(taskModel)
+            {
+                Owner = Window.GetWindow(this) ?? Application.Current.MainWindow
+            };
+            if (dialog.ShowDialog() == true)
+            {
+                vm.LoadTasksForCurrentWeek();
             }
 
-            // 如果当前显示的是同一个任务的详情卡片，则隐藏卡片
-            if (_currentVisibleTaskId == block.Id && TaskDetailsCard.Visibility == Visibility.Visible)
-            {
-                TaskDetailsCard.Visibility = Visibility.Collapsed;
-                _currentVisibleTaskId = -1;
-                e.Handled = true;
-                return;
-            }
-
-            // 设置详情卡片的内容
-            CardNoteText.Text = string.IsNullOrEmpty(block.Note) ?
-                "任务备注: 无" : $"任务备注: {block.Note}";
-            CardTypeText.Text = $"任务类型: {block.Type}";
-
-            // 根据是否为全天任务设置不同的时间显示
-            if (block.IsAllDay)
-            {
-                CardTimeText.Text = "任务时间: 全天";
-            }
-            else
-            {
-                CardTimeText.Text = $"任务时间: {block.StartTime.ToString(@"hh\:mm")} - {block.EndTime.ToString(@"hh\:mm")}";
-            }
-
-            // 获取鼠标点击的位置（相对于当前元素）
-            Point mousePos = e.GetPosition(element);
-
-            // 将点击位置转换为屏幕坐标
-            Point screenPoint = element.PointToScreen(mousePos);
-
-            // 将屏幕坐标转换为相对于RootCanvas的坐标
-            Point canvasPoint = RootCanvas.PointFromScreen(screenPoint);
-
-            // 设置卡片位置，确保不超出边界
-            double cardLeft = canvasPoint.X + 10; // 右侧偏移10像素
-            double cardTop = canvasPoint.Y + 10;  // 下方偏移10像素
-
-            // 确保卡片不会超出右边界
-            if (cardLeft + TaskDetailsCard.ActualWidth > RootCanvas.ActualWidth)
-            {
-                cardLeft = Math.Max(0, canvasPoint.X - TaskDetailsCard.ActualWidth - 10);
-            }
-
-            // 确保卡片不会超出下边界
-            if (cardTop + TaskDetailsCard.ActualHeight > RootCanvas.ActualHeight)
-            {
-                cardTop = Math.Max(0, canvasPoint.Y - TaskDetailsCard.ActualHeight - 10);
-            }
-
-            Canvas.SetLeft(TaskDetailsCard, cardLeft);
-            Canvas.SetTop(TaskDetailsCard, cardTop);
-
-            // 显示卡片并记录当前显示的任务ID
-            TaskDetailsCard.Visibility = Visibility.Visible;
-            _currentVisibleTaskId = block.Id;
-
+            // 标记已处理，避免其他 MouseDown 再次响应
             e.Handled = true;
         }
+
+
 
 
 

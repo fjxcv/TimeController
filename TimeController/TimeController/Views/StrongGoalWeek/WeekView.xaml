@@ -129,7 +129,7 @@
 
             <!-- 时间任务区（可滚动区域） -->
             <ScrollViewer Grid.Row="2" x:Name="TimeTasksScrollViewer" VerticalScrollBarVisibility="Auto">
-                <Grid x:Name="WeekContentGrid" Background="Transparent" MouseDown="WeekContentGrid_MouseDown">
+                <Grid x:Name="WeekContentGrid" Background="Transparent" >
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="75"/>
                         <!-- 左侧时间轴区域 -->
