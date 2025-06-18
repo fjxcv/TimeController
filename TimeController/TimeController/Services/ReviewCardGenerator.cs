@@ -56,13 +56,13 @@ namespace TimeController.Services
             {
                 double rate = (double)completed / total;
                 if (rate >= 0.9)
-                    message = "🎉 本周完成率非常高，继续保持！";
+                    message = "🎉本周完成率非常高，继续保持！";
                 else if (rate >= 0.6)
-                    message = "✅ 本周任务率完成良好，可以略作优化。";
+                    message = "✅本周任务率完成良好，可以略作优化。";
                 else if (rate >= 0.3)
-                    message = "⚠️ 本周任务完成率较低，建议复盘原因。";
+                    message = "⚠️本周任务完成率较低，建议复盘原因。";
                 else
-                    message = "🚨 完成率偏低，可考虑减少任务数量或优化计划。";
+                    message = "🚨完成率偏低，可考虑减少任务数量或优化计划。";
             }
 
             return new ReviewCardModel(icon, title, message, CardAccentHelper.GetAccentColor(title));
@@ -109,11 +109,11 @@ namespace TimeController.Services
             string message;
 
             if (total < 3)
-                message = "📌 本周任务安排较少，可以尝试多做一点小挑战。";
+                message = "📌本周任务安排较少，可以尝试多做一点小挑战。";
             else if (uncompleted >= 5)
-                message = "⚠️ 有较多任务未完成，建议精简任务列表，提升执行质量。";
+                message = "⚠️有较多任务未完成，建议精简任务列表，提升执行质量。";
             else
-                message = "✅ 任务分配较合理，继续保持当前节奏。";
+                message = "✅任务分配较合理，继续保持当前节奏。";
 
             return new ReviewCardModel(icon, title, message, CardAccentHelper.GetAccentColor(title));
         }
@@ -129,11 +129,11 @@ namespace TimeController.Services
             string message;
 
             if (planned > 10 && completed < 4)
-                message = "😵‍💫 本周任务计划较多但完成不理想，建议减少计划任务数量。";
+                message = "😵‍💫本周任务计划较多但完成不理想，建议减少计划任务数量。";
             else if (planned >= 8 && completed >= planned * 0.8)
-                message = "💪 你计划较多但完成得也很好，干得漂亮！";
+                message = "💪你计划较多但完成得也很好，干得漂亮！";
             else
-                message = "📊 任务计划适中，完成情况合理。";
+                message = "📊任务计划适中，完成情况合理。";
 
             return new ReviewCardModel(icon, title, message, CardAccentHelper.GetAccentColor(title));
         }
@@ -154,19 +154,19 @@ namespace TimeController.Services
 
             if (total == 0)
             {
-                message = "📝 本周没有任务记录，建议设定适当目标。";
+                message = "📝本周没有任务记录，建议设定适当目标。";
             }
             else if (lifeTasks == 0)
             {
-                message = "🧘‍ 本周没有生活类任务，建议加入一些放松安排。";
+                message = "🧘‍本周没有生活类任务，建议加入一些放松安排。";
             }
             else if (lifeTasks >= total * 0.6)
             {
-                message = "📌 生活任务占比较高，注意兼顾工作目标。";
+                message = "📌生活任务占比较高，注意兼顾工作目标。";
             }
             else
             {
-                message = "✅ 生活与工作安排平衡得很好，继续保持。";
+                message = "✅生活与工作安排平衡得很好，继续保持。";
             }
 
             return new ReviewCardModel(icon, title, message, CardAccentHelper.GetAccentColor(title));
@@ -184,17 +184,17 @@ namespace TimeController.Services
             string message;
 
             if (total == 0)
-                message = "🧩 本周未安排任何任务，下周尝试设定一些简单目标吧～";
+                message = "🧩本周未安排任何任务，下周尝试设定一些简单目标吧～";
             else
             {
                 double rate = (double)completed / total;
 
                 if (rate >= 0.9)
-                    message = "🏆 优秀！完成率高达 90% 以上，你是时间掌控大师！";
+                    message = "🏆优秀！完成率高达 90% 以上，你是时间掌控大师！";
                 else if (rate >= 0.6)
-                    message = "👏 完成率不错，继续加油！";
+                    message = "👏完成率不错，继续加油！";
                 else
-                    message = "💡 虽然完成不多，但每一个努力都值得鼓励！";  
+                    message = "💡虽然完成不多，但每一个努力都值得鼓励！";  
             }
 
             return new ReviewCardModel(icon, title, message, CardAccentHelper.GetAccentColor(title));

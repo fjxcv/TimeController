@@ -43,7 +43,7 @@
                     Padding="20,15">
                 <TextBlock Text="今日任务提醒" 
                          FontSize="18" 
-                         FontWeight="SemiBold"
+                         FontFamily="{StaticResource HOS_Sans_Bold}"
                          Foreground="#333333"/>
             </Border>
 
@@ -55,7 +55,7 @@
                     <!-- 全天任务 -->
                     <TextBlock Text="📄 全天任务" 
                              FontSize="16" 
-                             FontWeight="SemiBold"
+                             FontFamily="{StaticResource HOS_Sans_Bold}"
                              Foreground="#0078D4"
                              Margin="0,0,0,10"
                              Visibility="{Binding AllDayTasks, Converter={StaticResource CountToVisibilityConverter}}"/>
@@ -78,7 +78,7 @@
                                         <StackPanel>
                                             <TextBlock Text="{Binding Name}" 
                                                      FontSize="14"
-                                                     FontWeight="Medium"
+                                                     FontFamily="{StaticResource HOS_Sans_Medium}"
                                                      Foreground="#333333"/>
                                             <TextBlock Text="{Binding Note}" 
                                                      FontSize="12"
@@ -96,7 +96,7 @@
                     <!-- 非全天任务 -->
                     <TextBlock Text="⏰ 时段计划" 
                              FontSize="16" 
-                             FontWeight="SemiBold"
+                             FontFamily="{StaticResource HOS_Sans_Bold}"
                              Foreground="#0078D4"
                              Margin="0,0,0,10"
                              Visibility="{Binding ActiveTasks, Converter={StaticResource CountToVisibilityConverter}}"/>
@@ -118,7 +118,7 @@
                                         <StackPanel>
                                             <TextBlock Text="{Binding Name}" 
                                                      FontSize="14"
-                                                     FontWeight="Medium"
+                                                     FontFamily="{StaticResource HOS_Sans_Medium}"
                                                      Foreground="#333333"/>
                                             <TextBlock Text="{Binding Note}" 
                                                      FontSize="12"

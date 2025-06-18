@@ -34,16 +34,16 @@
             <TextBlock Grid.Column="0" 
                        Text="强目标模式"
                        FontSize="24"
-                       FontWeight="Bold"
+                       FontFamily="{StaticResource HOS_Sans_Bold}"
                        VerticalAlignment="Center"/>
 
             <!-- 将月份日期的显示移到中间位置 -->
             <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
                 <Button Content="&lt;" Margin="8,0" Padding="8,4" Command="{Binding PreviousMonthCommand}"/>
-                <TextBlock x:Name="MonthText" Text="{Binding MonthText}" VerticalAlignment="Center" Margin="8,0"/>
+                <TextBlock x:Name="MonthText" Text="{Binding MonthText}" VerticalAlignment="Center" Margin="8,0" FontSize="16"/>
                 <Button Content="&gt;" Margin="8,0" Padding="8,4" Command="{Binding NextMonthCommand}"/>
                 <Button Content="&lt;" Margin="24,0,8,0" Padding="8,4" Command="{Binding PreviousWeekCommand}"/>
-                <TextBlock x:Name="WeekText" Text="{Binding WeekText}" VerticalAlignment="Center" Margin="8,0"/>
+                <TextBlock x:Name="WeekText" Text="{Binding WeekText}" VerticalAlignment="Center" Margin="8,0"  FontSize="16"/>
                 <Button Content="&gt;" Margin="8,0" Padding="8,4" Command="{Binding NextWeekCommand}"/>
 
                 <TextBlock Text="{Binding SemesterWeekText}" 
@@ -51,7 +51,7 @@
                    Margin="24,0,8,0"
                    Foreground="#0078D4"
                    FontSize="13"
-                   FontWeight="SemiBold"
+                   FontFamily="{StaticResource HOS_Sans_Bold}"
                    Visibility="{Binding SemesterWeekText, Converter={StaticResource StringToVisibilityConverter}}"/>
             </StackPanel>
 
@@ -277,7 +277,7 @@
                                             <!-- 课程名称和时间 -->
                                             <StackPanel Grid.Row="0" Orientation="Vertical">
                                                 <TextBlock Text="{Binding Name}" 
-                                                    FontWeight="Bold" Margin="5,3,5,1" 
+                                                    FontFamily="{StaticResource HOS_Sans_Bold}" Margin="5,3,5,1" 
                                                     TextWrapping="Wrap" 
                                                     Foreground="#0078D4"/>
                                                 <TextBlock Margin="5,0,5,2"  FontSize="11" Foreground="#333333">
@@ -367,14 +367,14 @@
                                                      TextTrimming="CharacterEllipsis"
                                                      TextWrapping="NoWrap"
                                                      Foreground="#333333"
-                                                     FontWeight="Medium"
+                                                     FontFamily="{StaticResource HOS_Sans_Medium}"
                                                      TextDecorations="{Binding Status, Converter={StaticResource CompletedToTextDecorationConverter}}">
                                                 <TextBlock.ToolTip>
                                                     <ToolTip>
                                                         <StackPanel>
                                                             <!-- 名称 -->
                                                             <TextBlock Text="{Binding Name}" 
-                                                                       FontWeight="Bold" 
+                                                                       FontFamily="{StaticResource HOS_Sans_Bold}" 
                                                                        Margin="0,0,0,4"/>
                                                             <!-- 时间段 -->
                                                             <TextBlock FontSize="12"

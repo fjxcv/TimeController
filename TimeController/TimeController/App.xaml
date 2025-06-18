@@ -10,8 +10,6 @@
             <ResourceDictionary.MergedDictionaries>
                 <ui:ThemeResources/>
                 <ui:XamlControlsResources/>
-                <!-- 再插入默认（Light）或切换时会动态替换的自定义字典 -->
-                <ResourceDictionary Source="Themes/LightTheme.xaml"/>
             </ResourceDictionary.MergedDictionaries>
 
             <converters:DateTasksMultiConverter x:Key="DateTasksMultiConverter"/>
@@ -32,6 +30,38 @@
             <converters:NoteToTeacherDisplayConverter x:Key="NoteToTeacherDisplayConverter" />
             <converters:NoteToLocationDisplayConverter x:Key="NoteToLocationDisplayConverter" />
             <converters:CompletedToTextDecorationConverter x:Key="CompletedToTextDecorationConverter"/>
+
+            <!-- HarmonyOS Sans SC 系列 -->
+            <FontFamily x:Key="HOS_Sans_Thin">
+                pack://application:,,,/TimeController;component/Resources/Fonts/HarmonyOS_Sans_SC_Thin.ttf#HarmonyOS Sans SC
+            </FontFamily>
+            <FontFamily x:Key="HOS_Sans_Light">
+                pack://application:,,,/TimeController;component/Resources/Fonts/HarmonyOS_Sans_SC_Light.ttf#HarmonyOS Sans SC
+            </FontFamily>
+            <FontFamily x:Key="HOS_Sans_Regular">
+                pack://application:,,,/TimeController;component/Resources/Fonts/HarmonyOS_Sans_SC_Regular.ttf#HarmonyOS Sans SC
+            </FontFamily>
+            <FontFamily x:Key="HOS_Sans_Medium">
+                pack://application:,,,/TimeController;component/Resources/Fonts/HarmonyOS_Sans_SC_Medium.ttf#HarmonyOS Sans SC
+            </FontFamily>
+            <FontFamily x:Key="HOS_Sans_Bold">
+                pack://application:,,,/TimeController;component/Resources/Fonts/HarmonyOS_Sans_SC_Bold.ttf#HarmonyOS Sans SC
+            </FontFamily>
+            <FontFamily x:Key="HOS_Sans_Black">
+                pack://application:,,,/TimeController;component/Resources/Fonts/HarmonyOS_Sans_SC_Black.ttf#HarmonyOS Sans SC
+            </FontFamily>
+
+
+            <!-- 对所有 Control 类（Button、TextBox、ComboBox…）生效 -->
+            <Style TargetType="{x:Type Control}">
+                <Setter Property="FontFamily" Value="{StaticResource HOS_Sans_Regular}" />
+            </Style>
+
+            <!-- 对所有 TextBlock 生效 -->
+            <Style TargetType="{x:Type TextBlock}">
+                <Setter Property="FontFamily" Value="{StaticResource HOS_Sans_Regular}" />
+            </Style>
+
 
         </ResourceDictionary>
 

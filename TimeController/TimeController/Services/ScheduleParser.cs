@@ -13,6 +13,8 @@ using TimeController.Models;
 using NPOI.POIFS.FileSystem;
 using System.Net.Sockets;
 using System.Text;
+using System.Windows;
+using MessageBox = iNKORE.UI.WPF.Modern.Controls.MessageBox;
 
 namespace TimeController.Services
 {
@@ -25,131 +27,156 @@ namespace TimeController.Services
 
             try
             {
-                var ext = Path.GetExtension(filePath).ToLower();
 
                 // 尝试先读取前几个字节判断文件格式
                 byte[] header = new byte[8];
                 using (var fs = new FileStream(filePath, FileMode.Open, FileAccess.Read))
                 {
-                    fs.Read(header, 0, Math.Min(8, (int)fs.Length));
+                    fs.Read(header, 0, Math.Min(header.Length, (int)fs.Length));
                 }
 
                 // 检查文件是否可能是XML格式（常见HTML或XML文件头）
-                string headerStr = Encoding.ASCII.GetString(header);
-                if (headerStr.StartsWith("<?xml") || headerStr.StartsWith("<!DOCTY") || headerStr.StartsWith("<html>"))
+                var headerStr = Encoding.ASCII.GetString(header);
+                if (headerStr.StartsWith("<?xml")
+                 || headerStr.StartsWith("<!DOCTY")
+                 || headerStr.StartsWith("<html>"))
                 {
-                    throw new InvalidOperationException("文件似乎是XML或HTML格式，无法作为Excel文件打开");
+                    MessageBox.Show(
+                        "该文件看起来是 XML/HTML 格式，无法作为 Excel 打开。",
+                        "格式错误",
+                        MessageBoxButton.OK,
+                        MessageBoxImage.Warning);
+                    return courses;
                 }
+                // 2）真正打开流，这里不允许共享写锁，文件被占用时会抛 IOException
+                using var stream = new FileStream(
+                    filePath,
+                    FileMode.Open,
+                    FileAccess.Read,
+                    FileShare.None);
 
-                using (var stream = new FileStream(filePath, FileMode.Open, FileAccess.Read))
+                var ext = Path.GetExtension(filePath).ToLowerInvariant();
+                if (ext == ".xls")
                 {
-                    if (ext == ".xls")
+                    try
                     {
-                        try
-                        {
-                            workbook = new HSSFWorkbook(stream);
-                        }
-                        catch (NotOLE2FileException)
-                        {
-                            throw new InvalidOperationException("此文件不是有效的Excel .xls格式，请确认文件格式正确");
-                        }
+                        workbook = new HSSFWorkbook(stream);
                     }
-                    else if (ext == ".xlsx")
+                    catch (Exception)
                     {
-                        try
-                        {
-                            workbook = new XSSFWorkbook(stream);
-                        }
-                        catch
-                        {
-                            throw new InvalidOperationException("此文件不是有效的Excel .xlsx格式，请确认文件格式正确");
-                        }
-                    }
-                    else
-                    {
-                        throw new NotSupportedException("只支持.xls和.xlsx文件格式");
+                        MessageBox.Show(
+                            "此文件不是有效的 Excel .xls 格式，请确认文件格式正确。",
+                            "格式错误",
+                            MessageBoxButton.OK,
+                            MessageBoxImage.Warning);
+                        return courses;
                     }
                 }
+                else if (ext == ".xlsx")
+                {
+                    try
+                    {
+                        workbook = new XSSFWorkbook(stream);
+                    }
+                    catch (Exception)
+                    {
+                        MessageBox.Show(
+                            "此文件不是有效的 Excel .xlsx 格式，请确认文件格式正确。",
+                            "格式错误",
+                            MessageBoxButton.OK,
+                            MessageBoxImage.Warning);
+                        return courses;
+                    }
+                }
+                else
+                {
+                    MessageBox.Show(
+                        "只支持 .xls 和 .xlsx 两种 Excel 文件格式。",
+                        "不支持的格式",
+                        MessageBoxButton.OK,
+                        MessageBoxImage.Warning);
+                    return courses;
+                }
+            }
+            catch (IOException ioEx) when ((uint)ioEx.HResult == 0x80070020)
+            {
+                // 文件正在被占用
+                Application.Current.Dispatcher.Invoke(() =>
+                {
+                    MessageBox.Show(
+                        "该 Excel 文件当前正被其他程序占用，请先关闭后重试。",
+                        "文件占用",
+                        MessageBoxButton.OK,
+                        MessageBoxImage.Warning);
+                });
+                return courses;
+            }
+            catch (IOException ioEx)
+            {
+                MessageBox.Show(
+                    $"打开 Excel 文件时发生 I/O 错误：{ioEx.Message}",
+                    "文件错误",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Error);
+                return courses;
             }
             catch (Exception ex)
             {
-                throw new InvalidOperationException($"Excel文件打开失败: {ex.Message}", ex);
+                // 其他未预料的错误继续向上抛
+                throw new InvalidOperationException($"Excel 文件打开失败: {ex.Message}", ex);
             }
 
+            // —— 到这里 workbook 已经建立，可以安全读取第一个工作表 —— 
             ISheet sheet = workbook.GetSheetAt(0);
             int rowCount = sheet.LastRowNum;
-
-            // 确保至少有表头行
-            if (rowCount < 0)
+            if (rowCount < 1)
             {
-                throw new InvalidOperationException("Excel文件为空或格式不正确");
+                MessageBox.Show(
+                    "Excel 文件没有数据或格式不正确。",
+                    "读取失败",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Warning);
+                return courses;
             }
 
-            Console.WriteLine($"Excel文件共有{rowCount + 1}行数据(包含表头)");
-
-            // 从第二行开始（跳过表头）读取数据
-            for (int row = 1; row <= rowCount; row++)
+            // 从第二行开始读（跳过表头）
+            for (int i = 1; i <= rowCount; i++)
             {
-                IRow currentRow = sheet.GetRow(row);
-                if (currentRow == null) continue;
+                var row = sheet.GetRow(i);
+                if (row == null) continue;
 
                 try
                 {
-                    // 检查课程名称是否为空
-                    var nameCell = currentRow.GetCell(0);
-                    if (nameCell == null || string.IsNullOrWhiteSpace(nameCell.ToString()))
-                    {
-                        Console.WriteLine($"跳过第{row + 1}行：课程名称为空");
-                        continue;
-                    }
+                    string name = row.GetCell(0)?.ToString().Trim() ?? "";
+                    if (string.IsNullOrEmpty(name)) continue;
 
-                    // 读取并解析数据
-                    string name = GetCellStringValue(currentRow.GetCell(0));
-                    string dayOfWeek = GetCellStringValue(currentRow.GetCell(1));
-                    string startTimeStr = GetCellStringValue(currentRow.GetCell(2));
-                    string endTimeStr = GetCellStringValue(currentRow.GetCell(3));
-                    string location = GetCellStringValue(currentRow.GetCell(4));
-                    string teacher = GetCellStringValue(currentRow.GetCell(5));
+                    string dayOfWeek = row.GetCell(1)?.ToString().Trim() ?? "";
+                    var start = TimeSpan.Parse(row.GetCell(2)?.ToString() ?? "00:00");
+                    var end = TimeSpan.Parse(row.GetCell(3)?.ToString() ?? "00:00");
+                    string location = row.GetCell(4)?.ToString().Trim() ?? "";
+                    string teacher = row.GetCell(5)?.ToString().Trim() ?? "";
+                    string weekPattern = row.LastCellNum > 6
+                        ? row.GetCell(6)?.ToString().Trim() ?? "1-16"
+                        : "1-16";
 
-                    // 读取周次模式（如果存在）
-                    string weekPattern = currentRow.LastCellNum > 6 ?
-                        GetCellStringValue(currentRow.GetCell(6)) : "1-16";
+                    if (start >= end)
+                        continue; // 跳过时间非法的行
 
-                    // 确保周次模式不为空
-                    if (string.IsNullOrWhiteSpace(weekPattern))
-                    {
-                        weekPattern = "1-16";
-                    }
-
-                    // 解析时间
-                    TimeSpan startTime = ParseTimeSpan(startTimeStr);
-                    TimeSpan endTime = ParseTimeSpan(endTimeStr);
-
-                    // 验证时间
-                    if (startTime >= endTime)
-                    {
-                        Console.WriteLine($"警告：第{row + 1}行的开始时间晚于或等于结束时间，将跳过");
-                        continue;
-                    }
-
-                    var course = new Course
+                    courses.Add(new Course
                     {
                         Name = name,
                         DayOfWeek = dayOfWeek,
-                        StartTime = startTime,
-                        EndTime = endTime,
+                        StartTime = start,
+                        EndTime = end,
                         Location = location,
                         Teacher = teacher,
                         WeekPattern = weekPattern
-                    };
-
-                    courses.Add(course);
-                    Console.WriteLine($"成功解析课程: {course.Name}, 星期{course.DayOfWeek}, {course.StartTime}-{course.EndTime}, 周次:{course.WeekPattern}");
+                    });
                 }
-                catch (Exception ex)
+                catch
                 {
-                    // 记录错误但继续处理下一行
-                    Console.WriteLine($"解析第{row + 1}行失败: {ex.Message}");
+                    // 单行解析出错就跳过，继续下一行
+                    continue;
                 }
             }
 

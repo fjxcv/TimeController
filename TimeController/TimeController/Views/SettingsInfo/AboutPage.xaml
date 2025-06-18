@@ -17,7 +17,7 @@
             <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                 <TextBlock Text="关于 TimeController"
                    FontSize="24"
-                   FontWeight="Bold"
+                   FontFamily="{StaticResource HOS_Sans_Bold}"
                    VerticalAlignment="Center" Margin="0,0,0,20"/>
             </StackPanel>
             

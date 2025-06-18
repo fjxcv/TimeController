@@ -150,7 +150,7 @@
                 HorizontalAlignment="Left">
                 <TextBlock Text="每日复盘"
                    FontSize="36"
-                   FontWeight="Bold"
+                   FontFamily="{StaticResource HOS_Sans_Bold}"
                    VerticalAlignment="Center"
                    Margin="0,0,20,0"/>
 
@@ -197,7 +197,7 @@
 
                         <!-- ✔ 已完成 -->
                         <StackPanel Grid.Column="0" Margin="0,0,10,0">
-                            <TextBlock Text="✔ 已完成" FontSize="20" FontWeight="Bold" Margin="0,0,0,10"/>
+                            <TextBlock Text="✔ 已完成" FontSize="20" FontFamily="{StaticResource HOS_Sans_Bold}" Margin="0,0,0,10"/>
                             <ItemsControl ItemsSource="{Binding CompletedTasks}">
                                 <ItemsControl.ItemTemplate>
                                     <DataTemplate>
@@ -211,7 +211,7 @@
 
                         <!-- ❌ 未完成 -->
                         <StackPanel Grid.Column="1" Margin="10,0,0,0">
-                            <TextBlock Text="❌ 未完成" FontSize="20" FontWeight="Bold" Margin="0,0,0,10"/>
+                            <TextBlock Text="❌ 未完成" FontSize="20" FontFamily="{StaticResource HOS_Sans_Bold}" Margin="0,0,0,10"/>
                             <ItemsControl ItemsSource="{Binding TodayPendingTasks}">
                                 <ItemsControl.ItemTemplate>
                                     <DataTemplate>
@@ -237,7 +237,7 @@
 
                         <!-- 📌 今日未处理 -->
                         <StackPanel Grid.Column="0" Margin="0,0,10,0">
-                            <TextBlock Text="📌 今日未处理" FontSize="18" FontWeight="Bold" Margin="0,10,0,5" Foreground="#333333"/>
+                            <TextBlock Text="📌 今日未处理" FontSize="18" FontFamily="{StaticResource HOS_Sans_Bold}" Margin="0,10,0,5" Foreground="#333333"/>
                             <ItemsControl ItemsSource="{Binding TodayPendingTasks}">
                                 <ItemsControl.ItemTemplate>
                                     <DataTemplate>
@@ -251,7 +251,7 @@
                                                 </Grid.RowDefinitions>
 
                                                 <TextBlock Grid.Row="0" Text="{Binding PlannedDate, StringFormat='🗓 {0:yyyy-MM-dd}'}" FontSize="14" Margin="0,0,0,5"/>
-                                                <TextBlock Grid.Row="1" Text="{Binding Name}" FontSize="18" FontWeight="Bold" Margin="0,0,0,5"/>
+                                                <TextBlock Grid.Row="1" Text="{Binding Name}" FontSize="18" FontFamily="{StaticResource HOS_Sans_Bold}" Margin="0,0,0,5"/>
                                                 <!-- 1. 全天 或 “⏱ 开始时间 - ” -->
                                                 <TextBlock Grid.Row="2"
                                                            FontSize="14" Margin="0,0,0,10">
@@ -302,7 +302,7 @@
 
                         <!-- ⏰ 过期任务 -->
                         <StackPanel Grid.Column="1" Margin="10,0,0,0">
-                            <TextBlock Text="{Binding PendingTasksCount, StringFormat='⏰ 过期任务（共 {0} 项）'}" FontSize="18" FontWeight="Bold" Foreground="#B00020" Margin="0,10,0,5"/>
+                            <TextBlock Text="{Binding PendingTasksCount, StringFormat='⏰ 过期任务（共 {0} 项）'}" FontSize="18" FontFamily="{StaticResource HOS_Sans_Bold}" Foreground="#B00020" Margin="0,10,0,5"/>
                             <ItemsControl ItemsSource="{Binding OverduePendingTasks}">
                                 <ItemsControl.ItemTemplate>
                                     <DataTemplate>
@@ -316,7 +316,7 @@
                                                 </Grid.RowDefinitions>
 
                                                 <TextBlock Grid.Row="0" Text="{Binding PlannedDate, StringFormat='🗓 {0:yyyy-MM-dd}'}" FontSize="14" Margin="0,0,0,5"/>
-                                                <TextBlock Grid.Row="1" Text="{Binding Name}" FontSize="18" FontWeight="Bold" Margin="0,0,0,5"/>
+                                                <TextBlock Grid.Row="1" Text="{Binding Name}" FontSize="18" FontFamily="{StaticResource HOS_Sans_Bold}" Margin="0,0,0,5"/>
                                                 <TextBlock Grid.Row="2" Text="{Binding IsAllDay, Converter={StaticResource BoolToTimeTextConverter}}" FontSize="14" Margin="0,0,0,10"/>
 
                                                 <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Right">

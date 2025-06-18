@@ -19,7 +19,7 @@
 				<!-- 课程名称 -->
 				<TextBlock Text="课程名称:"
                            Margin="0,5,0,2"
-                           FontWeight="Medium"/>
+                           FontFamily="{StaticResource HOS_Sans_Medium}"/>
 				<TextBox Text="{Binding Name, UpdateSourceTrigger=PropertyChanged}"
                          Margin="0,0,0,10" 
 						 Width="270"
@@ -28,7 +28,7 @@
 				<!-- 星期几 -->
 				<TextBlock Text="课程日:"
                            Margin="0,5,0,2"
-                           FontWeight="Medium"/>
+                           FontFamily="{StaticResource HOS_Sans_Medium}"/>
 				<ComboBox SelectedValue="{Binding DayOfWeek}"
                           SelectedValuePath="Tag"
                           Margin="0,0,0,10" 
@@ -45,7 +45,7 @@
 				<!-- 时间选择器 -->
 				<TextBlock Text="课程时间:"
                            Margin="0,5,0,2"
-                           FontWeight="Medium"/>
+                           FontFamily="{StaticResource HOS_Sans_Medium}"/>
 				<Grid Margin="0,0,0,10" Width="270" HorizontalAlignment="Left">
 					<Grid.RowDefinitions>
 						<RowDefinition Height="Auto"/>
@@ -88,7 +88,7 @@
 				<!-- 上课地点 -->
 				<TextBlock Text="上课地点:"
                            Margin="0,5,0,2"
-                           FontWeight="Medium"/>
+                           FontFamily="{StaticResource HOS_Sans_Medium}"/>
 				<TextBox Text="{Binding Location, UpdateSourceTrigger=PropertyChanged}"
                          Margin="0,0,0,10"
 						 Width="270"
@@ -98,7 +98,7 @@
 				<!-- 教师姓名 -->
 				<TextBlock Text="授课老师:"
                            Margin="0,5,0,2"
-                           FontWeight="Medium"/>
+                           FontFamily="{StaticResource HOS_Sans_Medium}"/>
 				<TextBox Text="{Binding Teacher, UpdateSourceTrigger=PropertyChanged}"
                          Margin="0,0,0,10"
 						 Width="270"
@@ -108,7 +108,7 @@
                 <!-- 周次选择 -->
                 <TextBlock Text="上课周次:"
 					Margin="0,5,0,2"
-					FontWeight="Medium"/>
+					FontFamily="{StaticResource HOS_Sans_Medium}"/>
                 <Grid Margin="0,0,0,10" Width="270" HorizontalAlignment="Left">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto"/>

@@ -40,7 +40,7 @@
                            Text="{Binding DateText}"
                            HorizontalAlignment="Center"
                            FontSize="16"
-                           FontWeight="Bold"
+                           FontFamily="{StaticResource HOS_Sans_Bold}"
                            Foreground="{Binding IsCurrentMonth, Converter={StaticResource BoolToColorConverter}}"/>
             </StackPanel>
 
@@ -66,12 +66,12 @@
                                            Margin="8,4"
                                            TextWrapping="Wrap"
                                            Foreground="#333333"
-                                           FontWeight="Medium"
+                                           FontFamily="{StaticResource HOS_Sans_Medium}"
                                            TextDecorations="{Binding Status, Converter={StaticResource CompletedToTextDecorationConverter}}">
                                     <TextBlock.ToolTip>
                                         <ToolTip>
                                             <StackPanel>
-                                                <TextBlock Text="{Binding Name}" FontWeight="Bold" Margin="0,0,0,4"/>
+                                                <TextBlock Text="{Binding Name}" FontFamily="{StaticResource HOS_Sans_Bold}" Margin="0,0,0,4"/>
                                                 <TextBlock Text="{Binding Note}" FontStyle="Italic" Foreground="#666666" TextWrapping="Wrap" MaxWidth="200"/>
                                             </StackPanel>
                                         </ToolTip>

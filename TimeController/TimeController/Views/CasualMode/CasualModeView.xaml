@@ -118,7 +118,7 @@
             <!-- 顶部进度条区域 -->
             <Grid Grid.Row="0">
                 <StackPanel Orientation="Horizontal" VerticalAlignment="Top" Margin="0,10,0,20">
-                    <TextBlock Text="奖励进度" FontSize="20" FontWeight="Bold" VerticalAlignment="Center"/>
+                    <TextBlock Text="奖励进度" FontSize="20" FontFamily="{StaticResource HOS_Sans_Bold}" VerticalAlignment="Center"/>
                     <ProgressBar Style="{StaticResource CustomProgressBar}"
                                  Width="Auto" MinWidth="450" Margin="16,0,8,0"
                                  VerticalAlignment="Center" Value="{Binding Progress}" Maximum="{Binding RewardThreshold}"/>
@@ -166,7 +166,7 @@
 
                             <!-- 标题栏 -->
                             <Border Background="#555555" CornerRadius="8,8,0,0" Padding="10,8">
-                                <TextBlock Text="奖励任务" Foreground="White" FontWeight="Bold"/>
+                                <TextBlock Text="奖励任务" Foreground="White" FontFamily="{StaticResource HOS_Sans_Bold}"/>
                             </Border>
 
                             <!-- 奖励任务列表 -->
@@ -244,7 +244,7 @@
                             <RowDefinition Height="Auto"/>
                             <RowDefinition Height="*"/>
                         </Grid.RowDefinitions>
-                        <TextBlock Text="自我滋养" FontSize="20" FontWeight="Bold" VerticalAlignment="Top" HorizontalAlignment="Left" Margin="10,10,0,0"/>
+                        <TextBlock Text="自我滋养" FontSize="20" FontFamily="{StaticResource HOS_Sans_Bold}" VerticalAlignment="Top" HorizontalAlignment="Left" Margin="10,10,0,0"/>
                         <ListView Grid.Row="1" ItemsSource="{Binding Modules[0].Tasks}" Margin="10,10,10,0" Background="Transparent" BorderThickness="0">
                             <ListView.ItemTemplate>
                                 <DataTemplate>
@@ -365,7 +365,7 @@
                             <RowDefinition Height="Auto"/>
                             <RowDefinition Height="*"/>
                         </Grid.RowDefinitions>
-                        <TextBlock Text="创造表达" FontSize="20" FontWeight="Bold" VerticalAlignment="Top" HorizontalAlignment="Left" Margin="10,10,0,0"/>
+                        <TextBlock Text="创造表达" FontSize="20" FontFamily="{StaticResource HOS_Sans_Bold}" VerticalAlignment="Top" HorizontalAlignment="Left" Margin="10,10,0,0"/>
                         <ListView Grid.Row="1" ItemsSource="{Binding Modules[1].Tasks}" Margin="10,10,10,0" Background="Transparent" BorderThickness="0">
                             <ListView.ItemTemplate>
                                 <DataTemplate>
@@ -485,7 +485,7 @@
                             <RowDefinition Height="Auto"/>
                             <RowDefinition Height="*"/>
                         </Grid.RowDefinitions>
-                        <TextBlock Text="生活杂务" FontSize="20" FontWeight="Bold" VerticalAlignment="Top" HorizontalAlignment="Left" Margin="10,10,0,0"/>
+                        <TextBlock Text="生活杂务" FontSize="20" FontFamily="{StaticResource HOS_Sans_Bold}" VerticalAlignment="Top" HorizontalAlignment="Left" Margin="10,10,0,0"/>
                         <ListView Grid.Row="1" ItemsSource="{Binding Modules[2].Tasks}" Margin="10,10,10,0" Background="Transparent" BorderThickness="0">
                             <ListView.ItemTemplate>
                                 <DataTemplate>
@@ -605,7 +605,7 @@
                             <RowDefinition Height="Auto"/>
                             <RowDefinition Height="*"/>
                         </Grid.RowDefinitions>
-                        <TextBlock Text="人际连接" FontSize="20" FontWeight="Bold" VerticalAlignment="Top" HorizontalAlignment="Left" Margin="10,10,0,0"/>
+                        <TextBlock Text="人际连接" FontSize="20" FontFamily="{StaticResource HOS_Sans_Bold}" VerticalAlignment="Top" HorizontalAlignment="Left" Margin="10,10,0,0"/>
                         <ListView Grid.Row="1" ItemsSource="{Binding Modules[3].Tasks}" Margin="10,10,10,0" Background="Transparent" BorderThickness="0">
                             <ListView.ItemTemplate>
                                 <DataTemplate>
@@ -745,7 +745,7 @@
                         <TextBlock
                                 Text="长期备忘"
                                 FontSize="20"
-                                FontWeight="Bold"
+                                FontFamily="{StaticResource HOS_Sans_Bold}"
                                 VerticalAlignment="Top"
                                 HorizontalAlignment="Center"
                                 Margin="0,0,0,0"/>
@@ -875,7 +875,7 @@
                 <StackPanel>
                     <TextBlock Text="📊 本周复盘"
                                FontSize="18"
-                               FontWeight="Bold"
+                               FontFamily="{StaticResource HOS_Sans_Bold}"
                                Foreground="#333333"
                                Margin="0,0,0,15"/>
 

@@ -139,7 +139,7 @@
                                 Padding="12,8">
                             <TextBlock Text="任务列表" 
                                      FontSize="14" 
-                                     FontWeight="SemiBold"
+                                     FontFamily="{StaticResource HOS_Sans_Bold}"
                                      Foreground="#333333"/>
                         </Border>
 
@@ -163,7 +163,7 @@
                                                 <StackPanel>
                                                     <TextBlock Text="{Binding Name}" 
                                                              FontSize="13"
-                                                             FontWeight="Medium"
+                                                             FontFamily="{StaticResource HOS_Sans_Medium}"
                                                              Foreground="#333333">
                                                         <TextBlock.Style>
                                                             <Style TargetType="TextBlock">

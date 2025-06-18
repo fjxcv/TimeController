@@ -1272,8 +1272,13 @@ namespace TimeController.ViewModels
                 DateTime sunday = monday.AddDays(6);
 
                 // 拉数据
-                var weekTasks = await _taskService.GetTasksForDateRange(monday, sunday);
-                var courseTasks = await _taskService.GetCourseTasksForWeekAsync(CurrentDate);
+                var weekTasks = (await _taskService.GetTasksForDateRange(monday, sunday))
+                            .Where(t => t.Mode == TaskMode.Strong)
+                            .ToList();
+                var courseTasks = (await _taskService.GetCourseTasksForWeekAsync(CurrentDate))
+                                    .Where(t => t.Mode == TaskMode.Strong)  // 课程一般也是 Strong
+                                    .ToList();
+
                 Tasks.Clear();
                 foreach (var t in weekTasks.Concat(courseTasks))
                     Tasks.Add(t);
