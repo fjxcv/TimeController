@@ -123,6 +123,12 @@ namespace TimeController.ViewModels
                 _semesterWeeks = weeks;
             }
 
+            if (App.Current.Properties.Contains("SemesterStartDate") &&
+                DateTime.TryParse(App.Current.Properties["SemesterStartDate"].ToString(), out var start))
+            {
+                SemesterStartDate = start;
+            }
+
             // 更新日期文本和月份状态
             UpdateDateColumns();
 

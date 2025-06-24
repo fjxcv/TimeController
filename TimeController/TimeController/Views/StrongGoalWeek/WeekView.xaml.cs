@@ -408,7 +408,9 @@ namespace TimeController.Views.StrongGoalWeek
             }
 
             AddTaskButton.Visibility = Visibility.Collapsed;
-            _clickedDate = null; // 清除选择的日期（你要先把 _clickedDate 声明为 Nullable）
+            _clickedDate = null; // 清除选择的日期
+
+            _selectedColumnIndex = null;
         }
 
         //高亮
@@ -653,29 +655,36 @@ namespace TimeController.Views.StrongGoalWeek
 
         private void TaskColumn_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
-            if (sender is Border border && int.TryParse(border.Tag?.ToString(), out int index))
-            {
-                DateTime monday = _viewModel.CurrentDate.Date;
-                while (monday.DayOfWeek != DayOfWeek.Monday)
-                    monday = monday.AddDays(-1);
+            if (!(sender is Border border) || !int.TryParse(border.Tag?.ToString(), out int index))
+                return;
 
-                _clickedDate = monday.AddDays(index);
-
-                HighlightColumn(index);
-
-                var position = e.GetPosition(RootCanvas);
-                Canvas.SetLeft(AddTaskButton, position.X - AddTaskButton.Width / 2);
-                Canvas.SetTop(AddTaskButton, position.Y - AddTaskButton.Height / 2);
-                AddTaskButton.Visibility = Visibility.Visible;
-            }
-        }
-
-        private void RootGrid_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
-        {
-            if (!IsElementDescendantOf(e.OriginalSource as DependencyObject, AddTaskButton))
+            // 如果再次点击同一列，就取消选中
+            if (_selectedColumnIndex.HasValue && _selectedColumnIndex.Value == index)
             {
                 ClearSelection();
+                e.Handled = true;
+                return;
             }
+
+            // 记录当前选中列
+            _selectedColumnIndex = index;
+
+            // 计算那天的日期
+            DateTime monday = _viewModel.CurrentDate.Date;
+            while (monday.DayOfWeek != DayOfWeek.Monday)
+                monday = monday.AddDays(-1);
+            _clickedDate = monday.AddDays(index);
+
+            // 高亮并显示加号
+            HighlightColumn(index);
+
+            // 把加号放到鼠标位置
+            var position = e.GetPosition(RootCanvas);
+            Canvas.SetLeft(AddTaskButton, position.X - AddTaskButton.Width / 2);
+            Canvas.SetTop(AddTaskButton, position.Y - AddTaskButton.Height / 2);
+            AddTaskButton.Visibility = Visibility.Visible;
+
+            e.Handled = true;
         }
 
         /// <summary>
@@ -734,6 +743,78 @@ namespace TimeController.Views.StrongGoalWeek
                 double colWidth = WeekContentGrid.ActualWidth / 7;
                 TimeTasksScrollViewer.ScrollToHorizontalOffset(colWidth * todayIndex);
             }
+        }
+
+        private int? _selectedColumnIndex;
+
+        private void WeekContentGrid_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+        {
+            if (e.OriginalSource is DependencyObject src &&
+                FindVisualChild<Grid>(src, g => g.Tag is WeekViewModel.TaskBlock) != null)
+                return; // ignore clicks on task blocks
+
+            Point pos = e.GetPosition(WeekContentGrid);
+            double colWidth = WeekContentGrid.ActualWidth / 7;
+            int index = Math.Max(0, Math.Min(6, (int)(pos.X / colWidth)));
+            SelectColumn(index, e.GetPosition(RootCanvas));
+        }
+
+        public void OnDateColumnClicked(int index, MouseButtonEventArgs e)
+        {
+            SelectColumn(index, e.GetPosition(RootCanvas));
+        }
+
+        private void SelectColumn(int index, Point canvasPos)
+        {
+            DateTime date = _viewModel.DateColumns[index].Date;
+            _clickedDate = date;
+            _selectedColumnIndex = index;
+            HighlightColumn(index);
+
+            Canvas.SetLeft(AddTaskButton, canvasPos.X - AddTaskButton.Width / 2);
+            Canvas.SetTop(AddTaskButton, canvasPos.Y - AddTaskButton.Height / 2);
+            AddTaskButton.Visibility = Visibility.Visible;
+            AddTaskButton.Focus();
+        }
+
+        private void RootGrid_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+        {
+            if (AddTaskButton.Visibility != Visibility.Visible)
+                return;
+
+            if (e.OriginalSource is DependencyObject src && IsElementDescendantOf(src, AddTaskButton))
+                return;
+
+            int? index = null;
+            if (FindVisualParent<DateColumnControl>(e.OriginalSource as DependencyObject) is DateColumnControl col &&
+                col.DataContext is DateColumnViewModel vm)
+            {
+                index = vm.Index;
+            }
+            else
+            {
+                Point pos = e.GetPosition(WeekContentGrid);
+                if (pos.X >= 0 && pos.X <= WeekContentGrid.ActualWidth &&
+                    pos.Y >= 0 && pos.Y <= WeekContentGrid.ActualHeight)
+                {
+                    double colWidth = WeekContentGrid.ActualWidth / 7;
+                    index = Math.Max(0, Math.Min(6, (int)(pos.X / colWidth)));
+                }
+            }
+
+            if (!index.HasValue || index.Value != _selectedColumnIndex)
+            {
+                ClearSelection();
+            }
+        }
+
+        private T FindVisualParent<T>(DependencyObject child) where T : DependencyObject
+        {
+            while (child != null && child is not T)
+            {
+                child = VisualTreeHelper.GetParent(child);
+            }
+            return child as T;
         }
 
     }
