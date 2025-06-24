@@ -63,7 +63,6 @@ namespace TimeController.ViewModels
             Initialize();
 
         }
-
         public string MonthText { get; private set; }
         public string WeekText { get; private set; }
 
@@ -101,18 +100,21 @@ namespace TimeController.ViewModels
             RemoveTaskBlockCommand = new RelayCommand<TaskBlock>(RemoveTaskBlock);
             ToggleColumnExpandCommand = new RelayCommand<int>(ToggleColumnExpand);
 
+            DateTime monday = GetCurrentWeekMonday();
+
+            DateColumns.Clear();
             // 初始化日期列
             for (int i = 0; i < 7; i++)
             {
                 DateColumns.Add(new DateColumnViewModel
                 {
                     Index = i,
+                    Date = monday.AddDays(i),
                     WeekDayText = GetWeekDayText(i),
                     AllDayTasks = AllDayTaskBlocksPerDay[i],
                     IsExpanded = ExpandedColumns[i]
                 });
             }
-
 
             if (App.Current.Properties.Contains("SemesterWeeks") &&
                 int.TryParse(App.Current.Properties["SemesterWeeks"].ToString(), out int weeks) &&
@@ -121,12 +123,10 @@ namespace TimeController.ViewModels
                 _semesterWeeks = weeks;
             }
 
-            // 加载学期开始日期
             if (App.Current.Properties.Contains("SemesterStartDate") &&
-                DateTime.TryParse(App.Current.Properties["SemesterStartDate"].ToString(), out DateTime startDate))
+                DateTime.TryParse(App.Current.Properties["SemesterStartDate"].ToString(), out var start))
             {
-                _semesterStartDate = startDate;
-                Console.WriteLine($"从应用设置加载学期开始日期: {startDate:yyyy-MM-dd}");
+                SemesterStartDate = start;
             }
 
             // 更新日期文本和月份状态
@@ -136,25 +136,6 @@ namespace TimeController.ViewModels
             if (_taskService != null)
             {
                 LoadTasksForCurrentWeek();
-
-                // 异步检查是否有课程任务，如果有则确保显示学期周信息
-                Task.Run(async () => {
-                    try
-                    {
-                        var courseTasks = await _taskService.GetAllCourseTasksAsync();
-                        if (courseTasks.Count > 0 && _semesterStartDate.HasValue)
-                        {
-                            // 课程存在且学期开始日期已设置，更新学期周显示
-                            await System.Windows.Application.Current.Dispatcher.InvokeAsync(() => {
-                                UpdateSemesterWeekText();
-                            });
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        Console.WriteLine($"检查课程任务时出错: {ex.Message}");
-                    }
-                });
             }
         }
 
@@ -629,97 +610,56 @@ namespace TimeController.ViewModels
         }
 
         // 更新学期周数
-        private async void UpdateSemesterWeekText()
+        private void UpdateSemesterWeekText()
         {
-            try
+            if (!_semesterStartDate.HasValue)
             {
-                // 如果未设置学期开始日期，则不显示学期周
-                if (!_semesterStartDate.HasValue)
-                {
-                    SemesterWeekText = "";
-                    return;
-                }
-
-                // 获取本周一
-                DateTime currentMonday = GetCurrentWeekMonday();
-
-                // 获取学期第一周的周一
-                DateTime semesterMonday = _semesterStartDate.Value;
-                while (semesterMonday.DayOfWeek != DayOfWeek.Monday)
-                {
-                    semesterMonday = semesterMonday.AddDays(-1);
-                }
-
-                // 计算相差的周数
-                int weeksDiff = (int)Math.Ceiling((currentMonday - semesterMonday).TotalDays / 7.0) + 1;
-
-                // 检查是否有课程任务
-                bool hasCourses = false;
-                if (_taskService != null)
-                {
-                    var allCourses = await _taskService.GetAllCourseTasksAsync();
-                    hasCourses = allCourses.Count > 0;
-                }
-
-                // 如果有课程，显示学期周数
-                if (hasCourses)
-                {
-                    // 如果在学期开始日期之前或就是第一周，显示"学期第1周"
-                    if (weeksDiff == 1)
-                    {
-                        SemesterWeekText = "学期第 1 周";
-                    }
-                    // 如果在学期范围内(2-18周)
-                    else if (weeksDiff > 1 && weeksDiff <= SemesterWeeks)
-                    {
-                        SemesterWeekText = $"学期第 {weeksDiff} 周";
-                    }
-                    // 如果超出学期范围，则不显示学期周文本
-                    else
-                    {
-                        SemesterWeekText = "";
-                    }
-                }
-                else
-                {
-                    // 如果没有课程，只有当前周在学期周数范围内且在学期开始日期之后时才显示
-                    if (weeksDiff > 0 && weeksDiff <= SemesterWeeks)
-                    {
-                        SemesterWeekText = $"学期第 {weeksDiff} 周";
-                    }
-                    else
-                    {
-                        SemesterWeekText = "";
-                    }
-                }
-
-                Console.WriteLine($"更新学期周文本: 周差={weeksDiff}, 学期周={SemesterWeeks}, 结果={SemesterWeekText}");
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"更新学期周文本时出错: {ex.Message}");
                 SemesterWeekText = "";
+                return;
+            }
+
+            // 获取本周一
+            DateTime currentMonday = CurrentDate;
+            while (currentMonday.DayOfWeek != DayOfWeek.Monday)
+            {
+                currentMonday = currentMonday.AddDays(-1);
+            }
+
+            // 获取学期第一周的周一
+            DateTime semesterMonday = _semesterStartDate.Value;
+            while (semesterMonday.DayOfWeek != DayOfWeek.Monday)
+            {
+                semesterMonday = semesterMonday.AddDays(-1);
+            }
+
+            // 计算相差的周数
+            int weeksDiff = (int)Math.Round((currentMonday - semesterMonday).TotalDays / 7) + 1;
+
+            // 只有当前周在学期周数范围内且在学期开始日期之后时才显示学期周数
+            if (weeksDiff > 0 && weeksDiff <= SemesterWeeks)
+            {
+                SemesterWeekText = $"学期第 {weeksDiff} 周";
+            }
+            else
+            {
+                SemesterWeekText = ""; // 如果超出学期周数或在学期开始日期之前，则不显示
             }
         }
-
-
 
 
         // 更新日期列的日期文本和月份状态
         private void UpdateDateColumns()
         {
             // 获取该周周一
-            DateTime monday = CurrentDate.Date;
-            while (monday.DayOfWeek != DayOfWeek.Monday)
-                monday = monday.AddDays(-1);
-
-            // 当前选择的月份
+            DateTime monday = GetCurrentWeekMonday();
             int currentMonth = CurrentDate.Month;
 
             for (int i = 0; i < 7; i++)
             {
                 DateTime currentDay = monday.AddDays(i);
                 var column = DateColumns[i];
+
+                column.Date = currentDay;
 
                 // 更新日期文本
                 if (currentDay.Month != currentMonth)
@@ -1339,8 +1279,13 @@ namespace TimeController.ViewModels
                 DateTime sunday = monday.AddDays(6);
 
                 // 拉数据
-                var weekTasks = await _taskService.GetTasksForDateRange(monday, sunday);
-                var courseTasks = await _taskService.GetCourseTasksForWeekAsync(CurrentDate);
+                var weekTasks = (await _taskService.GetTasksForDateRange(monday, sunday))
+                            .Where(t => t.Mode == TaskMode.Strong)
+                            .ToList();
+                var courseTasks = (await _taskService.GetCourseTasksForWeekAsync(CurrentDate))
+                                    .Where(t => t.Mode == TaskMode.Strong)  // 课程一般也是 Strong
+                                    .ToList();
+
                 Tasks.Clear();
                 foreach (var t in weekTasks.Concat(courseTasks))
                     Tasks.Add(t);

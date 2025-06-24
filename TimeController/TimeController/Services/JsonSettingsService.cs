@@ -18,7 +18,10 @@ namespace TimeController.Services
             public int WeeklyTarget { get; set; } = 4;
             [JsonConverter(typeof(JsonStringEnumConverter))]
             public ThemeOption ThemeOption { get; set; } = ThemeOption.Light;
+            public bool EnableDailyReviewPrompt { get; set; } = false;
+            public int DailyReviewPromptHour { get; set; } = 18;
         }
+
 
         public JsonSettingsService()
         {
@@ -88,5 +91,26 @@ namespace TimeController.Services
             cfg.ThemeOption = option;
             SaveConfig(cfg);
         }
+
+        public bool LoadEnableDailyReviewPrompt() =>
+            LoadConfig().EnableDailyReviewPrompt;
+
+        public void SaveEnableDailyReviewPrompt(bool value)
+        {
+            var cfg = LoadConfig();
+            cfg.EnableDailyReviewPrompt = value;
+            SaveConfig(cfg);
+        }
+
+        public int LoadDailyReviewPromptHour() =>
+            LoadConfig().DailyReviewPromptHour;
+
+        public void SaveDailyReviewPromptHour(int hour)
+        {
+            var cfg = LoadConfig();
+            cfg.DailyReviewPromptHour = hour;
+            SaveConfig(cfg);
+        }
+
     }
 }

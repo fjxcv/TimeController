@@ -9,13 +9,15 @@
       d:DesignHeight="450" d:DesignWidth="800"
       Title="AboutPage">
 
+
+    
     <ScrollViewer  Padding="16">
         <StackPanel>
 
             <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                 <TextBlock Text="关于 TimeController"
                    FontSize="24"
-                   FontWeight="Bold"
+                   FontFamily="{StaticResource HOS_Sans_Bold}"
                    VerticalAlignment="Center" Margin="0,0,0,20"/>
             </StackPanel>
             
@@ -29,7 +31,7 @@
                         <ItemsControl.ItemTemplate>
                             <DataTemplate>
                                 <StackPanel Orientation="Horizontal">
-                                    <TextBlock Text="•" Margin="0,0,4,0"/>
+                                    <!--<TextBlock Text="•" Margin="0,0,4,0"/>-->
                                     <TextBlock Text="{Binding}" TextWrapping="Wrap"/>
                                 </StackPanel>
                             </DataTemplate>
@@ -48,7 +50,7 @@
                         <ItemsControl.ItemTemplate>
                             <DataTemplate>
                                 <StackPanel Orientation="Horizontal">
-                                    <TextBlock Text="•" Margin="0,0,4,0"/>
+                                    <!--<TextBlock Text="•" Margin="0,0,4,0"/>-->
                                     <TextBlock Text="{Binding}" TextWrapping="Wrap"/>
                                 </StackPanel>
                             </DataTemplate>
@@ -66,8 +68,8 @@
                     <ItemsControl.ItemTemplate>
                         <DataTemplate>
                             <StackPanel Orientation="Horizontal">
-                                <TextBlock Text="•"
-                                            Margin="0,0,4,0"/>
+                                <!--<TextBlock Text="•"
+                                            Margin="0,0,4,0"/>-->
                                 <TextBlock Text="{Binding}"
                                             TextWrapping="Wrap"/>
                             </StackPanel>

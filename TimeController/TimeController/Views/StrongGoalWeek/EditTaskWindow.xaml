@@ -17,7 +17,7 @@
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
-            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="80"/>
@@ -107,14 +107,11 @@
         <CheckBox Content="开启提醒" Grid.Row="4" Grid.Column="1" Margin="155,0,0,0"
                   IsChecked="{Binding IsReminderEnabled}" />
 
-        <!-- 任务推荐 -->
-        <TextBlock Grid.Row="5" Grid.Column="0" Grid.ColumnSpan="2" Margin="0,10,0,0"
-                Text="{Binding TimePeriodHint}"
-                Foreground="#0078D4"
-                FontSize="12"
-                TextWrapping="Wrap"
-                HorizontalAlignment="Center"
-                Visibility="{Binding HasTimePeriodHint, Converter={StaticResource BoolToVisibility}}"/>
+        <StackPanel Grid.Row="5" Grid.Column="2" VerticalAlignment="Center" Orientation="Horizontal">
+        <!-- 日期 -->
+            <TextBlock Text="日期:" Margin="40,5,20,2" FontFamily="{StaticResource HOS_Sans_Medium}" FontSize="14"/>
+        <DatePicker SelectedDate="{Binding PlannedDate, Mode=TwoWay}" Width="120"/>
+        </StackPanel>
         
         <StackPanel Grid.Row="6" Grid.ColumnSpan="2" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,15,0,0">
             <Button Content="取消" Width="80" Margin="0,0,20,0" Click="Cancel_Click"/>

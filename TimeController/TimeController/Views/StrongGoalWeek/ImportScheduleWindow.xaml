@@ -17,7 +17,7 @@
 
         <!-- 标题 -->
         <TextBlock Grid.Row="0" Text="选择导入课表的方式" 
-                   FontSize="18" FontWeight="SemiBold" 
+                   FontSize="18" FontFamily="{StaticResource HOS_Sans_Bold}"
                    Margin="0,0,0,10" HorizontalAlignment="Center"/>
 
         <!-- 日期选择 -->
@@ -29,7 +29,7 @@
 
             <TextBlock Grid.Column="0" Text="开学日期:" 
                        VerticalAlignment="Center" 
-                       FontWeight="SemiBold" Margin="0,0,10,0"/>
+                       FontFamily="{StaticResource HOS_Sans_Bold}" Margin="0,0,10,0"/>
 
             <DatePicker Grid.Column="1" Name="StartDatePicker" 
                         SelectedDate="{Binding SemesterStartDate}" 
@@ -45,7 +45,7 @@
 
             <TextBlock Grid.Column="0" Text="学期周数:" 
                        VerticalAlignment="Center" 
-                       FontWeight="SemiBold" Margin="0,0,10,0"/>
+                       FontFamily="{StaticResource HOS_Sans_Bold}" Margin="0,0,10,0"/>
 
             <ui:NumberBox Grid.Column="1" Name="SemesterWeeksBox"
                           Value="{Binding SemesterWeeks}"

@@ -88,7 +88,7 @@
                 </Setter.Value>
             </Setter>
 
-            <!-- ✅ 每周按钮只在 IsEverydayPage 为 false 时高亮 -->
+            <!-- 每周按钮只在 IsEverydayPage 为 false 时高亮 -->
             <Style.Triggers>
                 <DataTrigger Binding="{Binding IsEverydayPage}" Value="False">
                     <Setter Property="Background" Value="#00BFA5"/>
@@ -133,7 +133,7 @@
             <!-- 左边：标题 -->
             <TextBlock Text="每周复盘"
                FontSize="36"
-               FontWeight="Bold"
+               FontFamily="{StaticResource HOS_Sans_Bold}"
                VerticalAlignment="Center"
                HorizontalAlignment="Left"/>
 
@@ -171,7 +171,7 @@
             <Border CornerRadius="15" Padding="10,5" Background="#80AAAAAA" Margin="375,0,0,0">
                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                     <Button Content="&lt;" Command="{Binding PreviousWeekCommand}" Margin="5,0"/>
-                    <TextBlock Text="{Binding CurrentWeekText}" FontWeight="Bold" Margin="10,0" FontSize="24"/>
+                    <TextBlock Text="{Binding CurrentWeekText}" FontFamily="{StaticResource HOS_Sans_Bold}" Margin="10,0" FontSize="24"/>
                     <Button Content="&gt;" Command="{Binding NextWeekCommand}" Margin="5,0"/>
                 </StackPanel>
             </Border>
@@ -195,40 +195,57 @@
                 <ItemsControl.ItemTemplate>
                     <DataTemplate>
                         <Border Style="{StaticResource CardStyle}">
-
                             <Grid>
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="5"/>
                                     <ColumnDefinition Width="*" />
                                 </Grid.ColumnDefinitions>
-                                
-                                <!-- 彩色条 -->
-                                <Border Background="{Binding AccentColor}" Grid.Column="0" />
+
+                                <!-- 左侧彩色条 -->
+                                <Border Background="{Binding AccentColor}" Grid.Column="0"/>
 
                                 <StackPanel Grid.Column="1" Margin="12,8,10,8">
-                                <!-- 图标 -->
-                                <TextBlock Text="{Binding Icon}" FontSize="20" Opacity="0.7" Margin="0,0,0,6"/>
+                                   
+                                    <TextBlock Text="{Binding Icon}"
+                                               FontSize="20"
+                                               Opacity="0.7"
+                                               Margin="0,0,0,5"
+                                               VerticalAlignment="Center"/>
 
-                                <!--复盘标题-->
-                                <TextBlock Text="{Binding Title}"
-                                           FontSize="16"
-                                           FontWeight="SemiBold"
-                                           Foreground="#222"
-                                           Margin="0,0,0,15"/>
-                                    <RichTextBox local:RichTextBoxHelper.BindableDocument="{Binding FormattedMessage}"
-                                             x:Name="myRichTextBox"
-                                             FontSize="17"
-                                             Foreground="#444"
-                                             IsReadOnly="True"
-                                             BorderThickness="0"
-                                             Background="Transparent"/>
+                                    
+                                    <TextBlock Text="{Binding Title}"
+                                               FontSize="16"
+                                               FontWeight="SemiBold"
+                                               Foreground="#222"
+                                               Margin="0,0,0,10"/>
 
+                                   
+                                    <RichTextBox
+                                                local:RichTextBoxHelper.BindableDocument="{Binding FormattedMessage}"
+                                                FontSize="17"
+                                                Foreground="#444"
+                                                IsReadOnly="True"
+                                                BorderThickness="0"
+                                                Background="Transparent"
+                                                HorizontalScrollBarVisibility="Disabled"
+                                                VerticalScrollBarVisibility="Hidden">
+                                        <RichTextBox.Resources>
+                                            <!-- 去掉 FlowDocument 默认留白 -->
+                                            <Style TargetType="FlowDocument">
+                                                <Setter Property="PagePadding" Value="0"/>
+                                            </Style>
+                                            <Style TargetType="Paragraph">
+                                                <Setter Property="Margin" Value="0"/>
+                                            </Style>
+                                        </RichTextBox.Resources>
+                                    </RichTextBox>
                                 </StackPanel>
                             </Grid>
                         </Border>
                     </DataTemplate>
                 </ItemsControl.ItemTemplate>
             </ItemsControl>
+
 
             <!-- 右边：折线图和被推迟/放弃的任务列表 -->
             <Grid Grid.Column="1">
@@ -245,7 +262,7 @@
                     Height="300" Margin="0,0,0,10" Grid.Row="0"/>
 
                 <StackPanel  Grid.Row="1">
-                <TextBlock Text="本周被推迟/放弃的任务" FontWeight="Bold" FontSize="24" HorizontalAlignment="Center" Margin="0,0,0,10"/>
+                <TextBlock Text="本周被推迟/放弃的任务" FontFamily="{StaticResource HOS_Sans_Bold}" FontSize="24" HorizontalAlignment="Center" Margin="0,0,0,10"/>
 
                     <!-- 如果有任务就显示列表 -->
                     <ScrollViewer VerticalScrollBarVisibility="Auto" Height="200">

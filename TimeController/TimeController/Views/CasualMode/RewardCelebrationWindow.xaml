@@ -78,7 +78,7 @@
                            Text="恭喜你！进度条已满，专属奖励等你领取~"
                            FontSize="28"
                            Padding="15"
-                           FontWeight="Bold"
+                           FontFamily="{StaticResource HOS_Sans_Bold}"
                            Foreground="#2E8B57"
                            TextAlignment="Center"
                            TextWrapping="Wrap"
@@ -181,7 +181,7 @@
                             <!-- 标题 -->
                             <TextBlock Grid.Row="0"
                                      Text="请选择本周奖励"
-                                     FontSize="16" FontWeight="Bold"
+                                     FontSize="16" FontFamily="{StaticResource HOS_Sans_Bold}"
                                      Margin="4"/>
 
                             <!-- 单选 ListView -->

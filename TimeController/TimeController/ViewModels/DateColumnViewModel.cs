@@ -2,6 +2,7 @@
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Windows.Data;
+using System;
 
 namespace TimeController.ViewModels
 {
@@ -11,10 +12,10 @@ namespace TimeController.ViewModels
         private string _weekDayText = "";
         private string _dateText = "";
         private bool _isCurrentMonth;
-        private bool _isToday;
         private ObservableCollection<WeekViewModel.TaskBlock> _allDayTasks = new();
 
-        // —— 新增这一行 —— 
+        public bool IsToday => Date.Date == DateTime.Today;
+
         public ICollectionView AllDayTasksView { get; private set; }
 
         public DateColumnViewModel()
@@ -73,18 +74,22 @@ namespace TimeController.ViewModels
         }
 
         // IsToday 属性
-        public bool IsToday
+
+        private DateTime _date;
+        public DateTime Date
         {
-            get => _isToday;
+            get => _date;
             set
             {
-                if (_isToday != value)
+                if (_date != value)
                 {
-                    _isToday = value;
+                    _date = value;
                     OnPropertyChanged();
+                    OnPropertyChanged(nameof(IsToday)); // 通知高亮触发
                 }
             }
         }
+
 
 
         public int Index { get; set; }

@@ -11,7 +11,7 @@ using System.Windows.Media;
 
 namespace TimeController.Views.StrongGoalMonth
 {
-    
+
     public partial class DateCard : UserControl, INotifyPropertyChanged
     {
         // 定义Date依赖属性，用于绑定日期数据
@@ -159,10 +159,10 @@ namespace TimeController.Views.StrongGoalMonth
                 {
                     // 计算弹出位置
                     CalculatePopupPosition();
-                    
+
                     // 设置动画效果
                     TaskPopup.PopupAnimation = PopupAnimation.Fade;
-                    
+
                     // 打开弹出框并更新状态
                     TaskPopup.IsOpen = true;
                     IsExpanded = true;
@@ -185,7 +185,7 @@ namespace TimeController.Views.StrongGoalMonth
         {
             //// 获取卡片在屏幕上的位置
             //var cardPosition = CardBorder.PointToScreen(new Point(0, 0));
-            
+
             //// 获取主窗口
             //var mainWindow = Window.GetWindow(this);
             //if (mainWindow == null) return;
@@ -215,7 +215,7 @@ namespace TimeController.Views.StrongGoalMonth
             {
                 // 更新展开状态
                 IsExpanded = false;
-                
+
                 // 可以在这里添加额外的清理逻辑
                 System.Diagnostics.Debug.WriteLine("Popup closed via collapse button, IsExpanded set to false");
             }
@@ -228,7 +228,7 @@ namespace TimeController.Views.StrongGoalMonth
             {
                 // 通知属性变更，触发按钮图标更新
                 card.OnPropertyChanged(nameof(IsExpanded));
-                
+
                 // 可以在这里添加额外的状态同步逻辑
                 System.Diagnostics.Debug.WriteLine($"IsExpanded changed to: {e.NewValue}");
             }
@@ -238,7 +238,7 @@ namespace TimeController.Views.StrongGoalMonth
         protected override void OnRenderSizeChanged(SizeChangedInfo sizeInfo)
         {
             base.OnRenderSizeChanged(sizeInfo);
-            
+
             // 如果弹出框是打开的，重新计算位置
             if (TaskPopup.IsOpen)
             {
@@ -250,7 +250,7 @@ namespace TimeController.Views.StrongGoalMonth
         protected override void OnRender(DrawingContext drawingContext)
         {
             base.OnRender(drawingContext);
-            
+
             // 如果弹出框是打开的，重新计算位置
             if (TaskPopup.IsOpen)
             {
@@ -266,7 +266,7 @@ namespace TimeController.Views.StrongGoalMonth
             // 更新卡片上显示的文本
             if (d is DateCard card)
             {
-                 var date = (DateTime)e.NewValue;
+                var date = (DateTime)e.NewValue;
                 card.DateText.Text = date.Day.ToString();
                 card.IsToday = DateTime.Today == date.Date; // 自动更新IsToday状态
             }

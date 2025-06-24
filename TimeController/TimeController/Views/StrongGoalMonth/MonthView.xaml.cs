@@ -26,7 +26,6 @@ namespace TimeController.Views.StrongGoalMonth
     public partial class MonthView : Page
     {
         private MonthViewModel _viewModel;
-        private bool _hasCheckedTodayTasks = false;
 
         public MonthView()
         {
@@ -34,18 +33,6 @@ namespace TimeController.Views.StrongGoalMonth
             _viewModel = new MonthViewModel();
             DataContext = _viewModel;
 
-            // 订阅任务提醒事件
-            _viewModel.TodayTasksFound += OnTodayTasksFound;
-        }
-
-        private void OnTodayTasksFound(object? sender, ObservableCollection<TaskModel> tasks)
-        {
-            // 使用 Dispatcher 确保在 UI 线程上显示对话框
-            Dispatcher.BeginInvoke(new Action(() =>
-            {
-                var dialog = new TodayTasksReminderDialog(tasks);
-                dialog.ShowDialog();
-            }));
         }
 
         protected override void OnNavigatedTo(NavigationEventArgs e)

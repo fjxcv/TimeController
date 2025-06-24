@@ -27,8 +27,13 @@ namespace TimeController.Models
             Message = message;
             AccentColor = accentColor ?? Brushes.LightGray; // 默认灰
 
+            // 调试用
+            System.Diagnostics.Debug.WriteLine($"‘{message}’");
+
             // 生成带重点词高亮的文档
             FormattedMessage = TextHighlightHelper.CreateHighlightedDocument(message, Brushes.OrangeRed);
+
+
         }
     }
 }

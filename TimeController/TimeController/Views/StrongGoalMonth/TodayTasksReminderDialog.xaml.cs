@@ -8,15 +8,20 @@ namespace TimeController.Views.StrongGoalMonth
 {
     public partial class TodayTasksReminderDialog : Window
     {
+        private readonly TodayTasksReminderViewModel _viewModel;
+
         public TodayTasksReminderDialog(ObservableCollection<TaskModel> tasks)
         {
             InitializeComponent();
-            var viewModel = new TodayTasksReminderViewModel(tasks, () => 
+            _viewModel = new TodayTasksReminderViewModel(tasks, () =>
             {
                 DialogResult = true;
                 Close();
             });
-            DataContext = viewModel;
+            DataContext = _viewModel;
+
+            // 窗口关闭时释放定时器，避免后台占用
+            Closed += (_, __) => _viewModel.Dispose();
         }
     }
 } 

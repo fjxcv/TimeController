@@ -15,6 +15,7 @@ using TimeController.Views.StrongGoalMonth;
 using TimeController.Views.StrongGoalWeek;
 using iNKORE.UI.WPF.Modern.Helpers.Styles;
 using MessageBox = iNKORE.UI.WPF.Modern.Controls.MessageBox;
+using System.Collections.ObjectModel;
 
 namespace TimeController
 {
@@ -70,6 +71,7 @@ namespace TimeController
 
                     services.AddTransient<SettingsPageViewModel>();
                     services.AddTransient<AboutPageViewModel>();
+                    services.AddSingleton<TodayTasksReminderViewModel>();
 
                     //views
                     services.AddTransient<CasualModeView>();
@@ -78,9 +80,11 @@ namespace TimeController
                     services.AddTransient<ReviewView_everyday>();
                     services.AddTransient<SettingsPage>();
                     services.AddTransient<AboutPage>();
+                    services.AddSingleton<TodayTasksReminderDialog>();
 
                     // MainWindow
                     services.AddSingleton<MainWindow>();
+
 
                 })
                 .Build();
@@ -99,24 +103,38 @@ namespace TimeController
                 Console.Error.WriteLine($"Database migration failed: {ex.Message}");
             }
 
-            // 重置开发数据（仅示例，生产环境可移除）
-            var taskService = AppHost.Services.GetRequiredService<ITaskService>();
-            //_ = ((TaskService)taskService).ResetTaskDataAsync();
+            // 加载用户设置
+            var settingsService = AppHost.Services.GetRequiredService<ISettingsService>();
+            UserSettings.EnableDailyReviewPrompt = settingsService.LoadEnableDailyReviewPrompt();
+            UserSettings.DailyReviewPromptHour = settingsService.LoadDailyReviewPromptHour();
 
-            // 打开主窗口
             var mainWindow = AppHost.Services.GetRequiredService<MainWindow>();
+            Current.MainWindow = mainWindow;
 
-            // 异步延迟后提醒复盘
-            _ = Task.Run(async () =>
+            Dispatcher.BeginInvoke(async () =>
             {
-                await Task.Delay(1000);
-                await Application.Current.Dispatcher.InvokeAsync(async () =>
+                var taskService = AppHost.Services.GetRequiredService<ITaskService>();
+                var navService = AppHost.Services.GetRequiredService<INavigationService>();
+
+                // 启动复盘提醒计时器，确保不会被其他弹窗阻塞
+                ReviewReminderService.Start(taskService, navService);
+
+                var list = await taskService.GetTasksForDate(DateTime.Today);
+                var todayTasks = new ObservableCollection<TaskModel>(list.Where(t => t.IsReminderEnabled));
+                if (todayTasks.Any())
                 {
-                    await ReviewReminderService.TryShowReviewReminderAsync(
-                        taskService,
-                        AppHost.Services.GetRequiredService<INavigationService>());
-                });
+                    var dlg = new TodayTasksReminderDialog(todayTasks)
+                    {
+                        Owner = mainWindow,
+                        WindowStartupLocation = WindowStartupLocation.CenterOwner
+                    };
+                    dlg.ShowDialog();
+                }
+                // —— 复盘提醒 —— 
+                // 立即尝试一次，不用等 Timer Tick
+                await ReviewReminderService.TryShowReviewReminderAsync(taskService, navService);
             });
+
 
         }
         protected override void OnExit(ExitEventArgs e)

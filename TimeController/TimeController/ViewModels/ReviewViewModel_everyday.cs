@@ -186,11 +186,11 @@ namespace TimeController.ViewModels
             }
 
             // 更新待处理任务
-            var today = DateTime.Today;
+            var today = date.Date;
             TodayPendingTasks = new ObservableCollection<TaskModel>(
                 tasks.Where(t =>
-                    (t.Status == MyTaskStatus.Pending || t.Status == MyTaskStatus.Postponed) &&
-                    t.PlannedDate.Date == today));      //只要PlannedDate == date，就显示
+                (t.Status == MyTaskStatus.Pending || t.Status == MyTaskStatus.Postponed) &&
+                t.PlannedDate.Date == today));      //只要PlannedDate == date，就显示
 
 
             // 获取所有 pending 任务

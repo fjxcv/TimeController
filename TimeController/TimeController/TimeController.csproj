@@ -16,6 +16,12 @@
     <None Remove="Resources\fire3.png" />
     <None Remove="Resources\fire4.png" />
     <None Remove="Resources\fireworks.wav" />
+    <None Remove="Resources\Fonts\HarmonyOS_Sans_SC_Black.ttf" />
+    <None Remove="Resources\Fonts\HarmonyOS_Sans_SC_Bold.ttf" />
+    <None Remove="Resources\Fonts\HarmonyOS_Sans_SC_Light.ttf" />
+    <None Remove="Resources\Fonts\HarmonyOS_Sans_SC_Medium.ttf" />
+    <None Remove="Resources\Fonts\HarmonyOS_Sans_SC_Regular.ttf" />
+    <None Remove="Resources\Fonts\HarmonyOS_Sans_SC_Thin.ttf" />
     <None Remove="Resources\reward.png" />
   </ItemGroup>
 
@@ -68,6 +74,12 @@
     <Content Include="Resources\fireworks.wav">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
+    <Resource Include="Resources\Fonts\HarmonyOS_Sans_SC_Black.ttf" />
+    <Resource Include="Resources\Fonts\HarmonyOS_Sans_SC_Bold.ttf" />
+    <Resource Include="Resources\Fonts\HarmonyOS_Sans_SC_Light.ttf" />
+    <Resource Include="Resources\Fonts\HarmonyOS_Sans_SC_Medium.ttf" />
+    <Resource Include="Resources\Fonts\HarmonyOS_Sans_SC_Regular.ttf" />
+    <Resource Include="Resources\Fonts\HarmonyOS_Sans_SC_Thin.ttf" />
     <Resource Include="Resources\reward.png" />
   </ItemGroup>
 

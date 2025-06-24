@@ -27,5 +27,11 @@ namespace TimeController.Services
 
         ThemeOption LoadThemeOption();
         void SaveThemeOption(ThemeOption option);
+
+        bool LoadEnableDailyReviewPrompt();
+        void SaveEnableDailyReviewPrompt(bool value);
+
+        int LoadDailyReviewPromptHour();
+        void SaveDailyReviewPromptHour(int hour);
     }
 }

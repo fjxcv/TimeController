@@ -7,7 +7,26 @@
 
 >
 
-<ScrollViewer>
+    <ui:Page.Resources>
+        <!-- 基于系统 AccentButtonStyleKey 创建一个自定义保存按钮样式 -->
+        <Style x:Key="SaveButtonStyle"
+         TargetType="Button"
+         BasedOn="{StaticResource {x:Static ui:ThemeKeys.AccentButtonStyleKey}}">
+            <!-- 默认文字色保持白色 -->
+            <Setter Property="Foreground" Value="White"/>
+            <Style.Triggers>
+                <!-- 鼠标移入时，背景会变浅，我们把文字改成深色 -->
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Foreground" Value="#333333"/>
+                </Trigger>
+                <!-- 如果还想在按下时再调一次样式 -->
+                <Trigger Property="IsPressed" Value="True">
+                    <Setter Property="Foreground" Value="#111111"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+    </ui:Page.Resources>
+    <ScrollViewer>
     <ikw:SimpleStackPanel Spacing="6" Margin="0,20,0,0">
 
         <!-- 每周目标任务量 -->
@@ -30,7 +49,7 @@
 
             </ui:SettingsCard>
 
-            <!-- 主题设置卡片 -->
+            <!-- 主题设置卡片 --><!--
             <ui:SettingsCard Header="主题模式"
                  Description="选择浅色 / 深色，或跟随系统"
                  IsEnabled="True">
@@ -46,8 +65,28 @@
                     <ComboBoxItem Content="Dark"     Tag="{x:Static local:ThemeOption.Dark}"    />
                     <ComboBoxItem Content="跟随系统" Tag="{x:Static local:ThemeOption.System}"  />
                 </ComboBox>
-            </ui:SettingsCard>
+            </ui:SettingsCard>-->
 
+            <!-- 自动复盘提醒时间 -->
+            <ui:SettingsCard Header="自动复盘提醒时间"
+                             IsEnabled="True"
+                             Description="设置您希望提醒复盘的时间或关闭">
+                <ui:SettingsCard.HeaderIcon>
+                    <ui:FontIcon Glyph="&#xE823;"/>
+                </ui:SettingsCard.HeaderIcon>
+                <ComboBox Width="80"
+                        SelectedValue="{Binding DailyReviewPromptOption}"
+                        SelectedValuePath="Tag"
+                        Margin="0,8,0,0">
+                    <ComboBoxItem Content="关闭提醒" Tag="-1" />
+                    <ComboBoxItem Content="18:00" Tag="18" />
+                    <ComboBoxItem Content="19:00" Tag="19" />
+                    <ComboBoxItem Content="20:00" Tag="20" />
+                    <ComboBoxItem Content="21:00" Tag="21" />
+                    <ComboBoxItem Content="22:00" Tag="22" />
+                </ComboBox>
+            </ui:SettingsCard>
+        
             <!-- 保存 & 重置 按钮 -->
             <StackPanel Orientation="Horizontal"
                           HorizontalAlignment="Right"
@@ -65,7 +104,7 @@
                         MinWidth="70"
                         MinHeight="35"
                         Margin="20,0,30,0"
-                        Style="{StaticResource {x:Static ui:ThemeKeys.AccentButtonStyleKey}}" />
+                        Style="{StaticResource SaveButtonStyle}" />
             </StackPanel>
         
         </ikw:SimpleStackPanel>

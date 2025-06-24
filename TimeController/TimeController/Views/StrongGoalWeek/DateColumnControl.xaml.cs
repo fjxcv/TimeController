@@ -120,6 +120,16 @@ namespace TimeController.Views.StrongGoalWeek
             e.Handled = true;
         }
 
+        private void ColumnBorder_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+        {
+            if (DataContext is DateColumnViewModel vm)
+            {
+                var weekView = this.FindAncestor<WeekView>();
+                weekView?.OnDateColumnClicked(vm.Index, e);
+            }
+            e.Handled = true;
+        }
+
         private void ExpandButton_Click(object sender, RoutedEventArgs e)
         {
             if (DataContext is DateColumnViewModel vm)

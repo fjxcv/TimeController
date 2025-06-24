@@ -12,7 +12,8 @@
         <converters:CompletedToTextDecorationConverter x:Key="CompletedToTextDecorationConverter"/>
     </UserControl.Resources>
 
-    <Border x:Name="ColumnBorder" Background="#F0F0F0" CornerRadius="4" Margin="2" MinHeight="100">
+    <Border x:Name="ColumnBorder" Background="#F0F0F0" CornerRadius="4" Margin="2" MinHeight="100"
+            MouseLeftButtonDown="ColumnBorder_MouseLeftButtonDown">
         <Border.Style>
             <Style TargetType="Border">
                 <Setter Property="Background" Value="#F0F0F0"/>
@@ -40,7 +41,7 @@
                            Text="{Binding DateText}"
                            HorizontalAlignment="Center"
                            FontSize="16"
-                           FontWeight="Bold"
+                           FontFamily="{StaticResource HOS_Sans_Bold}"
                            Foreground="{Binding IsCurrentMonth, Converter={StaticResource BoolToColorConverter}}"/>
             </StackPanel>
 
@@ -66,12 +67,12 @@
                                            Margin="8,4"
                                            TextWrapping="Wrap"
                                            Foreground="#333333"
-                                           FontWeight="Medium"
+                                           FontFamily="{StaticResource HOS_Sans_Medium}"
                                            TextDecorations="{Binding Status, Converter={StaticResource CompletedToTextDecorationConverter}}">
                                     <TextBlock.ToolTip>
                                         <ToolTip>
                                             <StackPanel>
-                                                <TextBlock Text="{Binding Name}" FontWeight="Bold" Margin="0,0,0,4"/>
+                                                <TextBlock Text="{Binding Name}" FontFamily="{StaticResource HOS_Sans_Bold}" Margin="0,0,0,4"/>
                                                 <TextBlock Text="{Binding Note}" FontStyle="Italic" Foreground="#666666" TextWrapping="Wrap" MaxWidth="200"/>
                                             </StackPanel>
                                         </ToolTip>
