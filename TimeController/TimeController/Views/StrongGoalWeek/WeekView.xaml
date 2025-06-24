@@ -14,7 +14,7 @@
         <conv:CompletedToTextDecorationConverter x:Key="CompletedToTextDecorationConverter"/>
     </ui:Page.Resources>
 
-    <Grid x:Name="RootGrid">
+    <Grid x:Name="RootGrid" PreviewMouseLeftButtonDown="RootGrid_PreviewMouseLeftButtonDown">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
@@ -72,7 +72,7 @@
                     Padding="8,4"
                     VerticalAlignment="Center"
                     HorizontalAlignment="Center"
-                    Margin="350,0,0,0"
+                    Margin="420,0,0,0"
                     Click="TodayButton_Click"/>
             
         <!-- 内容区 - 采用新布局 -->
@@ -206,13 +206,21 @@
                         </Grid.ColumnDefinitions>
 
                         <!-- 背景高亮层 -->
-                        <Border x:Name="TaskColumn0" Grid.Column="0" Background="Transparent"/>
-                        <Border x:Name="TaskColumn1" Grid.Column="1" Background="Transparent"/>
-                        <Border x:Name="TaskColumn2" Grid.Column="2" Background="Transparent"/>
-                        <Border x:Name="TaskColumn3" Grid.Column="3" Background="Transparent"/>
-                        <Border x:Name="TaskColumn4" Grid.Column="4" Background="Transparent"/>
-                        <Border x:Name="TaskColumn5" Grid.Column="5" Background="Transparent"/>
-                        <Border x:Name="TaskColumn6" Grid.Column="6" Background="Transparent"/>
+                        <Border x:Name="TaskColumn0" Grid.Column="0" Background="Transparent"
+                                MouseLeftButtonDown="TaskColumn_MouseLeftButtonDown" Tag="0"/>
+                        <Border x:Name="TaskColumn1" Grid.Column="1" Background="Transparent"
+                                MouseLeftButtonDown="TaskColumn_MouseLeftButtonDown" Tag="1"/>
+                        <Border x:Name="TaskColumn2" Grid.Column="2" Background="Transparent"
+                                MouseLeftButtonDown="TaskColumn_MouseLeftButtonDown" Tag="2"/>
+                        <Border x:Name="TaskColumn3" Grid.Column="3" Background="Transparent"
+                                MouseLeftButtonDown="TaskColumn_MouseLeftButtonDown" Tag="3"/>
+                        <Border x:Name="TaskColumn4" Grid.Column="4" Background="Transparent"
+                                MouseLeftButtonDown="TaskColumn_MouseLeftButtonDown" Tag="4"/>
+                        <Border x:Name="TaskColumn5" Grid.Column="5" Background="Transparent"
+                                MouseLeftButtonDown="TaskColumn_MouseLeftButtonDown" Tag="5"/>
+                        <Border x:Name="TaskColumn6" Grid.Column="6" Background="Transparent"
+                                MouseLeftButtonDown="TaskColumn_MouseLeftButtonDown" Tag="6"/>
+
 
                         <!-- 课程显示区域 -->
                         <ItemsControl Grid.ColumnSpan="7" ItemsSource="{Binding CourseTaskBlocks}">

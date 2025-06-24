@@ -651,6 +651,33 @@ namespace TimeController.Views.StrongGoalWeek
             return null;
         }
 
+        private void TaskColumn_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+        {
+            if (sender is Border border && int.TryParse(border.Tag?.ToString(), out int index))
+            {
+                DateTime monday = _viewModel.CurrentDate.Date;
+                while (monday.DayOfWeek != DayOfWeek.Monday)
+                    monday = monday.AddDays(-1);
+
+                _clickedDate = monday.AddDays(index);
+
+                HighlightColumn(index);
+
+                var position = e.GetPosition(RootCanvas);
+                Canvas.SetLeft(AddTaskButton, position.X - AddTaskButton.Width / 2);
+                Canvas.SetTop(AddTaskButton, position.Y - AddTaskButton.Height / 2);
+                AddTaskButton.Visibility = Visibility.Visible;
+            }
+        }
+
+        private void RootGrid_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+        {
+            if (!IsElementDescendantOf(e.OriginalSource as DependencyObject, AddTaskButton))
+            {
+                ClearSelection();
+            }
+        }
+
         /// <summary>
         /// 根据当前日期更新上方 7 天的显示（DateTextBlock0 ~ 6）
         /// </summary>
