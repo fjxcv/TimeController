@@ -63,7 +63,6 @@ namespace TimeController.ViewModels
             Initialize();
 
         }
-
         public string MonthText { get; private set; }
         public string WeekText { get; private set; }
 
@@ -101,12 +100,16 @@ namespace TimeController.ViewModels
             RemoveTaskBlockCommand = new RelayCommand<TaskBlock>(RemoveTaskBlock);
             ToggleColumnExpandCommand = new RelayCommand<int>(ToggleColumnExpand);
 
+            DateTime monday = GetCurrentWeekMonday();
+
+            DateColumns.Clear();
             // 初始化日期列
             for (int i = 0; i < 7; i++)
             {
                 DateColumns.Add(new DateColumnViewModel
                 {
                     Index = i,
+                    Date = monday.AddDays(i),
                     WeekDayText = GetWeekDayText(i),
                     AllDayTasks = AllDayTaskBlocksPerDay[i],
                     IsExpanded = ExpandedColumns[i]
@@ -642,17 +645,15 @@ namespace TimeController.ViewModels
         private void UpdateDateColumns()
         {
             // 获取该周周一
-            DateTime monday = CurrentDate.Date;
-            while (monday.DayOfWeek != DayOfWeek.Monday)
-                monday = monday.AddDays(-1);
-
-            // 当前选择的月份
+            DateTime monday = GetCurrentWeekMonday();
             int currentMonth = CurrentDate.Month;
 
             for (int i = 0; i < 7; i++)
             {
                 DateTime currentDay = monday.AddDays(i);
                 var column = DateColumns[i];
+
+                column.Date = currentDay;
 
                 // 更新日期文本
                 if (currentDay.Month != currentMonth)
