@@ -1,8 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
+﻿using System.IO;
 using System.Globalization;
-using System.Linq;
 using System.Net.Http;
 using Newtonsoft.Json;
 using CsvHelper;
@@ -10,7 +7,7 @@ using NPOI.SS.UserModel;
 using NPOI.HSSF.UserModel; // .xls
 using NPOI.XSSF.UserModel; // .xlsx
 using TimeController.Models;
-using NPOI.POIFS.FileSystem;
+using System.Threading.Tasks;
 using System.Net.Sockets;
 using System.Text;
 using System.Windows;
@@ -506,5 +503,129 @@ namespace TimeController.Services
                 workbook.Write(fs);
             }
         }
+
+
+        /// <summary>
+        /// 异步解析 Excel 并汇报 (current, total, message)
+        /// </summary>
+        public static Task<List<Course>> ParseExcelAsync(
+            string filePath,
+            IProgress<(int current, int total, string message)> progress)
+        {
+            return Task.Run(() =>
+            {
+                var courses = new List<Course>();
+                IWorkbook workbook;
+                // （这里复用你原有的打开逻辑，省略…）
+                using var stream = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.None);
+                var ext = Path.GetExtension(filePath).ToLowerInvariant();
+                workbook = ext == ".xls" ? (IWorkbook)new HSSFWorkbook(stream) : new XSSFWorkbook(stream);
+
+                var sheet = workbook.GetSheetAt(0);
+                int rowCount = sheet.LastRowNum;
+                progress?.Report((0, rowCount, "正在读取 Excel…"));
+
+                for (int i = 1; i <= rowCount; i++)
+                {
+                    var row = sheet.GetRow(i);
+                    if (row != null)
+                    {
+                        try
+                        {
+                            // 你的行解析逻辑
+                            var name = row.GetCell(0)?.ToString().Trim() ?? "";
+                            var dayOfWeek = row.GetCell(1)?.ToString().Trim() ?? "";
+                            var start = TimeSpan.Parse(row.GetCell(2)?.ToString() ?? "00:00");
+                            var end = TimeSpan.Parse(row.GetCell(3)?.ToString() ?? "00:00");
+                            if (!string.IsNullOrEmpty(name) && start < end)
+                            {
+                                courses.Add(new Course
+                                {
+                                    Name = name,
+                                    DayOfWeek = dayOfWeek,
+                                    StartTime = start,
+                                    EndTime = end,
+                                    Location = row.GetCell(4)?.ToString().Trim() ?? "",
+                                    Teacher = row.GetCell(5)?.ToString().Trim() ?? "",
+                                    WeekPattern = row.LastCellNum > 6 ? row.GetCell(6)?.ToString().Trim() ?? "1-16" : "1-16"
+                                });
+                            }
+                        }
+                        catch { /* 跳过解析失败的行 */ }
+                    }
+
+                    // 汇报当前进度
+                    progress?.Report((i, rowCount, $"读取第 {i} 行，共 {rowCount} 行"));
+                }
+
+                progress?.Report((rowCount, rowCount, "Excel 读取完成"));
+                return courses;
+            });
+        }
+
+
+        /// <summary>
+        /// 异步解析 CSV 并汇报 (current, total, message)
+        /// </summary>
+        public static Task<List<Course>> ParseCsvAsync(
+            string filePath,
+            IProgress<(int current, int total, string message)> progress)
+        {
+            return Task.Run(() =>
+            {
+                // 先统计行数（减去表头）
+                var allLines = File.ReadAllLines(filePath);
+                int totalRows = Math.Max(0, allLines.Length - 1);
+                progress?.Report((0, totalRows, "正在读取 CSV…"));
+
+                var records = new List<Course>();
+                using var reader = new StreamReader(filePath, GetEncoding(filePath));
+                var config = new CsvHelper.Configuration.CsvConfiguration(CultureInfo.InvariantCulture)
+                {
+                    HasHeaderRecord = true,
+                    MissingFieldFound = null,
+                    BadDataFound = null
+                };
+                using var csv = new CsvReader(reader, config);
+
+                csv.Read();
+                csv.ReadHeader();
+
+                int rowIndex = 0;
+                while (csv.Read())
+                {
+                    rowIndex++;
+                    try
+                    {
+                        var startStr = csv.GetField("开始时间") ?? csv.GetField(2);
+                        var endStr = csv.GetField("结束时间") ?? csv.GetField(3);
+                        var start = ParseTimeSpan(startStr);
+                        var end = ParseTimeSpan(endStr);
+
+                        if (start < end)
+                        {
+                            records.Add(new Course
+                            {
+                                Name = csv.GetField("课程名称") ?? csv.GetField(0),
+                                DayOfWeek = csv.GetField("星期几") ?? csv.GetField(1),
+                                StartTime = start,
+                                EndTime = end,
+                                Location = csv.GetField("上课地点") ?? csv.GetField(4),
+                                Teacher = csv.GetField("教师姓名") ?? csv.GetField(5),
+                                WeekPattern = csv.GetField("周次") ?? csv.GetField(6) ?? "1-16"
+                            });
+                        }
+                    }
+                    catch { /* 跳过不合法行 */ }
+
+                    progress?.Report((rowIndex, totalRows, $"解析第 {rowIndex}/{totalRows} 行"));
+                }
+
+                progress?.Report((totalRows, totalRows, "CSV 解析完成"));
+                return records;
+            });
+        }
+
+
     }
 }

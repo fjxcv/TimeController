@@ -164,6 +164,7 @@
                             <RowDefinition Height="40"/>
                             <RowDefinition Height="40"/>
                             <RowDefinition Height="40"/>
+                            <RowDefinition Height="40"/>
                         </Grid.RowDefinitions>
                         <TextBlock Text="0:00" Grid.Row="0" VerticalAlignment="Center" HorizontalAlignment="Left"/>
                         <TextBlock Text="1:00" Grid.Row="1" VerticalAlignment="Center" HorizontalAlignment="Left"/>
@@ -189,6 +190,7 @@
                         <TextBlock Text="21:00" Grid.Row="21" VerticalAlignment="Center" HorizontalAlignment="Left"/>
                         <TextBlock Text="22:00" Grid.Row="22" VerticalAlignment="Center" HorizontalAlignment="Left"/>
                         <TextBlock Text="23:00" Grid.Row="23" VerticalAlignment="Center" HorizontalAlignment="Left"/>
+                        <TextBlock Text="24:00" Grid.Row="24" VerticalAlignment="Center" HorizontalAlignment="Left"/>
                     </Grid>
 
                     <!-- 时间任务区域 -->
@@ -227,7 +229,8 @@
                                             <ColumnDefinition Width="*"/>
                                         </Grid.ColumnDefinitions>
                                         <Grid.RowDefinitions>
-                                            <!-- 24小时，每小时一行 -->
+                                            <!-- 0:00到24:00，每小时一行 -->
+                                            <RowDefinition Height="40"/>
                                             <RowDefinition Height="40"/>
                                             <RowDefinition Height="40"/>
                                             <RowDefinition Height="40"/>
@@ -319,6 +322,7 @@
                                             <ColumnDefinition Width="*"/>
                                         </Grid.ColumnDefinitions>
                                         <Grid.RowDefinitions>
+                                            <RowDefinition Height="40"/>
                                             <RowDefinition Height="40"/>
                                             <RowDefinition Height="40"/>
                                             <RowDefinition Height="40"/>

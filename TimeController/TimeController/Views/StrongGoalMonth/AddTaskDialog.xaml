@@ -101,6 +101,7 @@
                 SelectedDateTime="{Binding StartTimeWrapper, Mode=TwoWay}" 
                 IsEnabled="{Binding IsTimeSelectionEnabled}" />
 
+
             <TextBlock Text="—" 
                FontSize="18" 
                HorizontalAlignment="Center" 
@@ -109,8 +110,9 @@
 
             <!-- 结束时间 -->
             <ui:TimePicker 
-                SelectedDateTime="{Binding EndTimeWrapper, Mode=TwoWay}" 
-                IsEnabled="{Binding IsTimeSelectionEnabled}" />
+                 SelectedDateTime="{Binding EndTimeWrapper, Mode=TwoWay}" 
+                IsEnabled="{Binding IsTimeSelectionEnabled}"/>
+
 
             <!-- 提示占位但默认隐藏（不会闪跳） -->
             <TextBlock

@@ -44,6 +44,12 @@ namespace TimeController.Views.StrongGoalWeek
                     return;
                 }
 
+                if (_viewModel.Name.Length > 15)
+                {
+                    MessageBox.Show("课程名称最多为15个字！", "验证错误", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
+
                 if (string.IsNullOrWhiteSpace(_viewModel.WeekPattern))
                 {
                     MessageBox.Show("上课周次不能为空", "验证错误", MessageBoxButton.OK, MessageBoxImage.Warning);
@@ -283,10 +289,6 @@ namespace TimeController.Views.StrongGoalWeek
             Debug.WriteLine("未找到周次模式，使用默认值1");
             return "1";  // 默认值
         }
-
-
-
-
 
         // 获取星期几对应的索引 (0=周一, 1=周二...)
         private int GetDayIndex(string dayOfWeek)

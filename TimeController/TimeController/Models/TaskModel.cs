@@ -217,7 +217,6 @@ namespace TimeController.Models
             _ => "未知"
         };
 
-
         public int PostponedCount { get; set; } // 非数据库字段，用于复盘卡片
         public bool RequiresSort => true;
 
@@ -236,16 +235,26 @@ namespace TimeController.Models
             if (string.IsNullOrWhiteSpace(Name))
                 errors.Add("任务名称不能为空");
 
+            // 检查时间 - 使用单一的时间验证逻辑
+            if (!IsAllDay && StartTime.HasValue && EndTime.HasValue)
+            {
+                // 特殊处理24:00的情况
+                bool is24Hour = EndTime.Value == TimeSpan.FromHours(24);
+
+                if (!is24Hour && StartTime.Value >= EndTime.Value)
+                {
+                    errors.Add("开始时间必须早于结束时间");
+                }
+            }
+
             if (Name?.Length > 10)
                 errors.Add("任务名称不能超过10个字符");
 
             if (Note?.Length > 20)
                 errors.Add("任务备注不能超过20个字符");
 
-            if (!IsAllDay && StartTime.HasValue && EndTime.HasValue && StartTime > EndTime)
-                errors.Add("开始时间不能晚于结束时间");
-
             return errors;
         }
+
     }
 }

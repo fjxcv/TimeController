@@ -101,8 +101,6 @@
                 Visibility="{Binding HasTimeError, Converter={StaticResource BoolToHiddenConverter}}" />
         </StackPanel>
 
-
-
         <CheckBox Content="全天任务" Grid.Row="4" Grid.Column="0" Margin="80,0,0,0" Grid.ColumnSpan="2"
                   IsChecked="{Binding IsAllDay}" />
 
