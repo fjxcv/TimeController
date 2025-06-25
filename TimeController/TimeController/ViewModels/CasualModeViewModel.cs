@@ -149,7 +149,18 @@ namespace TimeController.ViewModels
             Modules.Add(new ModuleViewModel { Name = "长期备忘" });
 
             // 从持久化设置里读取阈值（默认为 4）
-            RewardThreshold = Math.Max(1, _settingsService.LoadWeeklyTarget());
+            _rewardThreshold = Math.Max(1, _settingsService.LoadWeeklyTarget());
+
+            _settingsService.WeeklyTargetChanged += newVal =>
+            {
+                // UI 线程更新
+                Application.Current.Dispatcher.Invoke(() =>
+                {
+                    _rewardThreshold = newVal;      // 直接改 backing field
+                    OnPropertyChanged(nameof(RewardThreshold));
+                    UpdateProgress();              // 重新计算进度/奖励
+                });
+            };
 
             // 从数据库加载任务
             _ = LoadTasksFromDatabaseAsync();

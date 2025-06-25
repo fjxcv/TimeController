@@ -6,7 +6,7 @@ using System.Threading;
 
 namespace TimeController.Services
 {
-    public class JsonSettingsService : ISettingsService
+    public class JsonSettingsService
     {
         private readonly string _configPath =
             Path.Combine(AppContext.BaseDirectory, "appsettings.json");
@@ -17,7 +17,6 @@ namespace TimeController.Services
         {
             public int WeeklyTarget { get; set; } = 4;
             [JsonConverter(typeof(JsonStringEnumConverter))]
-            public ThemeOption ThemeOption { get; set; } = ThemeOption.Light;
             public bool EnableDailyReviewPrompt { get; set; } = false;
             public int DailyReviewPromptHour { get; set; } = 18;
         }
@@ -29,28 +28,6 @@ namespace TimeController.Services
             if (!File.Exists(_configPath) || new FileInfo(_configPath).Length == 0)
                 SaveConfig(new Config());
         }
-
-        private Config LoadConfig()
-        {
-            _lock.EnterReadLock();
-            try
-            {
-                var json = File.ReadAllText(_configPath);
-                if (string.IsNullOrWhiteSpace(json))
-                    return new Config();
-                return JsonSerializer.Deserialize<Config>(json)
-                       ?? new Config();
-            }
-            catch
-            {
-                return new Config();
-            }
-            finally
-            {
-                _lock.ExitReadLock();
-            }
-        }
-
         private void SaveConfig(Config cfg)
         {
             _lock.EnterWriteLock();
@@ -68,48 +45,6 @@ namespace TimeController.Services
             {
                 _lock.ExitWriteLock();
             }
-        }
-
-        // —— ISettingsService 接口实现 —— 
-
-        public int LoadWeeklyTarget() =>
-            LoadConfig().WeeklyTarget;
-
-        public void SaveWeeklyTarget(int value)
-        {
-            var cfg = LoadConfig();
-            cfg.WeeklyTarget = value;
-            SaveConfig(cfg);
-        }
-
-        public ThemeOption LoadThemeOption() =>
-            LoadConfig().ThemeOption;
-
-        public void SaveThemeOption(ThemeOption option)
-        {
-            var cfg = LoadConfig();
-            cfg.ThemeOption = option;
-            SaveConfig(cfg);
-        }
-
-        public bool LoadEnableDailyReviewPrompt() =>
-            LoadConfig().EnableDailyReviewPrompt;
-
-        public void SaveEnableDailyReviewPrompt(bool value)
-        {
-            var cfg = LoadConfig();
-            cfg.EnableDailyReviewPrompt = value;
-            SaveConfig(cfg);
-        }
-
-        public int LoadDailyReviewPromptHour() =>
-            LoadConfig().DailyReviewPromptHour;
-
-        public void SaveDailyReviewPromptHour(int hour)
-        {
-            var cfg = LoadConfig();
-            cfg.DailyReviewPromptHour = hour;
-            SaveConfig(cfg);
         }
 
     }

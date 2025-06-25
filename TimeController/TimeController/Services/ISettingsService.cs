@@ -8,16 +8,6 @@ using TimeController.ViewModels;
 namespace TimeController.Services
 {
     /// <summary>
-    /// 主题模式选项
-    /// </summary>
-    public enum ThemeOption
-    {
-        Light,
-        Dark,
-        System
-    }
-
-    /// <summary>
     /// 应用设置服务接口
     /// </summary>
     public interface ISettingsService
@@ -25,13 +15,13 @@ namespace TimeController.Services
         int LoadWeeklyTarget();
         void SaveWeeklyTarget(int value);
 
-        ThemeOption LoadThemeOption();
-        void SaveThemeOption(ThemeOption option);
-
         bool LoadEnableDailyReviewPrompt();
         void SaveEnableDailyReviewPrompt(bool value);
 
         int LoadDailyReviewPromptHour();
         void SaveDailyReviewPromptHour(int hour);
+
+        event Action<int>? WeeklyTargetChanged;
     }
+
 }

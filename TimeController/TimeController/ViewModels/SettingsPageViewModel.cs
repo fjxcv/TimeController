@@ -7,13 +7,13 @@ using System.Windows.Input;
 using TimeController.Services;
 using TimeController.Models;
 using MessageBox = iNKORE.UI.WPF.Modern.Controls.MessageBox;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace TimeController.ViewModels
 {
 
     public class SettingsPageViewModel : INotifyPropertyChanged
     {
-        private ThemeOption _selectedThemeOption;
         private int _rewardThreshold;
         private int _dailyReviewPromptOption; // -1 for off, otherwise hour
 
@@ -43,19 +43,12 @@ namespace TimeController.ViewModels
 
             // 读取两项初始值
             RewardThreshold = _settingsService.LoadWeeklyTarget();
-            SelectedThemeOption = _settingsService.LoadThemeOption();
             _enableDailyReviewPrompt = _settingsService.LoadEnableDailyReviewPrompt();
             _dailyReviewPromptHour = _settingsService.LoadDailyReviewPromptHour();
             _dailyReviewPromptOption = _enableDailyReviewPrompt ? _dailyReviewPromptHour : -1;
 
             // 一加载就视作“已保存”状态
             IsDirty = false;
-
-            // 根据 SelectedThemeOption 立刻应用一次主题
-            if (_selectedThemeOption == ThemeOption.System)
-                SubscribeSystemThemeChange();
-            else
-                ApplyAppTheme(_selectedThemeOption == ThemeOption.Light);
 
             // 从存储中读取阈值，默认至少 4
             RewardThreshold = Math.Max(4, _settingsService.LoadWeeklyTarget());
@@ -70,9 +63,11 @@ namespace TimeController.ViewModels
         {
             // 持久化
             _settingsService.SaveWeeklyTarget(RewardThreshold);
-            _settingsService.SaveThemeOption(SelectedThemeOption);
             _settingsService.SaveEnableDailyReviewPrompt(_enableDailyReviewPrompt);
             _settingsService.SaveDailyReviewPromptHour(_dailyReviewPromptHour);
+
+            var casualVm = App.Services.GetRequiredService<CasualModeViewModel>();
+            casualVm.UpdateProgress();
 
             UserSettings.EnableDailyReviewPrompt = _enableDailyReviewPrompt;
             UserSettings.DailyReviewPromptHour = _dailyReviewPromptHour;
@@ -100,14 +95,12 @@ namespace TimeController.ViewModels
             {
                 // 恢复默认值
                 RewardThreshold = 4;                  // 你的默认阈值
-                SelectedThemeOption = ThemeOption.Light;  // 默认日间模式
                 _enableDailyReviewPrompt = false;
                 _dailyReviewPromptHour = 18;
                 DailyReviewPromptOption = -1;
 
                 // 持久化重置后的值
                 _settingsService.SaveWeeklyTarget(RewardThreshold);
-                _settingsService.SaveThemeOption(SelectedThemeOption);
                 _settingsService.SaveEnableDailyReviewPrompt(_enableDailyReviewPrompt);
                 _settingsService.SaveDailyReviewPromptHour(_dailyReviewPromptHour);
 
@@ -140,29 +133,6 @@ namespace TimeController.ViewModels
             }
         }
 
-        /// <summary>
-        /// 三种主题选项：Light / Dark / System
-        /// </summary>
-        public ThemeOption SelectedThemeOption
-        {
-            get => _selectedThemeOption;
-            set
-            {
-                if (_selectedThemeOption == value) return;
-                _selectedThemeOption = value;
-                OnPropertyChanged();
-                IsDirty = true;        // 标记为“未保存”
-                _settingsService.SaveThemeOption(value);
-
-                if (value == ThemeOption.System)
-                    SubscribeSystemThemeChange();
-                else
-                {
-                    UnsubscribeSystemThemeChange();
-                    ApplyAppTheme(value == ThemeOption.Light);
-                }
-            }
-        }
 
         /// <summary>
         /// ComboBox selected value for daily review reminder. -1 means disabled.

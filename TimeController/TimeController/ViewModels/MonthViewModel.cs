@@ -209,7 +209,9 @@ namespace TimeController.ViewModels
             var start = new DateTime(Year, Month, 1);
             var end = start.AddMonths(1).AddDays(-1);
             var tasks = await _taskService.GetTasksForDateRange(start, end);
-            foreach (var group in tasks.Where(t => t.Mode == TaskMode.Strong).GroupBy(t => t.PlannedDate.Date))
+            foreach (var group in tasks
+                 .Where(t => t.Mode == TaskMode.Strong && !t.IsCourseTask)
+                 .GroupBy(t => t.PlannedDate.Date))
             {
                 var sorted = group.OrderBy(t => t.StartTime ?? TimeSpan.Zero);
                 TasksByDate[group.Key] = new ObservableCollection<TaskModel>(sorted);
@@ -311,7 +313,9 @@ namespace TimeController.ViewModels
         public async Task<ObservableCollection<TaskModel>?> GetTasksForDate(DateTime date)
         {
             var tasks = await _taskService.GetTasksForDateRange(date, date);
-            var strongTasks = tasks.Where(t => t.Mode == TaskMode.Strong).ToList();
+            var strongTasks = tasks
+                    .Where(t => t.Mode == TaskMode.Strong && !t.IsCourseTask)
+                    .ToList();
             return strongTasks.Any() ? new ObservableCollection<TaskModel>(strongTasks.OrderBy(t => t.StartTime ?? TimeSpan.Zero)) : null;
         }
 

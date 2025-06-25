@@ -12,7 +12,7 @@
         <converters:CompletedToTextDecorationConverter x:Key="CompletedToTextDecorationConverter"/>
     </UserControl.Resources>
 
-    <Border x:Name="ColumnBorder" Background="#F0F0F0" CornerRadius="4" Margin="2" MinHeight="100"
+    <Border x:Name="ColumnBorder" Background="#E8E8E8" CornerRadius="4" Margin="2" MinHeight="100"
             MouseLeftButtonDown="ColumnBorder_MouseLeftButtonDown">
         <Border.Style>
             <Style TargetType="Border">

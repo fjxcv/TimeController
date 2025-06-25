@@ -61,7 +61,7 @@ namespace TimeController
                     services.AddSingleton<INavigationService, NavigationService>();
 
                     services.AddScoped<IRewardService, RewardService>();
-                    services.AddSingleton<ISettingsService, JsonSettingsService>();
+                    services.AddSingleton<ISettingsService, SettingsService>();
 
                     // ViewModels
                     services.AddTransient<WeekViewModel>();
