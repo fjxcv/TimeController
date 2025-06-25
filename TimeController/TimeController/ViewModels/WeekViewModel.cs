@@ -116,26 +116,41 @@ namespace TimeController.ViewModels
                 });
             }
 
-            if (App.Current.Properties.Contains("SemesterWeeks") &&
-                int.TryParse(App.Current.Properties["SemesterWeeks"].ToString(), out int weeks) &&
-                weeks >= 1)
+            if (Properties.Settings.Default.SemesterWeeks > 0)
             {
-                _semesterWeeks = weeks;
+                _semesterWeeks = Properties.Settings.Default.SemesterWeeks;
             }
 
-            if (App.Current.Properties.Contains("SemesterStartDate") &&
-                DateTime.TryParse(App.Current.Properties["SemesterStartDate"].ToString(), out var start))
+            if (Properties.Settings.Default.SemesterStartDate > DateTime.MinValue)
             {
-                SemesterStartDate = start;
+                SemesterStartDate = Properties.Settings.Default.SemesterStartDate;
+                Debug.WriteLine($"[DEBUG] Properties.Settings.Default.SemesterStartDate={Properties.Settings.Default.SemesterStartDate}");
             }
 
             // 更新日期文本和月份状态
             UpdateDateColumns();
 
+            // 先立即刷新一次学期周文本
+            UpdateSemesterWeekText();
+
             // 如果服务可用，加载任务
             if (_taskService != null)
             {
                 LoadTasksForCurrentWeek();
+                // 异步检查是否有课程任务，如果有则再刷新一次（双保险）
+                Task.Run(async () => {
+                    try
+                    {
+                        var courseTasks = await _taskService.GetAllCourseTasksAsync();
+                        await System.Windows.Application.Current.Dispatcher.InvokeAsync(() => {
+                            UpdateSemesterWeekText();
+                        });
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"检查课程任务时出错: {ex.Message}");
+                    }
+                });
             }
         }
 
@@ -561,7 +576,6 @@ namespace TimeController.ViewModels
             };
         }
 
-
         //学期开始日
         private DateTime? _semesterStartDate;
 
@@ -570,27 +584,12 @@ namespace TimeController.ViewModels
             get => _semesterStartDate;
             set
             {
-                if (_semesterStartDate != value)
-                {
-                    _semesterStartDate = value;
+                _semesterStartDate = value;
+                OnPropertyChanged();
 
-                    // 当设置学期开始日期时，同时更新App.Current.Properties
-                    if (value.HasValue)
-                    {
-                        App.Current.Properties["SemesterStartDate"] = value.Value.ToString("yyyy-MM-dd");
-                        Console.WriteLine($"更新学期开始日期: {value.Value:yyyy-MM-dd}");
-                    }
-                    else
-                    {
-                        if (App.Current.Properties.Contains("SemesterStartDate"))
-                        {
-                            App.Current.Properties.Remove("SemesterStartDate");
-                        }
-                    }
-
-                    OnPropertyChanged();
-                    UpdateSemesterWeekText(); // 更新学期周数文本
-                }
+                // 保存到设置
+                Properties.Settings.Default.SemesterStartDate = value ?? DateTime.MinValue;
+                Properties.Settings.Default.Save();
             }
         }
 
@@ -610,8 +609,9 @@ namespace TimeController.ViewModels
         }
 
         // 更新学期周数
-        private void UpdateSemesterWeekText()
+        public void UpdateSemesterWeekText()
         {
+            Debug.WriteLine($"[DEBUG] UpdateSemesterWeekText called, _semesterStartDate={_semesterStartDate}");
             if (!_semesterStartDate.HasValue)
             {
                 SemesterWeekText = "";
@@ -644,6 +644,165 @@ namespace TimeController.ViewModels
             {
                 SemesterWeekText = ""; // 如果超出学期周数或在学期开始日期之前，则不显示
             }
+            Debug.WriteLine($"[DEBUG] SemesterWeekText set to: {SemesterWeekText}");
+        }
+
+        /// <summary>
+        /// 检查编辑中的任务是否与现有任务或课程冲突（排除自身）
+        /// </summary>
+        /// <param name="editedTask">正在被编辑的任务</param>
+        /// <returns>冲突检测结果与冲突列表</returns>
+        public (bool hasConflict, List<TaskBlock> conflicts) CheckEditingTaskConflicts(TaskModel editedTask)
+        {
+            var conflicts = new List<TaskBlock>();
+
+            // 如果是全天任务或没有设置时间，则不需要检查冲突
+            if (editedTask.IsAllDay || !editedTask.StartTime.HasValue || !editedTask.EndTime.HasValue)
+                return (false, conflicts);
+
+            // 首先检查与其他任务冲突
+            var (hasTaskConflict, taskConflicts) = CheckTimeConflicts(editedTask);
+
+            // 然后检查与课程冲突
+            var (hasCourseConflict, courseConflicts) = CheckCourseConflicts(editedTask);
+
+            // 过滤掉任务自身（以ID为标识）
+            var filteredTaskConflicts = taskConflicts.Where(t => t.Id != editedTask.Id).ToList();
+
+            // 合并冲突列表
+            conflicts.AddRange(filteredTaskConflicts);
+            conflicts.AddRange(courseConflicts);
+
+            Debug.WriteLine($"任务编辑冲突检测 - 任务: {editedTask.Name}, ID: {editedTask.Id}, 发现任务冲突: {filteredTaskConflicts.Count}, 课程冲突: {courseConflicts.Count}");
+
+            return (conflicts.Count > 0, conflicts);
+        }
+
+        /// <summary>
+        /// 处理特定的编辑任务冲突，如果有课程冲突则拒绝保存
+        /// </summary>
+        /// <param name="editedTask">编辑后的任务</param>
+        /// <param name="conflicts">冲突列表</param>
+        /// <returns>是否应继续保存任务</returns>
+        public async Task<bool> HandleEditingTaskConflicts(TaskModel editedTask, List<TaskBlock> conflicts)
+        {
+            // 如果没有冲突，则可以继续保存
+            if (conflicts.Count == 0)
+                return true;
+
+            // 分离课程冲突和任务冲突
+            var courseConflicts = conflicts.Where(c => c.IsCourse).ToList();
+            var taskConflicts = conflicts.Where(c => !c.IsCourse).ToList();
+
+            // 如果有课程冲突，拒绝保存
+            if (courseConflicts.Any())
+            {
+                // 编辑任务冲突不能覆盖课程，直接拒绝保存
+                Debug.WriteLine($"编辑任务与课程冲突，拒绝保存: {editedTask.Name}, ID: {editedTask.Id}");
+                return false;
+            }
+
+            // 对于任务冲突，按照原有逻辑处理（删除冲突任务并保存编辑后的任务）
+            if (taskConflicts.Any())
+            {
+                using (_taskService?.BeginTransaction())
+                {
+                    try
+                    {
+                        await ProcessTaskConflicts(taskConflicts);
+                        _taskService?.CommitTransaction();
+                        return true;
+                    }
+                    catch (Exception ex)
+                    {
+                        _taskService?.RollbackTransaction();
+                        HandleError(ex);
+                        await ReloadTasks();
+                        return false;
+                    }
+                }
+            }
+
+            return true;
+        }
+
+        /// <summary>
+        /// 尝试更新编辑后的任务，如果与课程冲突则拒绝保存
+        /// </summary>
+        /// <param name="editedTask">编辑后的任务</param>
+        /// <param name="originalTask">原始任务（用于在冲突时恢复）</param>
+        /// <returns>是否成功保存</returns>
+        public async Task<bool> TryUpdateEditedTask(TaskModel editedTask, TaskModel originalTask)
+        {
+            // 如果没有实际修改时间相关属性，直接保存
+            if (editedTask.IsAllDay == originalTask.IsAllDay &&
+                editedTask.StartTime == originalTask.StartTime &&
+                editedTask.EndTime == originalTask.EndTime &&
+                editedTask.PlannedDate == originalTask.PlannedDate)
+            {
+                // 直接保存非时间相关的修改
+                await _taskService.UpdateTaskAsync(editedTask);
+                return true;
+            }
+
+            // 检查冲突
+            var (hasConflict, conflicts) = CheckEditingTaskConflicts(editedTask);
+
+            // 分离课程冲突
+            var courseConflicts = conflicts.Where(c => c.IsCourse).ToList();
+
+            // 如果有课程冲突，拒绝保存
+            if (courseConflicts.Any())
+            {
+                Debug.WriteLine($"编辑任务与课程冲突，拒绝保存: {editedTask.Name}, ID: {editedTask.Id}");
+
+                // 恢复任务的原始时间属性
+                editedTask.IsAllDay = originalTask.IsAllDay;
+                editedTask.StartTime = originalTask.StartTime;
+                editedTask.EndTime = originalTask.EndTime;
+                editedTask.PlannedDate = originalTask.PlannedDate;
+
+                // 如果用户修改了其他属性（如名称、备注等），仍然保存这些修改
+                await _taskService.UpdateTaskAsync(editedTask);
+
+                // 返回false表示时间修改未保存
+                return false;
+            }
+
+            // 处理与其他任务的冲突
+            var taskConflicts = conflicts.Where(c => !c.IsCourse).ToList();
+            if (taskConflicts.Any())
+            {
+                // 对于其他任务冲突，可以选择删除冲突任务后保存
+                using (_taskService?.BeginTransaction())
+                {
+                    try
+                    {
+                        await ProcessTaskConflicts(taskConflicts);
+                        await _taskService.UpdateTaskAsync(editedTask);
+                        _taskService?.CommitTransaction();
+                        return true;
+                    }
+                    catch (Exception ex)
+                    {
+                        _taskService?.RollbackTransaction();
+                        HandleError(ex);
+
+                        // 恢复任务的原始时间属性
+                        editedTask.IsAllDay = originalTask.IsAllDay;
+                        editedTask.StartTime = originalTask.StartTime;
+                        editedTask.EndTime = originalTask.EndTime;
+                        editedTask.PlannedDate = originalTask.PlannedDate;
+
+                        await ReloadTasks();
+                        return false;
+                    }
+                }
+            }
+
+            // 无冲突，直接保存
+            await _taskService.UpdateTaskAsync(editedTask);
+            return true;
         }
 
 
@@ -1080,9 +1239,14 @@ namespace TimeController.ViewModels
                 if (_semesterWeeks != value && value >= 1)
                 {
                     _semesterWeeks = value;
-                    App.Current.Properties["SemesterWeeks"] = value.ToString();
                     OnPropertyChanged();
-                    UpdateSemesterWeekText(); // 更新学期周数文本
+
+                    // 保存到设置
+                    Properties.Settings.Default.SemesterWeeks = value;
+                    Properties.Settings.Default.Save();
+
+                    // 立即更新学期周文本
+                    UpdateSemesterWeekText();
                 }
             }
         }

@@ -16,6 +16,7 @@ using TimeController;
 using MessageBox = iNKORE.UI.WPF.Modern.Controls.MessageBox;
 using NPOI.SS.UserModel;
 using NPOI.XSSF.UserModel;
+using NPOI.Util.Collections;
 
 namespace TimeController.ViewModels
 {
@@ -85,12 +86,11 @@ namespace TimeController.ViewModels
             int daysUntilMonday = ((int)DayOfWeek.Monday - (int)today.DayOfWeek + 7) % 7;
             SemesterStartDate = today.AddDays(daysUntilMonday);
 
-            // 从应用设置中获取学期周数（如果有）
-            if (App.Current.Properties.Contains("SemesterWeeks") &&
-                int.TryParse(App.Current.Properties["SemesterWeeks"].ToString(), out int weeks) &&
-                weeks >= 1)
+            // 读取设置
+            _semesterWeeks = Properties.Settings.Default.SemesterWeeks > 0 ? Properties.Settings.Default.SemesterWeeks : 18;
+            if (Properties.Settings.Default.SemesterStartDate > DateTime.MinValue)
             {
-                _semesterWeeks = weeks;
+                _semesterStartDate = Properties.Settings.Default.SemesterStartDate;
             }
 
             ImportFromUrlCommand = new RelayCommand(_ => ImportFromUrl(), _ => !IsImporting);
@@ -112,10 +112,19 @@ namespace TimeController.ViewModels
                     OnPropertyChanged();
 
                     // 将学期周数保存到应用设置中
-                    App.Current.Properties["SemesterWeeks"] = value.ToString();
+                    Properties.Settings.Default.SemesterWeeks = value;
+                    Properties.Settings.Default.Save();
+
+                    // 立即通知WeekViewModel更新学期周数文本
+                    App.Current.Dispatcher.InvokeAsync(() => {
+                        // 触发事件通知学期信息更新
+                        SemesterInfoUpdated?.Invoke(SemesterStartDate, value);
+                        Console.WriteLine($"已将学期周数更新为: {value}，通知WeekViewModel更新显示");
+                    });
                 }
             }
         }
+
 
         // 从教务导入课程
         private async void ImportFromUrl()
@@ -293,6 +302,9 @@ namespace TimeController.ViewModels
 
                 // 触发事件通知已保存课程及开学日期
                 CoursesSavedWithStartDate?.Invoke(SemesterStartDate);
+
+                // 添加这一行，确保SemesterInfoUpdated事件也被触发
+                SemesterInfoUpdated?.Invoke(SemesterStartDate, SemesterWeeks);
 
                 return true;
             }
@@ -519,11 +531,28 @@ namespace TimeController.ViewModels
                 });
 
                 // 保存学期周数到全局设置 - 这需要在UI线程
-                await Application.Current.Dispatcher.InvokeAsync(() =>
+                await Application.Current.Dispatcher.InvokeAsync(async () =>
                 {
                     App.Current.Properties["SemesterWeeks"] = SemesterWeeks.ToString();
                     App.Current.Properties["SemesterStartDate"] = SemesterStartDate.ToString("yyyy-MM-dd");
+                    // 关键：保存到磁盘
+                    if (App.Current is Application app && app is not null)
+                    {
+                        if (app is System.Windows.Application wpfApp)
+                        {
+                            // WPF Application 没有 SavePropertiesAsync
+                            Properties.Settings.Default.Save();
+                        }
+                        else
+                        {
+                            // 如果有 SavePropertiesAsync 方法
+                            var saveMethod = app.GetType().GetMethod("SavePropertiesAsync");
+                            if (saveMethod != null)
+                                await (Task)saveMethod.Invoke(app, null);
+                        }
+                    }
                 });
+
 
                 // 根据操作类型显示不同的成功消息 - 这需要在UI线程
                 string operationMessage = replaceCourses ? "替换" : "添加";

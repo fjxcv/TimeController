@@ -21,6 +21,8 @@ using TimeController.ViewModels;
 using Page = iNKORE.UI.WPF.Modern.Controls.Page;
 using MessageBox = iNKORE.UI.WPF.Modern.Controls.MessageBox;
 using static TimeController.ViewModels.WeekViewModel;
+using System.Diagnostics;
+using System.IO;
 
 namespace TimeController.Views.StrongGoalWeek
 {
@@ -39,7 +41,7 @@ namespace TimeController.Views.StrongGoalWeek
             try
             {
                 // 从服务容器获取 TaskService
-                _viewModel = App.Services.GetRequiredService<WeekViewModel>();
+                _viewModel = App.AppHost.Services.GetRequiredService<WeekViewModel>();
 
                 DataContext = _viewModel;
 
@@ -180,7 +182,7 @@ namespace TimeController.Views.StrongGoalWeek
         }
 
 
-        //导入改1
+        // 导入课表按钮点击
         private void ImportSchedule_Click(object sender, RoutedEventArgs e)
         {
             var importWindow = new ImportScheduleWindow
@@ -194,27 +196,58 @@ namespace TimeController.Views.StrongGoalWeek
             if (importVM != null)
             {
                 // 订阅开学日期事件
-
                 importVM.CoursesSavedWithStartDate += (startDate) =>
                 {
-                    Console.WriteLine($"收到课程保存事件，开学日期: {startDate:yyyy-MM-dd}");
+                    Debug.WriteLine($"收到课程保存事件，开学日期: {startDate:yyyy-MM-dd}");
                     // 设置学期开始日期但不改变当前日期
                     _viewModel.SemesterStartDate = startDate;
                 };
+
+                // 订阅学期信息更新事件，同时获取开学日期和周数
+                importVM.SemesterInfoUpdated += (startDate, weeks) =>
+                {
+                    Debug.WriteLine($"收到学期信息更新事件，开学日期: {startDate:yyyy-MM-dd}, 周数: {weeks}");
+                    _viewModel.SemesterStartDate = startDate;
+                    _viewModel.SemesterWeeks = weeks; // 这里设置周数
+
+                    // 强制更新学期周文本
+                    _viewModel.UpdateSemesterWeekText();
+                    // 添加这一行，确保设置被正确保存和应用
+                    FixSemesterWeeksValue();
+                };
             }
+
             // 添加关闭事件
             importWindow.Closed += (s, args) =>
             {
-                Console.WriteLine("导入窗口已关闭，重新加载周视图数据");
                 if (importVM != null && importVM.HasImportedCourses)
                 {
-                    // 获取所选的开学日期，并跳转到那一周
-                    //_viewModel.CurrentDate = importVM.SemesterStartDate;
+                    // 重新加载周视图数据
                     _viewModel.LoadTasksForCurrentWeek();
                 }
             };
 
             importWindow.ShowDialog();
+        }
+
+        /// <summary>
+        /// 修复学期周数不生效的问题
+        /// </summary>
+        private void FixSemesterWeeksValue()
+        {
+            // 确保当前设置的SemesterWeeks能够被正确应用
+            Console.WriteLine($"当前设置的学期周数为: {_viewModel.SemesterWeeks}");
+
+            // 强制保存设置
+            Properties.Settings.Default.SemesterWeeks = _viewModel.SemesterWeeks;
+            Properties.Settings.Default.Save();
+
+            // 再次调用更新文本的方法
+            _viewModel.UpdateSemesterWeekText();
+
+            // 输出调试信息
+            Console.WriteLine($"修复后的学期周数为: {Properties.Settings.Default.SemesterWeeks}");
+            Console.WriteLine($"当前学期周文本: {_viewModel.SemesterWeekText}");
         }
 
         //手动添加课表
@@ -323,7 +356,7 @@ namespace TimeController.Views.StrongGoalWeek
         /// - 如果是课程任务，什么也不弹（或继续原有详情卡逻辑）
         /// - 否则弹出编辑窗口
         /// </summary>
-        private void TaskBlock_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+        private async void TaskBlock_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
             // 拿到绑定的 TaskBlock
             if (!(sender is FrameworkElement elt) || !(elt.Tag is TaskBlock block))
@@ -333,27 +366,120 @@ namespace TimeController.Views.StrongGoalWeek
             if (block.IsCourse)
                 return;  // 或者：e.Handled = false; 让别的 MouseDown 逻辑接管
 
-            // 以下只处理“非课程”——弹编辑对话框
+            // 以下只处理"非课程"——弹编辑对话框
             var vm = (WeekViewModel)DataContext;
             var taskModel = vm.Tasks.FirstOrDefault(t => t.Id == block.Id);
             if (taskModel == null) return;
 
+            // 保存任务的原始数据副本，用于后续比较
+            var originalTask = new TaskModel
+            {
+                Id = taskModel.Id,
+                Name = taskModel.Name,
+                Note = taskModel.Note,
+                PlannedDate = taskModel.PlannedDate,
+                StartTime = taskModel.StartTime,
+                EndTime = taskModel.EndTime,
+                IsAllDay = taskModel.IsAllDay
+            };
+
+            // 打开编辑窗口
             var dialog = new EditTaskWindow(taskModel)
             {
                 Owner = Window.GetWindow(this) ?? Application.Current.MainWindow
             };
+
             if (dialog.ShowDialog() == true)
             {
-                vm.LoadTasksForCurrentWeek();
+                try
+                {
+                    // 如果任务的时间或日期发生了变化，才需要检查冲突
+                    if (!taskModel.IsAllDay &&
+                        (taskModel.StartTime != originalTask.StartTime ||
+                         taskModel.EndTime != originalTask.EndTime ||
+                         taskModel.PlannedDate != originalTask.PlannedDate ||
+                         taskModel.IsAllDay != originalTask.IsAllDay))
+                    {
+                        // 检查冲突
+                        var (hasConflict, conflicts) = vm.CheckEditingTaskConflicts(taskModel);
+
+                        // 处理课程冲突
+                        var courseConflicts = conflicts.Where(c => c.IsCourse).ToList();
+                        if (courseConflicts.Any())
+                        {
+                            var courseNames = string.Join("\n", courseConflicts.Select(c => $"- {c.Name}"));
+                            MessageBox.Show(
+                                $"无法保存任务，与以下课程时间冲突:\n{courseNames}\n\n请修改任务时间以避免与课程冲突。",
+                                "课程时间冲突",
+                                MessageBoxButton.OK,
+                                MessageBoxImage.Warning);
+
+                            // 恢复任务原始数据（时间相关属性）
+                            taskModel.PlannedDate = originalTask.PlannedDate;
+                            taskModel.StartTime = originalTask.StartTime;
+                            taskModel.EndTime = originalTask.EndTime;
+                            taskModel.IsAllDay = originalTask.IsAllDay;
+
+                            // 其他非时间属性（如名称、备注等）仍保存变更
+                            await vm.TaskService.UpdateTaskAsync(taskModel);
+                        }
+                        else
+                        {
+                            // 处理与其他任务的冲突
+                            var taskConflicts = conflicts.Where(c => !c.IsCourse).ToList();
+                            if (taskConflicts.Any())
+                            {
+                                var taskNames = string.Join("\n", taskConflicts.Select(c => $"- {c.Name}"));
+                                string message = $"修改后的任务与以下任务时间冲突:\n{taskNames}\n\n确认后将会删除原有冲突的任务，是否继续?";
+
+                                var result = MessageBox.Show(
+                                    message,
+                                    "任务时间冲突",
+                                    MessageBoxButton.YesNo,
+                                    MessageBoxImage.Warning);
+
+                                if (result == MessageBoxResult.Yes)
+                                {
+                                    // 处理冲突并保存编辑后的任务
+                                    await vm.HandleConflictAndAddTask(taskModel, taskConflicts);
+                                }
+                                else
+                                {
+                                    // 用户取消，恢复任务原始数据
+                                    taskModel.PlannedDate = originalTask.PlannedDate;
+                                    taskModel.StartTime = originalTask.StartTime;
+                                    taskModel.EndTime = originalTask.EndTime;
+                                    taskModel.IsAllDay = originalTask.IsAllDay;
+
+                                    // 保存非时间属性的变更
+                                    await vm.TaskService.UpdateTaskAsync(taskModel);
+                                }
+                            }
+                            else
+                            {
+                                // 无冲突，直接保存
+                                await vm.TaskService.UpdateTaskAsync(taskModel);
+                            }
+                        }
+                    }
+                    else
+                    {
+                        // 时间没有变化，直接保存
+                        await vm.TaskService.UpdateTaskAsync(taskModel);
+                    }
+
+                    // 刷新视图
+                    vm.LoadTasksForCurrentWeek();
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"保存任务失败: {ex.Message}", "错误", MessageBoxButton.OK, MessageBoxImage.Error);
+                }
             }
 
             // 标记已处理，避免其他 MouseDown 再次响应
             e.Handled = true;
         }
-
-
-
-
 
         // 关闭详情卡片时，如果点击的不是卡片本身或其子元素，则隐藏卡片
         public void CloseTaskDetailsCardIfOutside(DependencyObject clickedElement)
