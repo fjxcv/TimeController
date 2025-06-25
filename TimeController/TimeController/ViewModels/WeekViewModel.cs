@@ -70,7 +70,7 @@ namespace TimeController.ViewModels
         public ICommand NextWeekCommand { get; private set; }
         public ICommand PreviousMonthCommand { get; private set; }
         public ICommand NextMonthCommand { get; private set; }
-        public ICommand ToggleCompleteCommand { get; }
+        public ICommand ToggleCompleteCommand { get; private set; }
 
         public WeekViewModel()
               : this(
@@ -98,7 +98,27 @@ namespace TimeController.ViewModels
 
             SaveRequested += OnTaskSaved;
             RemoveTaskBlockCommand = new RelayCommand<TaskBlock>(RemoveTaskBlock);
-            ToggleColumnExpandCommand = new RelayCommand<int>(ToggleColumnExpand);
+            ToggleCompleteCommand = new RelayCommand<TaskBlock>(async block =>
+            {
+                // 找到对应的 TaskModel
+                var model = Tasks.FirstOrDefault(t => t.Id == block.Id);
+                if (model == null) return;
+
+                // 切换状态
+                model.Status = model.Status == MyTaskStatus.Completed
+                               ? MyTaskStatus.Pending
+                               : MyTaskStatus.Completed;
+
+                // 更新到数据库
+                await _taskService.UpdateTaskAsync(model);
+
+                // 同步 TaskBlock 的显示
+                block.Status = model.Status;
+
+                // 如果你还想刷新整个视图
+                OnPropertyChanged(nameof(TimedTaskBlocks));
+                // 或者只刷新这个 block：UI 会因为 INotifyPropertyChanged 而自动更新 TextDecorations
+            });
 
             DateTime monday = GetCurrentWeekMonday();
 
