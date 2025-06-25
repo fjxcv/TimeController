@@ -250,8 +250,8 @@ namespace TimeController.Models
             if (Name?.Length > 10)
                 errors.Add("任务名称不能超过10个字符");
 
-            if (Note?.Length > 20)
-                errors.Add("任务备注不能超过20个字符");
+            if (Note?.Length > 200)
+                errors.Add("任务备注不能超过200个字符");
 
             return errors;
         }

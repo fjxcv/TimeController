@@ -112,10 +112,6 @@ namespace TimeController.ViewModels
             NavigateToEverydayCommand = new RelayCommand(_ => { }); // 当前页，不跳转
             NavigateToEveryweekCommand = new RelayCommand(_ => NavigateToEveryweekRequested?.Invoke());
 
-            PostponeTaskCommand = new RelayCommand<TaskModel>(PostponeTask);
-            AbandonTaskCommand = new RelayCommand<TaskModel>(AbandonTask);
-            BatchProcessCommand = new RelayCommand<object>(BatchProcess);
-
 
             ReviewReasons = new ObservableCollection<string>
             {
@@ -144,12 +140,6 @@ namespace TimeController.ViewModels
 
         }
 
-        private async Task ResetDataForDevelopment()
-        {
-        #if DEBUG
-                    await _taskService.ResetTaskDataAsync();
-        #endif
-        }
         private async void LoadTasksForDate(DateTime date)
         {
             // 清空现有任务
@@ -159,10 +149,10 @@ namespace TimeController.ViewModels
             // 从数据库或服务中获取指定日期的任务
             var allTasks = await _taskService.GetTasksForDate(date);
 
-            // 过滤出强管理任务
+            // 过滤出强管理的非课程任务
             var tasks = allTasks
-                .Where(t => t.Mode == TaskMode.Strong)
-                .ToList();
+            .Where(t => t.Mode == TaskMode.Strong && !t.IsCourseTask)
+            .ToList();
 
             //调试！！！！
             System.Diagnostics.Debug.WriteLine($"任务加载数: {tasks.Count}");
@@ -193,14 +183,18 @@ namespace TimeController.ViewModels
                 t.PlannedDate.Date == today));      //只要PlannedDate == date，就显示
 
 
-            // 获取所有 pending 任务
+            // 获取所有 pending 任务，排除课程任务
             var allPending = await _taskService.GetAllPendingTasksAsync();
 
             OverduePendingTasks = new ObservableCollection<TaskModel>(
                 allPending
-                  .Where(t => t.Mode == TaskMode.Strong
-                           && t.Status == MyTaskStatus.Pending
-                           && t.PlannedDate.Date < today));
+                  .Where(t =>
+                        t.Mode == TaskMode.Strong
+                        && t.Status == MyTaskStatus.Pending
+                        && t.PlannedDate.Date < today
+                        && !t.IsCourseTask));
+
+            Debug.WriteLine($"📝 过期任务数 = {OverduePendingTasks.Count}");
 
             OnPropertyChanged(nameof(PendingTasksCount));
 
@@ -298,31 +292,6 @@ namespace TimeController.ViewModels
 
         }
 
-        private void OnTaskSaved(TaskModel task)
-        {
-            var current = SelectedDate ?? DateTime.Today;
-            if (task.PlannedDate.Date == current.Date)
-            {
-                LoadTasksForDate(current);
-            }
-        }
-
-
-
-        private void PostponeTask(TaskModel task)
-        {
-            // TODO: 实现推迟任务的逻辑
-        }
-
-        private void AbandonTask(TaskModel task)
-        {
-            // TODO: 实现放弃任务的逻辑
-        }
-
-        private void BatchProcess(object parameter)
-        {
-            // TODO: 实现批量处理任务的逻辑
-        }
 
         public event PropertyChangedEventHandler? PropertyChanged;
         protected void OnPropertyChanged(string propertyName) =>

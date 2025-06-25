@@ -10,12 +10,23 @@ namespace TimeController.Converters
     {
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
-            if (value is ICollection collection)
+            int count = 0;
+
+            // 支持 int
+            if (value is int i)
             {
-                return collection.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
+                count = i;
             }
-            return Visibility.Collapsed;
+            // 支持 ICollection
+            else if (value is ICollection collection)
+            {
+                count = collection.Count;
+            }
+            // 其它类型一律当 0 处理
+
+            return count > 0 ? Visibility.Visible : Visibility.Collapsed;
         }
+
 
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
         {

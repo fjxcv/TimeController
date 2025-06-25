@@ -162,13 +162,15 @@ namespace TimeController.ViewModels
             var tasksThisWeek = await _taskService.GetTasksForDateRange(weekStart, weekEnd);
             var allHistory = await _taskService.GetAllTasksAsync();
 
-            // 1. 拉出本周所在日期范围内的所有“按计划”任务
+            // 1. 拉出本周所在日期范围内的所有“按计划”任务，排除课程任务
             var allThisWeek = await _taskService.GetTasksForDateRange(weekStart, weekStart.AddDays(6));
             var scheduledTasks = allThisWeek
-                .Where(t => t.Mode == TaskMode.Strong)
+                .Where(t => t.Mode == TaskMode.Strong && !t.IsCourseTask)
                 .ToList();
 
             // 2. 按状态分类：本周“完成” & “未完成”
+            WeeklyCompletedTasks.Clear();
+            WeeklyUncompletedTasks.Clear();
             foreach (var t in scheduledTasks)
             {
                 if (t.Status == MyTaskStatus.Completed)
@@ -179,7 +181,9 @@ namespace TimeController.ViewModels
 
             // 3. 拉出所有任务，找出本周发生过的“推迟/放弃”事件
             var allTasks = await _taskService.GetAllTasksAsync();
-            var strongHistory = allTasks.Where(t => t.Mode == TaskMode.Strong);
+            var strongHistory = allTasks
+                .Where(t => t.Mode == TaskMode.Strong && !t.IsCourseTask);
+
 
             var postponedThisWeek = strongHistory
                 .Where(t => t.PostponedAt >= weekStart && t.PostponedAt < weekEnd);
@@ -208,6 +212,7 @@ namespace TimeController.ViewModels
             // 生成完成率卡片
             LoadChart(scheduledTasks);
 
+            // 触发属性变更通知
             OnPropertyChanged(nameof(WeeklyCompletedTasks));
             OnPropertyChanged(nameof(WeeklyUncompletedTasks));
             OnPropertyChanged(nameof(SkippedTasks));
