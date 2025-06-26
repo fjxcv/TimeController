@@ -246,36 +246,74 @@ namespace TimeController.ViewModels
         /// <summary>
         /// 一步完成课程的添加和保存
         /// </summary>
+        /// <summary>
+        /// 一步完成课程的添加和保存
+        /// </summary>
+        /// <summary>
+        /// 一步完成课程的添加和保存
+        /// </summary>
+        /// <summary>
+        /// 一步完成课程的添加和保存
+        /// </summary>
         public async Task<List<TaskModel>> AddAndSaveCourse(Course course)
         {
-            // 先检查是否与数据库中的所有课程冲突
-            var (hasConflict, conflictCourses) = await CheckCourseTimeConflictsWithDatabase(course);
+            Debug.WriteLine($"开始添加课程: {course.Name}, 星期: {course.DayOfWeek}, 时间: {course.StartTime}-{course.EndTime}, 周次: {course.WeekPattern}");
 
-            // 如果有冲突，抛出异常并返回冲突信息
-            if (hasConflict)
+            try
             {
-                var conflictNames = string.Join("\n- ", conflictCourses.Select(c => c.Name));
-                throw new InvalidOperationException($"新课程与以下已有课程时间冲突:\n- {conflictNames}\n\n请修改上课时间以避免冲突。");
+                // 1. 先检查是否与数据库中的所有课程冲突
+                var (hasConflict, conflictCourses) = await CheckCourseTimeConflictsWithDatabase(course);
+
+                // 2. 如果有冲突，抛出异常并返回冲突信息
+                if (hasConflict)
+                {
+                    var conflictNames = string.Join("\n- ", conflictCourses.Select(c => $"{c.Name} ({c.DayOfWeek} {c.StartTime}-{c.EndTime})"));
+                    throw new InvalidOperationException($"新课程与以下已有课程时间冲突:\n- {conflictNames}\n\n请修改上课时间以避免冲突。");
+                }
+
+                // 3. 转换为任务模型
+                TaskModel taskModel = ConvertCourseToTaskModel(course);
+                var result = new List<TaskModel> { taskModel };
+
+                // 4. 使用事务保障数据一致性
+                using (var transaction = _taskService.BeginTransaction())
+                {
+                    try
+                    {
+                        // 5. 保存到数据库
+                        await _taskService.UpdateTaskAsync(taskModel);
+                        Debug.WriteLine($"课程 {course.Name} 已保存到数据库，ID={taskModel.Id}");
+
+                        // 6. 提交事务
+                        _taskService.CommitTransaction();
+
+                        // 7. 添加到当前视图
+                        Tasks.Add(taskModel);
+
+                        // 8. 刷新当前周视图
+                        LoadTasksForCurrentWeek();
+
+                        return result;
+                    }
+                    catch (Exception ex)
+                    {
+                        // 回滚事务
+                        _taskService.RollbackTransaction();
+                        Debug.WriteLine($"保存课程时出错，已回滚事务: {ex.Message}");
+                        throw new InvalidOperationException($"保存课程时出错: {ex.Message}", ex);
+                    }
+                }
             }
-
-            // 1. 转换为任务模型
-            TaskModel taskModel = ConvertCourseToTaskModel(course);
-
-            // 2. 保存到数据库
-            if (_taskService != null)
+            catch (InvalidOperationException)
             {
-                await _taskService.UpdateTaskAsync(taskModel);
-                Console.WriteLine($"课程 {course.Name} 已保存到数据库，ID={taskModel.Id}");
+                // 直接重新抛出业务逻辑异常
+                throw;
             }
-
-            // 3. 添加到任务列表
-            Tasks.Add(taskModel);
-
-            // 4. 刷新当前视图
-            LoadTasksForCurrentWeek();
-
-            // 5. 返回包含单个任务模型的列表
-            return new List<TaskModel> { taskModel };
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"添加课程过程中出错: {ex.Message}\n{ex.StackTrace}");
+                throw new InvalidOperationException($"添加课程失败: {ex.Message}", ex);
+            }
         }
 
         /// <summary>
@@ -410,6 +448,10 @@ namespace TimeController.ViewModels
 
             return (conflicts.Count > 0, conflicts);
         }
+
+
+
+
 
         /// <summary>
         /// 从注释中提取周次模式
@@ -1436,6 +1478,7 @@ namespace TimeController.ViewModels
         private void Grid_MouseEnter(object sender, MouseEventArgs e)
         {
             if (sender is Grid g && g.FindName("ActionButtons") is UIElement btns)
+                //显示按钮
                 btns.Visibility = Visibility.Visible;
         }
 
@@ -1443,6 +1486,7 @@ namespace TimeController.ViewModels
         private void Grid_MouseLeave(object sender, MouseEventArgs e)
         {
             if (sender is Grid g && g.FindName("ActionButtons") is UIElement btns)
+                //隐藏按钮
                 btns.Visibility = Visibility.Collapsed;
         }
 

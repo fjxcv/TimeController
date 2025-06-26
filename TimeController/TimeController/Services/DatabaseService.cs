@@ -24,58 +24,75 @@ namespace TimeController.Services
                 throw new InvalidOperationException("任务服务不可用");
             }
 
-            // 创建任务列表，避免一一保存
-            var allTasks = new List<TaskModel>();
-
-            // 确保开学日期是周一
-            DateTime semesterFirstMonday = semesterStartDate;
-            while (semesterFirstMonday.DayOfWeek != DayOfWeek.Monday)
+            // 使用事务确保操作的原子性
+            using (var transaction = _taskService.BeginTransaction())
             {
-                semesterFirstMonday = semesterFirstMonday.AddDays(-1);
-            }
-
-            foreach (var course in courses)
-            {
-                // 确保 WeekPattern 不为空
-                if (string.IsNullOrWhiteSpace(course.WeekPattern))
-                {
-                    course.WeekPattern = "1-16"; // 默认为1-16周
-                }
-
-                Console.WriteLine($"正在保存课程 {course.Name}，周次模式: {course.WeekPattern}");
-
-                // 解析周次模式
-                HashSet<int> weeks;
                 try
                 {
-                    weeks = TimeController.ViewModels.AddCourseViewModel.ParseWeekPattern(course.WeekPattern);
-                    Console.WriteLine($"解析周次: {string.Join(", ", weeks)}");
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine($"周次解析失败: {ex.Message}, 默认为第1周");
-                    weeks = new HashSet<int> { 1 };
-                }
+                    // 创建任务列表，避免一一保存
+                    var allTasks = new List<TaskModel>();
 
-                // 针对每个周次创建独立的任务
-                foreach (int week in weeks)
-                {
-                    var task = CreateTaskForWeek(course, week, semesterFirstMonday);
-                    allTasks.Add(task);
-                }
-            }
+                    // 确保开学日期是周一
+                    DateTime semesterFirstMonday = semesterStartDate;
+                    while (semesterFirstMonday.DayOfWeek != DayOfWeek.Monday)
+                    {
+                        semesterFirstMonday = semesterFirstMonday.AddDays(-1);
+                    }
 
-            // 批量保存所有任务
-            int batchSize = 50; // 每批处理的任务数
-            for (int i = 0; i < allTasks.Count; i += batchSize)
-            {
-                var batch = allTasks.Skip(i).Take(batchSize);
-                foreach (var task in batch)
+                    foreach (var course in courses)
+                    {
+                        // 确保 WeekPattern 不为空
+                        if (string.IsNullOrWhiteSpace(course.WeekPattern))
+                        {
+                            course.WeekPattern = "1-16"; // 默认为1-16周
+                        }
+
+                        Console.WriteLine($"正在保存课程 {course.Name}，周次模式: {course.WeekPattern}");
+
+                        // 解析周次模式
+                        HashSet<int> weeks;
+                        try
+                        {
+                            weeks = TimeController.ViewModels.AddCourseViewModel.ParseWeekPattern(course.WeekPattern);
+                            Console.WriteLine($"解析周次: {string.Join(", ", weeks)}");
+                        }
+                        catch (Exception ex)
+                        {
+                            Console.WriteLine($"周次解析失败: {ex.Message}, 默认为第1周");
+                            weeks = new HashSet<int> { 1 };
+                        }
+
+                        // 针对每个周次创建独立的任务
+                        foreach (int week in weeks)
+                        {
+                            var task = CreateTaskForWeek(course, week, semesterFirstMonday);
+                            allTasks.Add(task);
+                        }
+                    }
+
+                    // 批量保存
+                    int batchSize = 50; // 每批处理的任务数
+                    for (int i = 0; i < allTasks.Count; i += batchSize)
+                    {
+                        var batch = allTasks.Skip(i).Take(batchSize);
+                        foreach (var task in batch)
+                        {
+                            await _taskService.UpdateTaskAsync(task);
+                        }
+                    }
+
+                    // 提交事务
+                    _taskService.CommitTransaction();
+                }
+                catch
                 {
-                    await _taskService.UpdateTaskAsync(task);
+                    // 错误时回滚事务
+                    _taskService.RollbackTransaction();
+                    throw;
                 }
             }
         }
+
 
         // 新增方法：为特定周次创建任务
         private TaskModel CreateTaskForWeek(Course course, int week, DateTime semesterFirstMonday)
