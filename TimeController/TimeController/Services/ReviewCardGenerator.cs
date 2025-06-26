@@ -27,8 +27,8 @@ namespace TimeController.Services
             // 卡片 2：重复推迟提示
             cards.Add(GenerateRepeatedPostponeCard(taskHistory, weekStart, weekEnd));
 
-            // 卡片 3: 跳过的任务建议
-            cards.Add(GenerateTopReasonCard(tasksThisWeek));
+            // 卡片 3: 跳过的任务原因
+            cards.Add(GenerateTopReasonCard(taskHistory, weekStart, weekEnd));
             // 卡片 4: 过度规划提示
             cards.Add(GenerateOverPlanningCard(tasksThisWeek));
             // 卡片 5: 生活任务平衡
@@ -97,13 +97,15 @@ namespace TimeController.Services
             return new ReviewCardModel(icon, title, message, CardAccentHelper.GetAccentColor(title));
         }
 
-        private ReviewCardModel GenerateTopReasonCard(List<TaskModel> tasks)
+        private ReviewCardModel GenerateTopReasonCard(List<TaskModel> history, DateTime weekStart, DateTime weekEnd)
         {
             var icon = "🧠";
             var title = "任务跳过原因分析";
 
-            var topReason = tasks
-                .Where(t => t.Status == MyTaskStatus.Postponed || t.Status == MyTaskStatus.Abandoned)
+            var topReason = history
+                .Where(t =>
+                    (t.Status == MyTaskStatus.Pending && t.PostponedAt >= weekStart && t.PostponedAt < weekEnd)
+                    || (t.Status == MyTaskStatus.Abandoned && t.AbandonedAt >= weekStart && t.AbandonedAt < weekEnd))
                 .Select(t => t.Reason)
                 .Where(r => !string.IsNullOrWhiteSpace(r))
                 .GroupBy(r => r)
