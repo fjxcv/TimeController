@@ -246,15 +246,6 @@ namespace TimeController.ViewModels
         /// <summary>
         /// 一步完成课程的添加和保存
         /// </summary>
-        /// <summary>
-        /// 一步完成课程的添加和保存
-        /// </summary>
-        /// <summary>
-        /// 一步完成课程的添加和保存
-        /// </summary>
-        /// <summary>
-        /// 一步完成课程的添加和保存
-        /// </summary>
         public async Task<List<TaskModel>> AddAndSaveCourse(Course course)
         {
             Debug.WriteLine($"开始添加课程: {course.Name}, 星期: {course.DayOfWeek}, 时间: {course.StartTime}-{course.EndTime}, 周次: {course.WeekPattern}");
@@ -448,9 +439,6 @@ namespace TimeController.ViewModels
 
             return (conflicts.Count > 0, conflicts);
         }
-
-
-
 
 
         /// <summary>

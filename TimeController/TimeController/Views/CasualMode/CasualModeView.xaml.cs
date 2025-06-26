@@ -20,6 +20,7 @@ using System.ComponentModel;
 using System.Windows.Threading;
 using System.Windows.Media.Animation;
 using Microsoft.Extensions.DependencyInjection;
+using System.Windows.Media.Media3D;
 
 namespace TimeController.Views.CasualMode
 {
@@ -166,23 +167,34 @@ namespace TimeController.Views.CasualMode
             }
         }
         //
-        private static T? FindVisualChild<T>(DependencyObject parent) where T : DependencyObject
+        private T FindVisualChild<T>(DependencyObject parent, Func<T, bool> condition) where T : DependencyObject
         {
-            for (int i = 0; i < VisualTreeHelper.GetChildrenCount(parent); i++)
+            // 检查parent是否为有效的Visual对象
+            if (parent == null || !(parent is Visual || parent is Visual3D))
+                return null;
+
+            try
             {
-                var child = VisualTreeHelper.GetChild(parent, i);
-                if (child is T result)
+                for (int i = 0; i < VisualTreeHelper.GetChildrenCount(parent); i++)
                 {
-                    return result;
-                }
-                var descendant = FindVisualChild<T>(child);
-                if (descendant != null)
-                {
-                    return descendant;
+                    var child = VisualTreeHelper.GetChild(parent, i);
+                    if (child is T typedChild && condition(typedChild))
+                        return typedChild;
+
+                    var result = FindVisualChild(child, condition);
+                    if (result != null)
+                        return result;
                 }
             }
+            catch (InvalidOperationException)
+            {
+                // 忽略不适用于VisualTreeHelper的对象
+                return null;
+            }
+
             return null;
         }
+
 
         private static IEnumerable<T> FindVisualChildren<T>(DependencyObject parent) where T : DependencyObject
         {

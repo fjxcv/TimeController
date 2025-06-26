@@ -160,9 +160,6 @@ namespace TimeController.ViewModels
                 IsWeekPatternValid = isValid;
                 WeekPatternError = error;
             }
-
-            // 更新总体验证状态
-            IsTimeValid = IsTimeValid && IsWeekPatternValid;
         }
 
         // 解析周次模式，返回包含所有周次的集合

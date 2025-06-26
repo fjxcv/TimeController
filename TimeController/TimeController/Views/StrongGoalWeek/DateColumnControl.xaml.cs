@@ -17,6 +17,7 @@ namespace TimeController.Views.StrongGoalWeek
             this.MouseLeftButtonDown += UserControl_MouseDown;
         }
 
+        // 全天任务鼠标进入事件
         private void Grid_MouseEnter(object sender, MouseEventArgs e)
         {
             if (sender is Grid grid
@@ -26,6 +27,7 @@ namespace TimeController.Views.StrongGoalWeek
             }
         }
 
+        // 全天任务鼠标离开事件
         private void Grid_MouseLeave(object sender, MouseEventArgs e)
         {
             if (sender is Grid grid
@@ -35,6 +37,7 @@ namespace TimeController.Views.StrongGoalWeek
             }
         }
 
+        // 左击任务
         private void TaskBlock_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
             // 从 Element.Tag 获取 TaskBlock
@@ -71,42 +74,7 @@ namespace TimeController.Views.StrongGoalWeek
             e.Handled = true;
         }
 
-        // 在DateColumnControl.xaml.cs中添加这两个方法
-
-        private void UpdateCardPosition(FrameworkElement element)
-        {
-            // 将卡片定位逻辑委托给WeekView
-            var weekView = this.FindAncestor<WeekView>();
-            if (weekView != null)
-            {
-                weekView.UpdateCardPositionForElement(element);
-            }
-        }
-
-        private void CloseDetailsCard()
-        {
-            // 将关闭卡片逻辑委托给WeekView
-            var weekView = this.FindAncestor<WeekView>();
-            if (weekView != null)
-            {
-                weekView.CloseTaskDetailsCard();
-            }
-        }
-
-
-        // 检查一个元素是否是另一个元素的子元素
-        private bool IsDescendantOf(DependencyObject element, DependencyObject ancestor)
-        {
-            while (element != null)
-            {
-                if (element == ancestor)
-                    return true;
-
-                // 获取视觉树上的父元素
-                element = VisualTreeHelper.GetParent(element);
-            }
-            return false;
-        }
+        // 删除全天任务
 
         private void DeleteAllDayButton_Click(object sender, RoutedEventArgs e)
         {
@@ -120,6 +88,7 @@ namespace TimeController.Views.StrongGoalWeek
             e.Handled = true;
         }
 
+        //任务左击
         private void ColumnBorder_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
             if (DataContext is DateColumnViewModel vm)
@@ -130,6 +99,7 @@ namespace TimeController.Views.StrongGoalWeek
             e.Handled = true;
         }
 
+        // 展开/收起按钮
         private void ExpandButton_Click(object sender, RoutedEventArgs e)
         {
             if (DataContext is DateColumnViewModel vm)
@@ -144,6 +114,7 @@ namespace TimeController.Views.StrongGoalWeek
             }
         }
 
+        // 任务弹窗关闭事件
         private void TaskPopup_Closed(object? sender, EventArgs e)
         {
             if (DataContext is DateColumnViewModel vm)
