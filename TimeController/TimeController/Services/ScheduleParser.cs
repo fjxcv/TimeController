@@ -385,32 +385,6 @@ namespace TimeController.Services
             return reader.CurrentEncoding;
         }
 
-        // 从URL解析课表
-        public static async Task<List<Course>> ParseFromUrlAsync(string url, IProgress<string> progress = null)
-        {
-            try
-            {
-                using var httpClient = new HttpClient();
-                httpClient.Timeout = TimeSpan.FromSeconds(15);
-                httpClient.DefaultRequestHeaders.Add("User-Agent", "TimeController/1.0");
-
-                progress?.Report("正在请求数据...");
-                var response = await httpClient.GetAsync(url);
-                response.EnsureSuccessStatusCode();
-
-                string content = await response.Content.ReadAsStringAsync();
-                if (string.IsNullOrWhiteSpace(content))
-                    throw new InvalidOperationException("服务器返回了空内容");
-
-                progress?.Report("正在解析JSON数据...");
-                return JsonConvert.DeserializeObject<List<Course>>(content)
-                    ?? new List<Course>();
-            }
-            catch (Exception ex)
-            {
-                throw new InvalidOperationException($"URL解析失败: {ex.Message}", ex);
-            }
-        }
 
         // 使用NPOI创建Excel模板文件
         public static void CreateExcelTemplate(string filePath)
