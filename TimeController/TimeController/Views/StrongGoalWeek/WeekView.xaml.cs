@@ -23,6 +23,7 @@ using MessageBox = iNKORE.UI.WPF.Modern.Controls.MessageBox;
 using static TimeController.ViewModels.WeekViewModel;
 using System.Diagnostics;
 using System.IO;
+using System.Windows.Media.Media3D;
 
 namespace TimeController.Views.StrongGoalWeek
 {
@@ -875,15 +876,75 @@ namespace TimeController.Views.StrongGoalWeek
 
         private void WeekContentGrid_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
-            if (e.OriginalSource is DependencyObject src &&
-                FindVisualChild<Grid>(src, g => g.Tag is WeekViewModel.TaskBlock) != null)
-                return; // ignore clicks on task blocks
+            // 更安全的方式：从事件源开始向上查找Grid元素
+            DependencyObject element = e.OriginalSource as DependencyObject;
+            Grid taskGrid = null;
+            WeekViewModel.TaskBlock taskBlock = null;
 
+            // 向上查找Grid
+            while (element != null && taskGrid == null)
+            {
+                taskGrid = element as Grid;
+                if (taskGrid != null)
+                {
+                    // 检查是否有TaskBlock标签
+                    taskBlock = taskGrid.Tag as WeekViewModel.TaskBlock;
+                    if (taskBlock == null)
+                        taskGrid = null;  // 不是任务块，继续查找
+                }
+
+                // 如果没找到符合条件的Grid，继续向上查找
+                if (taskGrid == null)
+                {
+                    // 添加类型检查，确保element是Visual或Visual3D
+                    if (element is Visual || element is Visual3D)
+                    {
+                        try
+                        {
+                            element = VisualTreeHelper.GetParent(element);
+                        }
+                        catch
+                        {
+                            // 如果获取父元素失败，跳出循环
+                            break;
+                        }
+                    }
+                    else
+                    {
+                        // 如果不是Visual或Visual3D，跳出循环
+                        break;
+                    }
+                }
+
+                // 如果到达了WeekContentGrid，停止查找
+                if (element == WeekContentGrid)
+                    break;
+            }
+
+            // 如果找到了带TaskBlock标签的Grid
+            if (taskGrid != null && taskBlock != null)
+            {
+                // 如果是课程块，不显示添加按钮并直接返回
+                if (taskBlock.IsCourse)
+                {
+                    // 确保清除任何当前选择，隐藏添加按钮
+                    ClearSelection();
+                    e.Handled = true;
+                    return;
+                }
+                return; // 如果是普通任务块，也不处理（已经在TaskBlock_MouseLeftButtonDown中处理）
+            }
+
+            // 否则，处理普通区域点击
             Point pos = e.GetPosition(WeekContentGrid);
             double colWidth = WeekContentGrid.ActualWidth / 7;
             int index = Math.Max(0, Math.Min(6, (int)(pos.X / colWidth)));
             SelectColumn(index, e.GetPosition(RootCanvas));
         }
+
+
+
+
 
         public void OnDateColumnClicked(int index, MouseButtonEventArgs e)
         {
@@ -911,6 +972,51 @@ namespace TimeController.Views.StrongGoalWeek
             if (e.OriginalSource is DependencyObject src && IsElementDescendantOf(src, AddTaskButton))
                 return;
 
+            // 检查是否点击在课程块上
+            DependencyObject element = e.OriginalSource as DependencyObject;
+            Grid taskGrid = null;
+            WeekViewModel.TaskBlock taskBlock = null;
+
+            // 向上查找Grid
+            while (element != null && taskGrid == null)
+            {
+                taskGrid = element as Grid;
+                if (taskGrid != null)
+                {
+                    // 检查是否有TaskBlock标签并且是课程块
+                    taskBlock = taskGrid.Tag as WeekViewModel.TaskBlock;
+                    if (taskBlock == null)
+                        taskGrid = null;  // 不是任务块，继续查找
+                }
+
+                if (taskGrid == null && (element is Visual || element is Visual3D))
+                {
+                    try
+                    {
+                        element = VisualTreeHelper.GetParent(element);
+                    }
+                    catch
+                    {
+                        break;
+                    }
+                }
+                else if (taskGrid == null)
+                {
+                    break;
+                }
+
+                if (element == null)
+                    break;
+            }
+
+            // 如果点击在课程块上，清除当前选择
+            if (taskGrid != null && taskBlock != null && taskBlock.IsCourse)
+            {
+                ClearSelection();
+                return;
+            }
+
+            // 原有的列检查逻辑...
             int? index = null;
             if (FindVisualParent<DateColumnControl>(e.OriginalSource as DependencyObject) is DateColumnControl col &&
                 col.DataContext is DateColumnViewModel vm)
@@ -933,6 +1039,7 @@ namespace TimeController.Views.StrongGoalWeek
                 ClearSelection();
             }
         }
+
 
         private T FindVisualParent<T>(DependencyObject child) where T : DependencyObject
         {

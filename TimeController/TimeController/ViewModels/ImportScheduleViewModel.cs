@@ -130,7 +130,7 @@ namespace TimeController.ViewModels
         /// </summary>
         /// <param name="course">要检查的课程</param>
         /// <returns>冲突课程列表和是否有冲突</returns>
-        private async Task<(bool hasConflict, List<Course> conflictCourses)> CheckCourseConflict(Course course)
+        public async Task<(bool hasConflict, List<Course> conflictCourses)> CheckCourseConflict(Course course)
         {
             var conflicts = new List<Course>();
 
@@ -147,21 +147,15 @@ namespace TimeController.ViewModels
                 // 获取课程对应的星期几索引(0=周一)
                 int dayIndex = GetDayIndex(course.DayOfWeek);
 
-                // 从数据库获取所有课程任务 - 确保获取所有课程，包括文件导入的
+                // 从数据库获取所有课程任务 - 确保获取所有课程，包括文件导入的和手动添加的
                 var existingCourses = await _taskService.GetAllCourseTasksAsync();
                 Console.WriteLine($"数据库中共有 {existingCourses.Count} 门课程");
-
-                // 添加调试信息，查看现有课程详情
-                foreach (var existingCourse in existingCourses)
-                {
-                    Console.WriteLine($"现有课程: {existingCourse.Name}, 星期: {existingCourse.WeekDay}, 时间: {existingCourse.StartTime}-{existingCourse.EndTime}, 周次: {ExtractWeekPatternFromNote(existingCourse.Note)}");
-                }
 
                 // 解析新课程的周次模式
                 System.Collections.Generic.HashSet<int> newCourseWeeks = AddCourseViewModel.ParseWeekPattern(course.WeekPattern);
                 Console.WriteLine($"新课程周次: {string.Join(", ", newCourseWeeks)}");
 
-                // 检查冲突
+                // 检查冲突 - 所有课程都检查，不区分来源
                 foreach (var existingCourse in existingCourses)
                 {
                     // 只检查同一天的课程
@@ -175,8 +169,7 @@ namespace TimeController.ViewModels
                             continue;
                         }
 
-                        // 检查时间重叠 - 修正冲突检测逻辑
-                        // 使用与WeekViewModel中一致的冲突判断逻辑
+                        // 检查时间重叠 - 使用统一的冲突检测逻辑
                         bool hasTimeOverlap = Math.Max(course.StartTime.TotalMinutes, existingCourse.StartTime.Value.TotalMinutes) <
                                             Math.Min(course.EndTime.TotalMinutes, existingCourse.EndTime.Value.TotalMinutes);
 
@@ -184,7 +177,7 @@ namespace TimeController.ViewModels
 
                         if (hasTimeOverlap)
                         {
-                            // 提取周次模式并添加更多调试信息
+                            // 提取周次模式
                             string existingWeekPattern = ExtractWeekPatternFromNote(existingCourse.Note);
                             Console.WriteLine($"现有课程周次模式: {existingWeekPattern}");
 
@@ -232,6 +225,7 @@ namespace TimeController.ViewModels
             Console.WriteLine($"检测到 {conflicts.Count} 个冲突课程");
             return (conflicts.Count > 0, conflicts);
         }
+
 
 
         /// <summary>
