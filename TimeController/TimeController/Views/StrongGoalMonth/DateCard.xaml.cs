@@ -19,7 +19,7 @@ namespace TimeController.Views.StrongGoalMonth
             "Date",                         // 属性名称
             typeof(DateTime),               // 属性类型
             typeof(DateCard),               // 所属控件类型
-            new PropertyMetadata(DateTime.Now, OnDateChanged)); // 默认值和变更回调
+            new PropertyMetadata(null, OnDateChanged)); // 默认值和变更回调
 
         // 定义Command依赖属性，用于绑定点击命令
         public static readonly DependencyProperty CommandProperty = DependencyProperty.Register(

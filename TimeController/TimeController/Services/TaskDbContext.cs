@@ -14,6 +14,7 @@ namespace TimeController.Services
 
         public DbSet<RewardModel> Rewards { get; set; }
 
+
         public TaskDbContext(DbContextOptions<TaskDbContext> options)
             : base(options)
         {

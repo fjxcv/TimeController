@@ -29,9 +29,6 @@ namespace TimeController.Services
         Task UpdateTaskAsync(TaskModel task);
 
 
-        //种子数据
-        Task ResetTaskDataAsync();
-
         Task DeleteTaskAsync(TaskModel task);
 
         // 删除所有相同课程的实例
@@ -46,6 +43,7 @@ namespace TimeController.Services
 
         // 不返回具体的事务对象，而是直接提供事务功能
         IDisposable BeginTransaction();
+
         void CommitTransaction();
         void RollbackTransaction();
 

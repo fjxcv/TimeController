@@ -27,8 +27,8 @@ namespace TimeController.Services
             // 卡片 2：重复推迟提示
             cards.Add(GenerateRepeatedPostponeCard(taskHistory, weekStart, weekEnd));
 
-            // 卡片 3:任务分配策略建议
-            cards.Add(GenerateTaskDistributionCard(tasksThisWeek));
+            // 卡片 3: 跳过的任务建议
+            cards.Add(GenerateTopReasonCard(tasksThisWeek));
             // 卡片 4: 过度规划提示
             cards.Add(GenerateOverPlanningCard(tasksThisWeek));
             // 卡片 5: 生活任务平衡
@@ -97,23 +97,39 @@ namespace TimeController.Services
             return new ReviewCardModel(icon, title, message, CardAccentHelper.GetAccentColor(title));
         }
 
-        private ReviewCardModel GenerateTaskDistributionCard(List<TaskModel> tasks)
+        private ReviewCardModel GenerateTopReasonCard(List<TaskModel> tasks)
         {
-            var icon = "📋";
-            var title = "任务分配策略建议";
+            var icon = "🧠";
+            var title = "任务跳过原因分析";
 
-            int total = tasks.Count;
-            int completed = tasks.Count(t => t.Status == MyTaskStatus.Completed);
-            int uncompleted = tasks.Count(t => t.Status != MyTaskStatus.Completed);
+            var topReason = tasks
+                .Where(t => t.Status == MyTaskStatus.Postponed || t.Status == MyTaskStatus.Abandoned)
+                .Select(t => t.Reason)
+                .Where(r => !string.IsNullOrWhiteSpace(r))
+                .GroupBy(r => r)
+                .OrderByDescending(g => g.Count())
+                .FirstOrDefault();
 
             string message;
 
-            if (total < 3)
-                message = "📌本周任务安排较少，可以尝试多做一点小挑战。";
-            else if (uncompleted >= 5)
-                message = "⚠️有较多任务未完成，建议精简任务列表，提升执行质量。";
+            if (topReason == null)
+            {
+                message = "暂无跳过任务原因记录，下周可留意记录原因以便分析～";
+            }
             else
-                message = "✅任务分配较合理，继续保持当前节奏。";
+            {
+                var reason = topReason.Key;
+                message = reason switch
+                {
+                    "时间安排问题" => "🗓️你本周最常跳过任务的原因是“时间安排问题”，建议下周尝试预留更多灵活时间段，避免任务堆叠。",
+                    "主观状态问题" => "😵你本周多次因“主观状态问题”跳过任务，建议根据自身精力安排任务难度，适当休息。",
+                    "外部干扰" => "📡“外部干扰”是你本周主要阻力，可以考虑关闭通知、选择安静环境来执行重要任务。",
+                    "自主延迟决策" => "🤔你倾向于自主推迟任务，建议尝试设定更具体的执行场景或使用番茄钟等工具。",
+                    "动机缺失" => "🫥“动机缺失”是你的主要阻碍，可以尝试拆分任务、引入小奖励机制提升驱动力。",
+                    "不明确" => "❓你多次因为“任务目标不明确”而跳过，建议在安排时写清具体行动，例如“整理10张PPT”。",
+                    _ => $"你本周最常跳过任务的原因是“{reason}”，建议有意识地尝试调整这方面的影响。"
+                };
+            }
 
             return new ReviewCardModel(icon, title, message, CardAccentHelper.GetAccentColor(title));
         }
