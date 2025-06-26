@@ -53,10 +53,10 @@ namespace TimeController.Views.StrongGoalMonth
         /// <summary>
         /// 获取或设置卡片显示的日期
         /// </summary>
-        public DateTime Date
+        public DateTime? Date
         {
-            get => (DateTime)GetValue(DateProperty);   // 从依赖属性获取值
-            set => SetValue(DateProperty, value);       // 设置依赖属性的值
+            get => (DateTime?)GetValue(DateProperty);
+            set => SetValue(DateProperty, value);
         }
 
         /// <summary>
@@ -266,9 +266,18 @@ namespace TimeController.Views.StrongGoalMonth
             // 更新卡片上显示的文本
             if (d is DateCard card)
             {
-                var date = (DateTime)e.NewValue;
-                card.DateText.Text = date.Day.ToString();
-                card.IsToday = DateTime.Today == date.Date; // 自动更新IsToday状态
+                var date = (DateTime?)e.NewValue;
+                if (date.HasValue)
+                {
+                    card.DateText.Text = date.Value.Day.ToString();
+                    card.IsToday = date.Value.Date == DateTime.Today;
+                }
+                else
+                {
+                    // 传 null 进来，就清空显示，并且不会把 IsToday 置为 true
+                    card.DateText.Text = "";
+                    card.IsToday = false;
+                }
             }
         }
 

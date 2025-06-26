@@ -154,13 +154,13 @@ namespace TimeController.ViewModels
             .Where(t => t.Mode == TaskMode.Strong && !t.IsCourseTask)
             .ToList();
 
-            //调试！！！！
-            System.Diagnostics.Debug.WriteLine($"任务加载数: {tasks.Count}");
-            Debug.WriteLine($"▶▶ LoadTasksForDate for {date:yyyy-MM-dd}, total fetched: {tasks.Count}");
-            foreach (var t in tasks)
-            {
-                Debug.WriteLine($"任务: {t.Name} 状态: {t.Status} 日期: {t.PlannedDate:yyyy-MM-dd}");
-            }
+            ////调试！！！！
+            //System.Diagnostics.Debug.WriteLine($"任务加载数: {tasks.Count}");
+            //Debug.WriteLine($"▶▶ LoadTasksForDate for {date:yyyy-MM-dd}, total fetched: {tasks.Count}");
+            //foreach (var t in tasks)
+            //{
+            //    Debug.WriteLine($"任务: {t.Name} 状态: {t.Status} 日期: {t.PlannedDate:yyyy-MM-dd}");
+            //}
 
             // 分类任务
             foreach (var task in tasks)
@@ -194,7 +194,6 @@ namespace TimeController.ViewModels
                         && t.PlannedDate.Date < today
                         && !t.IsCourseTask));
 
-            Debug.WriteLine($"📝 过期任务数 = {OverduePendingTasks.Count}");
 
             OnPropertyChanged(nameof(PendingTasksCount));
 
