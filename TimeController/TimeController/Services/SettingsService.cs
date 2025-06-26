@@ -7,12 +7,11 @@ namespace TimeController.Services
     {
         private const string REG_KEY = @"HKEY_CURRENT_USER\Software\TimeController";
 
-        // 当每周目标被保存时触发
-        public event Action<int>? WeeklyTargetChanged;
+        public event Action<int>? WeeklyTargetChanged; // 每周任务目标变更事件
 
         public int LoadWeeklyTarget()
         {
-            // 默认阈值 4
+            // 从注册表加载设置，默认值为 4
             return (int)(Registry.GetValue(REG_KEY, nameof(LoadWeeklyTarget), 4) ?? 4);
         }
 

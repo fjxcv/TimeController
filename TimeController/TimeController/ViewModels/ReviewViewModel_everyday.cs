@@ -15,7 +15,6 @@ using System.Diagnostics;
 
 namespace TimeController.ViewModels
 {
-
     public class ReviewViewModel_everyday : INotifyPropertyChanged
     {
         private readonly ITaskService _taskService;
@@ -26,21 +25,18 @@ namespace TimeController.ViewModels
         public bool IsEverydayPage { get; set; } = true;
         public event Action? NavigateToEveryweekRequested;
 
-
+        // 命令声明
         public ICommand NavigateToEverydayCommand { get; }
         public ICommand NavigateToEveryweekCommand { get; }
         public ICommand PostponeTaskCommand { get; }
         public ICommand AbandonTaskCommand { get; }
         public ICommand BatchProcessCommand { get; }
-        
-        //放弃和推迟按钮的命令声明
         public ICommand ShowAbandonMenuCommand { get; }
         public ICommand AbandonReasonCommand { get; }
-
         public ICommand ShowPostponeMenuCommand { get; }
         public ICommand PostponeReasonCommand { get; }
 
-
+        // 属性绑定
         public DateTime? SelectedDate
         {
             get => _selectedDate;
@@ -48,14 +44,13 @@ namespace TimeController.ViewModels
             {
                 _selectedDate = value;
                 OnPropertyChanged(nameof(SelectedDate));
-                LoadTasksForDate(value ?? DateTime.Today); //无条件刷新
+                LoadTasksForDate(value ?? DateTime.Today); // 每次变更选中日期都刷新
             }
         }
 
-
-
         public ObservableCollection<TaskModel> CompletedTasks { get; set; }
         public ObservableCollection<TaskModel> UncompletedTasks { get; set; }
+
         public ObservableCollection<TaskModel> TodayPendingTasks
         {
             get => _todayPendingTasks;
@@ -96,23 +91,19 @@ namespace TimeController.ViewModels
             IsEverydayPage = true;
             _taskService = taskService;
 
-//#if DEBUG
-//            _ = ResetDataForDevelopment();
-//#endif
-
             CompletedTasks = new ObservableCollection<TaskModel>();
             UncompletedTasks = new ObservableCollection<TaskModel>();
 
+            // 初始化命令
             ShowAbandonMenuCommand = new RelayCommand<Button>(ShowAbandonReasonMenu);
             AbandonReasonCommand = new RelayCommand<Tuple<TaskModel, string>>(AbandonWithReason);
-
             ShowPostponeMenuCommand = new RelayCommand<Button>(ShowPostponeReasonMenu);
             PostponeReasonCommand = new RelayCommand<Tuple<TaskModel, string>>(PostponeWithReason);
 
             NavigateToEverydayCommand = new RelayCommand(_ => { }); // 当前页，不跳转
             NavigateToEveryweekCommand = new RelayCommand(_ => NavigateToEveryweekRequested?.Invoke());
 
-
+            // 设定原因下拉菜单的选项
             ReviewReasons = new ObservableCollection<string>
             {
                 "时间安排问题",
@@ -123,80 +114,59 @@ namespace TimeController.ViewModels
                 "不明确"
             };
 
-            // 订阅带参事件
+            // 订阅任务更新事件，刷新对应日期的任务
             App.TaskChanged += newTask =>
             {
-                // 刷新：用新任务的 PlannedDate
                 var dateToLoad = newTask.PlannedDate.Date;
-                System.Windows.Application.Current.Dispatcher.Invoke(() =>
+                Application.Current.Dispatcher.Invoke(() =>
                 {
                     Debug.WriteLine($"{dateToLoad:yyyy-MM-dd} 刷新复盘");
                     LoadTasksForDate(dateToLoad);
                 });
             };
 
-            // 初始化待办任务
+            // 默认加载今天任务
             SelectedDate = DateTime.Today;
-
         }
 
         private async void LoadTasksForDate(DateTime date)
         {
-            // 清空现有任务
             CompletedTasks.Clear();
             UncompletedTasks.Clear();
 
-            // 从数据库或服务中获取指定日期的任务
             var allTasks = await _taskService.GetTasksForDate(date);
 
-            // 过滤出强管理的非课程任务
+            // 筛选出强管理且不是课程任务的列表
             var tasks = allTasks
-            .Where(t => t.Mode == TaskMode.Strong && !t.IsCourseTask)
-            .ToList();
+                .Where(t => t.Mode == TaskMode.Strong && !t.IsCourseTask)
+                .ToList();
 
-            ////调试！！！！
-            //System.Diagnostics.Debug.WriteLine($"任务加载数: {tasks.Count}");
-            //Debug.WriteLine($"▶▶ LoadTasksForDate for {date:yyyy-MM-dd}, total fetched: {tasks.Count}");
-            //foreach (var t in tasks)
-            //{
-            //    Debug.WriteLine($"任务: {t.Name} 状态: {t.Status} 日期: {t.PlannedDate:yyyy-MM-dd}");
-            //}
-
-            // 分类任务
+            // 分类添加任务到对应集合
             foreach (var task in tasks)
             {
                 if (task.Status == MyTaskStatus.Completed)
-                {
                     CompletedTasks.Add(task);
-                }
                 else
-                {
                     UncompletedTasks.Add(task);
-                }
             }
 
-            // 更新待处理任务
+            // 生成今日的待完成任务
             var today = date.Date;
             TodayPendingTasks = new ObservableCollection<TaskModel>(
                 tasks.Where(t =>
-                (t.Status == MyTaskStatus.Pending || t.Status == MyTaskStatus.Postponed) &&
-                t.PlannedDate.Date == today));      //只要PlannedDate == date，就显示
+                    (t.Status == MyTaskStatus.Pending || t.Status == MyTaskStatus.Postponed)
+                    && t.PlannedDate.Date == today));
 
-
-            // 获取所有 pending 任务，排除课程任务
+            // 查询所有未完成任务中已过期的部分作为逾期任务
             var allPending = await _taskService.GetAllPendingTasksAsync();
-
             OverduePendingTasks = new ObservableCollection<TaskModel>(
-                allPending
-                  .Where(t =>
-                        t.Mode == TaskMode.Strong
-                        && t.Status == MyTaskStatus.Pending
-                        && t.PlannedDate.Date < today
-                        && !t.IsCourseTask));
-
+                allPending.Where(t =>
+                    t.Mode == TaskMode.Strong &&
+                    t.Status == MyTaskStatus.Pending &&
+                    t.PlannedDate.Date < today &&
+                    !t.IsCourseTask));
 
             OnPropertyChanged(nameof(PendingTasksCount));
-
         }
 
         private void ShowAbandonReasonMenu(Button button)
@@ -206,6 +176,7 @@ namespace TimeController.ViewModels
 
             var contextMenu = new ContextMenu();
 
+            // 为每个原因创建菜单项
             foreach (var reason in ReviewReasons)
             {
                 var item = new MenuItem
@@ -222,7 +193,6 @@ namespace TimeController.ViewModels
             contextMenu.IsOpen = true;
         }
 
-        // 放弃任务（异步加保存到数据库）
         private async void AbandonWithReason(Tuple<TaskModel, string> param)
         {
             var (task, reason) = param;
@@ -232,9 +202,7 @@ namespace TimeController.ViewModels
 
             await _taskService.UpdateTaskAsync(task);
             LoadTasksForDate(SelectedDate ?? DateTime.Today);
-
         }
-
 
         private void ShowPostponeReasonMenu(Button button)
         {
@@ -259,12 +227,12 @@ namespace TimeController.ViewModels
             contextMenu.IsOpen = true;
         }
 
-        // 推迟任务（异步加保存到数据库）
         private async void PostponeWithReason(Tuple<TaskModel, string> param)
         {
             var (task, reason) = param;
             task.Reason = reason;
 
+            // 弹出日期选择对话框
             var dialog = new PostponeDateDialog();
             if (dialog.ShowDialog() != true || !dialog.SelectedDate.HasValue)
             {
@@ -274,23 +242,18 @@ namespace TimeController.ViewModels
 
             var newDate = dialog.SelectedDate.Value;
 
-            // 记录推迟历史戳
+            // 记录推迟历史与计数
             task.PostponedAt = DateTime.Now;
-
             task.PostponedCount += 1;
 
-            // 更新到新日期
+            // 更新任务为新的计划日期
             task.PostponeDate = newDate;
             task.PlannedDate = newDate;
-            // —— 关键：第一次推迟也把状态设为 Pending，这样它就会被 TodayPendingTasks 包括进来 —— 
             task.Status = MyTaskStatus.Pending;
 
             await _taskService.UpdateTaskAsync(task);
-
             LoadTasksForDate(SelectedDate ?? DateTime.Today);
-
         }
-
 
         public event PropertyChangedEventHandler? PropertyChanged;
         protected void OnPropertyChanged(string propertyName) =>

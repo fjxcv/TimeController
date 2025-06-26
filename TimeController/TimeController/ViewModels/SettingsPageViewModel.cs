@@ -11,21 +11,19 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace TimeController.ViewModels
 {
-
     public class SettingsPageViewModel : INotifyPropertyChanged
     {
-        private int _rewardThreshold;
-        private int _dailyReviewPromptOption; // -1 for off, otherwise hour
+        private int _rewardThreshold; // 每周任务完成奖励门槛
+        private int _dailyReviewPromptOption; // 用户选择的每日复盘提示时间：-1 表示关闭
+        private bool _enableDailyReviewPrompt; // 是否启用每日复盘提醒
+        private int _dailyReviewPromptHour; // 实际存储的提醒时间（小时）
 
-        private bool _enableDailyReviewPrompt;
-        private int _dailyReviewPromptHour;
+        private readonly ISettingsService _settingsService; // 设置服务
 
-        // 服务层，用于加载/保存
-        private readonly ISettingsService _settingsService;
-        public ICommand SaveCommand { get; }
-        public ICommand ResetCommand { get; }
+        public ICommand SaveCommand { get; } // 保存设置命令
+        public ICommand ResetCommand { get; } // 重置设置命令
 
-        private bool _isDirty;
+        private bool _isDirty; // 标记设置是否被修改
         public bool IsDirty
         {
             get => _isDirty;
@@ -41,65 +39,58 @@ namespace TimeController.ViewModels
         {
             _settingsService = settingsService;
 
-            // 读取两项初始值
-            RewardThreshold = _settingsService.LoadWeeklyTarget();
+            // 读取用户设置并初始化
+            RewardThreshold = Math.Max(4, _settingsService.LoadWeeklyTarget());
             _enableDailyReviewPrompt = _settingsService.LoadEnableDailyReviewPrompt();
             _dailyReviewPromptHour = _settingsService.LoadDailyReviewPromptHour();
             _dailyReviewPromptOption = _enableDailyReviewPrompt ? _dailyReviewPromptHour : -1;
 
-            // 一加载就视作“已保存”状态
-            IsDirty = false;
+            IsDirty = false; // 默认状态为未更改
 
-            // 从存储中读取阈值，默认至少 4
-            RewardThreshold = Math.Max(4, _settingsService.LoadWeeklyTarget());
-
-            // 初始化命令
+            // 初始化保存与重置命令
             SaveCommand = new RelayCommand<object?>(_ => OnSave());
             ResetCommand = new RelayCommand<object?>(_ => OnReset());
-
         }
 
         private void OnSave()
         {
-            // 持久化
+            // 保存设置到注册表
             _settingsService.SaveWeeklyTarget(RewardThreshold);
             _settingsService.SaveEnableDailyReviewPrompt(_enableDailyReviewPrompt);
             _settingsService.SaveDailyReviewPromptHour(_dailyReviewPromptHour);
 
+            // 通知咸鱼模式重新加载奖励进度
             var casualVm = App.Services.GetRequiredService<CasualModeViewModel>();
             casualVm.UpdateProgress();
 
+            // 同步设置到运行时变量
             UserSettings.EnableDailyReviewPrompt = _enableDailyReviewPrompt;
             UserSettings.DailyReviewPromptHour = _dailyReviewPromptHour;
 
-            // 提示
-            MessageBox.Show(
-                "设置已保存！",
-                "提示",
-                MessageBoxButton.OK,
-                MessageBoxImage.Asterisk);
-                IsDirty = false;         // 保存后重置“脏”标记
+            // 弹出提示
+            MessageBox.Show("设置已保存！", "提示", MessageBoxButton.OK, MessageBoxImage.Asterisk);
+            IsDirty = false; // 状态复原
         }
 
         private void OnReset()
         {
-            // 二次确认
+            // 提示用户确认是否重置
             var result = MessageBox.Show(
                 "是否重置所有设置为默认？",
                 "确认重置",
                 MessageBoxButton.YesNo,
                 MessageBoxImage.Question,
-                MessageBoxResult.No);  // 默认焦点在“否”
+                MessageBoxResult.No);
 
             if (result == MessageBoxResult.Yes)
             {
-                // 恢复默认值
-                RewardThreshold = 4;                  // 你的默认阈值
+                // 重置为默认值
+                RewardThreshold = 4;
                 _enableDailyReviewPrompt = false;
                 _dailyReviewPromptHour = 18;
                 DailyReviewPromptOption = -1;
 
-                // 持久化重置后的值
+                // 保存重置值
                 _settingsService.SaveWeeklyTarget(RewardThreshold);
                 _settingsService.SaveEnableDailyReviewPrompt(_enableDailyReviewPrompt);
                 _settingsService.SaveDailyReviewPromptHour(_dailyReviewPromptHour);
@@ -107,20 +98,12 @@ namespace TimeController.ViewModels
                 UserSettings.EnableDailyReviewPrompt = _enableDailyReviewPrompt;
                 UserSettings.DailyReviewPromptHour = _dailyReviewPromptHour;
 
-                // 再次提示
-                MessageBox.Show(
-                    "已重置为默认设置。",
-                    "提示",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Asterisk);
-                    IsDirty = false;         // 保存后重置“脏”标记
+                // 弹出提示
+                MessageBox.Show("已重置为默认设置。", "提示", MessageBoxButton.OK, MessageBoxImage.Asterisk);
+                IsDirty = false;
             }
         }
 
-
-        /// <summary>
-        /// 每周完成多少任务可获得奖励，同时也是设置页输入值
-        /// </summary>
         public int RewardThreshold
         {
             get => _rewardThreshold;
@@ -129,14 +112,10 @@ namespace TimeController.ViewModels
                 if (_rewardThreshold == value) return;
                 _rewardThreshold = value;
                 OnPropertyChanged();
-                IsDirty = true;        // 标记为“未保存”
+                IsDirty = true;
             }
         }
 
-
-        /// <summary>
-        /// ComboBox selected value for daily review reminder. -1 means disabled.
-        /// </summary>
         public int DailyReviewPromptOption
         {
             get => _dailyReviewPromptOption;
@@ -152,52 +131,10 @@ namespace TimeController.ViewModels
             }
         }
 
-        #region 系统主题变化监听
-
-        private void SubscribeSystemThemeChange()
-        {
-            SystemEvents.UserPreferenceChanged += OnUserPreferenceChanged;
-            // 首次同步一次
-            ApplyAppTheme(GetCurrentSystemIsLight());
-        }
-
-        private void UnsubscribeSystemThemeChange()
-        {
-            SystemEvents.UserPreferenceChanged -= OnUserPreferenceChanged;
-        }
-
-        private void OnUserPreferenceChanged(object sender, UserPreferenceChangedEventArgs e)
-        {
-            // Windows 主题改变时 e.Category 为 General
-            if (e.Category == UserPreferenceCategory.General)
-                ApplyAppTheme(GetCurrentSystemIsLight());
-        }
-
-        private bool GetCurrentSystemIsLight()
-        {
-            const string key = @"HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Themes\Personalize";
-            var value = Registry.GetValue(key, "AppsUseLightTheme", 1);
-            return Convert.ToInt32(value) == 1;
-        }
-
-        private void ApplyAppTheme(bool isLight)
-        {
-            // 假设你项目里有两个 ResourceDictionary：LightTheme.xaml / DarkTheme.xaml
-            var uri = new Uri($"/TimeController;component/Themes/{(isLight ? "Light" : "Dark")}Theme.xaml",
-                              UriKind.Relative);
-            var dict = new ResourceDictionary { Source = uri };
-            // 替换第一个 MergedDictionary
-            Application.Current.Resources.MergedDictionaries[0] = dict;
-        }
-
-        #endregion
-
-        #region INotifyPropertyChanged
-
         public event PropertyChangedEventHandler? PropertyChanged;
         private void OnPropertyChanged([CallerMemberName] string name = "") =>
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
 
-        #endregion
+
     }
 }

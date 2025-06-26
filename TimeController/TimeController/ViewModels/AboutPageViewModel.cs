@@ -7,82 +7,65 @@ namespace TimeController.ViewModels
 {
     public class AboutPageViewModel : INotifyPropertyChanged
     {
-
-        /// <summary>
-        /// 新手教程列表
-        /// </summary>
-        public ObservableCollection<string> TutorialSteps { get; }
-
-        /// <summary>
-        /// 系统理念文案
-        /// </summary>
-        public ObservableCollection<string> PhilosophyLines { get; }
-
-        /// <summary>
-        /// 致谢列表
-        /// </summary>
-        public ObservableCollection<string> Acknowledgements { get; }
+        public ObservableCollection<string> TutorialSteps { get; } // 新手教程步骤列表
+        public ObservableCollection<string> PhilosophyLines { get; } // 项目理念内容
+        public ObservableCollection<string> Acknowledgements { get; } // 致谢信息
 
         public AboutPageViewModel()
         {
-            // 新手教程
+            // 教程内容
             TutorialSteps = new ObservableCollection<string>
             {
                 "🐟【咸鱼日常模式】",
-                "1. 默认启动即进入咸鱼日常模式，顶部有本周进度条（默认完成4个即奖励，可在设置调整）",
-                "2. 点击任一区域卡片空白处，输入任务名称并回车添加",
-                "3. 点击任务前的复选框可标记完成，再次点击可撤销",
-                "4. 鼠标移到任务行中会在右侧出现“×”按钮，点击即可删除该任务",
-                "5. 右侧“长期备忘”可查看不限期的任务；在“本周复盘”查看周数据反馈",
-                "6. 每周的已完成任务会在新的一周重新计入未完成",
+                "1. 默认进入咸鱼模式，顶部有本周进度条（默认 4 个任务达成奖励，可在设置更改）",
+                "2. 点击空白处输入任务，回车即可添加",
+                "3. 可打钩标记完成，再次点击撤销",
+                "4. 鼠标悬浮右侧出现删除按钮",
+                "5. 可查看长期备忘 + 本周复盘结果",
+                "6. 每周完成任务将自动清零重新统计",
+                "7. 点击进度条旁的⭐图标可自定义每周奖励内容",
+                "8. 每日 18:00 默认弹出今日复盘提醒，可在设置中关闭或修改时间",
                 "",
                 "🎯【强目标管理模式】",
-                "1. 点击导航栏“强目标管理模式”进入",
-                "2. 在“周视图”中，横向展示全天任务和周一至周日的时间轴（0:00–24:00），按需操作：",
-                "   - 点击空白区域出现加号，可点击添加时段任务；勾选标记完成",
-                "3. 在“月视图”中，显示当月日历网格，每日可显示最多3条任务；点击“∨”可查看全部任务；点击卡片即可添加任务",
-                "4. 切换到“复盘”页面，默认进入每日复盘，展示：",
-                "   - 已完成/未完成任务列表",
-                "   - 今日未处理任务与过期任务，可选择推迟或放弃",
-                "5. 每周复盘页面中，展示周任务完成及推迟/放弃的折线图，并给出6项行为建议"
+                "1. 导航栏进入强目标模式",
+                "2. 周视图展示全天任务 + 每天时间轴（0:00–24:00）",
+                "3. 月视图展示每日任务数量，点击可查看和添加",
+                "4. 每日复盘：完成/未完成列表，支持推迟或放弃",
+                "5. 每周复盘：图表展示执行情况并生成 6 项建议",
+                "6. 竖行区域点击出现加号，再次点击添加时间段任务",
+                "7. 强管理任务支持点击卡片编辑内容，悬浮后可完成或删除",
+                "8. 支持手动导入课程任务",
+                "9. 支持通过 Excel 表格自动识别导入课程任务",
+                "10. 强管理任务开启提醒后，到点将弹窗提示"
             };
 
             // 系统理念
             PhilosophyLines = new ObservableCollection<string>
             {
-
                 "1. 双模式设计：",
-                "   - 咸鱼日常：低门槛、低负担，通过可视化进度与周奖励激发持续行动",
-                "   - 强目标管理：周视图 + 月视图 + 复盘，支持项目冲刺或考试备考场景",
+                "   - 咸鱼日常：低门槛、周奖励",
+                "   - 强目标管理：结构化视图 + 复盘分析",
                 "",
                 "2. 温和驱动力：",
-                "   - 不“逼”完成，而是通过“完成感”与正反馈，让行动成为习惯",
+                "   - 用“完成感”替代“强迫感”",
                 "",
-                "3. 数据智能：",
-                "   - 复盘模块自动统计完成数、推迟与放弃数，生成个性化建议",
+                "3. 数据智能反馈：",
+                "   - 系统自动识别推迟任务、行为模式，生成建议",
                 "",
-                "4. 为“非理性用户”而生：",
-                "   - 针对拖延与注意力分散，提供“易开始”“易坚持”“易复盘”的交互"
+                "4. 非理性友好：",
+                "   - 为拖延者和注意力分散者设计，鼓励渐进式管理"
             };
 
-            // 致谢
+            // 感谢致辞
             Acknowledgements = new ObservableCollection<string>
             {
-                "Inkore.UI.WPF.Modern — 现代化控件库",
-                "小组的每一个人:",
-                "张欣茹",
-                "曹心如",
-                "邱舒桐",
-                "彭湉欣"
+                "Inkore.UI.WPF.Modern — 现代 UI 控件库",
+                "项目成员：张欣茹、曹心如、邱舒桐、彭湉欣"
             };
         }
-
-        #region INotifyPropertyChanged
 
         public event PropertyChangedEventHandler? PropertyChanged;
         private void OnPropertyChanged([CallerMemberName] string propName = "") =>
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propName));
-
-        #endregion
     }
 }
