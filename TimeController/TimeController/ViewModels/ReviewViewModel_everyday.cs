@@ -12,6 +12,7 @@ using TimeController.Services;
 using System.Windows.Controls;
 using TimeController.Views.Dialogs;
 using System.Diagnostics;
+using MessageBox = iNKORE.UI.WPF.Modern.Controls.MessageBox;
 
 namespace TimeController.ViewModels
 {
@@ -242,6 +243,28 @@ namespace TimeController.ViewModels
 
             var newDate = dialog.SelectedDate.Value;
 
+            bool convertToAllDay = false;
+
+            if (!task.IsAllDay && task.StartTime.HasValue && task.EndTime.HasValue)
+            {
+                var tasksOnDate = await _taskService.GetTasksForDate(newDate);
+                var conflicts = tasksOnDate
+                    .Where(t => !t.IsAllDay && t.Id != task.Id &&
+                           t.StartTime.HasValue && t.EndTime.HasValue &&
+                           t.StartTime.Value < t.EndTime.Value &&
+                           !(task.EndTime.Value <= t.StartTime.Value || task.StartTime.Value >= t.EndTime.Value))
+                    .Select(t => t.Name)
+                    .ToList();
+
+                if (conflicts.Any())
+                {
+                    string conflictNames = string.Join("\n- ", conflicts);
+                    MessageBox.Show($"推迟后与以下任务时间冲突:\n- {conflictNames}\n本任务将自动转为全天任务。",
+                                   "任务时间冲突", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    convertToAllDay = true;
+                }
+            }
+
             // 记录推迟历史与计数
             task.PostponedAt = DateTime.Now;
             task.PostponedCount += 1;
@@ -250,6 +273,13 @@ namespace TimeController.ViewModels
             task.PostponeDate = newDate;
             task.PlannedDate = newDate;
             task.Status = MyTaskStatus.Pending;
+
+            if (convertToAllDay)
+            {
+                task.IsAllDay = true;
+                task.StartTime = null;
+                task.EndTime = null;
+            }
 
             await _taskService.UpdateTaskAsync(task);
             LoadTasksForDate(SelectedDate ?? DateTime.Today);
